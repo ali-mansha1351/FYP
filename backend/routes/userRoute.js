@@ -6,20 +6,33 @@ import {
   loginUser,
   logoutUser,
   deleteUser,
+  resetPassword,
+  forgotPassword,
 } from "../controller/userController.js";
 
-import { isAuthenticatedUser } from "../middlewares/authentication.js";
+import {
+  isAuthenticatedUser,
+  authorizeRoles,
+} from "../middlewares/authentication.js";
 const router = express.Router();
 
-router.route("/users").get(isAuthenticatedUser, getUsers);
+router
+  .route(".admin/users")
+  .get(isAuthenticatedUser, authorizeRoles("admin"), getUsers);
 
 router.route("/user/newRegister").post(registerUser);
 
 router.route("/user/login").post(loginUser);
 
+router.route("/user/password/forgot").post(forgotPassword);
+
+router.route("/user/password/reset/:token").put(resetPassword);
+
 router.route("/user/logout").get(logoutUser);
 
-router.route("/user/delete/:id").delete(isAuthenticatedUser, deleteUser);
+router
+  .route("/admin/user/delete/:id")
+  .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteUser);
 
 router.route("/user/:id").get(getUserById);
 
