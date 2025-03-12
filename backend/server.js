@@ -13,7 +13,7 @@ dotenv.config({ path: "backend/config/config.env" });
 //connecting to db
 connectDatabse();
 
-const server = app.listen(process.env.PORT, () => {
+const server = app.listen(process.env.PORT, "0.0.0.0", () => {
   console.log(
     `server started in port ${process.env.PORT} in ${process.env.NODE_ENV} mode`
   );

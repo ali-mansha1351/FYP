@@ -1,19 +1,67 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import HomePage from "./pages/HomePage";
-import Login from "./components/Login";
-import Register from "./components/Register";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Toaster } from "react-hot-toast";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import AppLayout from "./ui/AppLayout";
+import Login from "./features/login/Login";
+import Register from "./features/register/Register";
+import HomePage from "./ui/HomePage";
+import UserProfile from "./features/userDashboard/UserProfile";
+import Error from "./ui/Error";
+import ProtectedRoute from "./ui/ProtectedRoute";
+import PublicRoute from "./ui/PublicRoute";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+    },
+  },
+});
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <AppLayout />,
+    errorElement: <Error />,
+    children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
+      {
+        path: "/login",
+        element: (
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: "/register",
+        element: <Register />,
+      },
+      {
+        path: "/user/me",
+
+        element: (
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
+]);
+
 function App() {
   return (
-    <div>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} />
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <>
+      <Toaster position="top-center" />
+      <QueryClientProvider client={queryClient}>
+        <ReactQueryDevtools initialIsOpen={false} />
+        <RouterProvider router={router} />;
+      </QueryClientProvider>
+    </>
   );
 }
-
 export default App;

@@ -45,6 +45,13 @@ const userSchema = mongoose.Schema({
     requierd: true,
     default: "user",
   },
+  skillLevel: {
+    type: String,
+    required: true,
+    enum: {
+      values: ["beginner", "intermediate", "advance"],
+    },
+  },
   //   images: [
   //     {
   //       punlicId: {

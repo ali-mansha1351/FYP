@@ -12,6 +12,7 @@ export const registerUser = async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     dateOfBirth: req.body.dateOfBirth,
+    skillLevel: req.body.skillLevel,
   });
 
   try {
@@ -33,7 +34,7 @@ export const getUsers = async (req, res, next) => {
 
 export const getUserById = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById({ _id: req.params.id });
     res.status(200).json({ success: true, user });
   } catch (error) {
     return next(new ErrorHandler(error.message, 404));
@@ -63,11 +64,25 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
+export const currentUser = async (req, res, next) => {
+  try {
+    const user = await User.findById({ _id: req.user.id });
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 404));
+  }
+};
+
 export const logoutUser = async (req, res, next) => {
   try {
     res.cookie("token", null, {
       expires: new Date(Date.now()),
       httpOnly: true,
+      secure: true,
+      sameSite: "none",
     });
 
     res.status(200).json({
@@ -177,5 +192,36 @@ export const deleteUser = async (req, res, next) => {
     if (error.message === "user not found") {
       return next(new ErrorHandler(error.message, 404));
     }
+  }
+};
+
+export const updateUser = async (req, res, next) => {
+  const updates = req.body;
+  try {
+    const user = await User.findByIdAndUpdate({ _id: req.params.id }, updates, {
+      new: true,
+      runValidators: true,
+    });
+    if (!user) {
+      throw new Error("user not found,invalid ID");
+    }
+    if (!updates) {
+      throw new Error("no updates provided");
+    }
+
+    res.status(201).json({
+      success: true,
+      message: "user successfuly updated",
+      user: user,
+    });
+  } catch (error) {
+    if (error.message === "user not found,invalid ID") {
+      return next(new ErrorHandler(error.message, 404));
+    }
+    if (error.message === "no updates provided") {
+      return next(new ErrorHandler(error.message, 400));
+    }
+
+    return next(new ErrorHandler(error.message || "something went wrong", 500));
   }
 };
