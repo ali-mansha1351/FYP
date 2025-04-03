@@ -8,6 +8,10 @@ const stitchSchema = mongoose.Schema({
   type: {
     type: String,
     required: true,
+    enum: {
+      values: ["default", "custom"],
+    },
+    default: "default",
   },
   layerNumber: {
     type: Number,
@@ -17,11 +21,12 @@ const stitchSchema = mongoose.Schema({
   isStart: {
     type: Boolean,
     required: true,
+    default: "false",
   },
   isIncrease: {
     type: Boolean,
     required: true,
-    default: false,
+    default: "false",
   },
   //   surroundingStitches: [
   //     {
@@ -35,26 +40,32 @@ const stitchSchema = mongoose.Schema({
     {
       type: mongoose.Types.ObjectId,
       ref: "stitch",
+      default: null,
     },
   ],
   next: {
     type: mongoose.Types.ObjectId,
     ref: "stitch",
+    default: null,
   },
   previous: {
     type: mongoose.Types.ObjectId,
     ref: "stitch",
+    default: null,
   },
   x_cordinates: {
     type: Number,
-    require: true,
+    required: true,
+    default: 0,
   },
   y_cordinates: {
     type: Number,
     required: true,
+    default: 0,
   },
   color: {
     type: String,
+    default: null,
   },
 });
 

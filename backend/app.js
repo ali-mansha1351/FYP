@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import userRoute from "./routes/userRoute.js";
 import patternRoutes from "./routes/patternRoutes.js";
+import stitchRoute from "./routes/stitchRoute.js";
 import cookieParser from "cookie-parser";
 
 const app = express();
@@ -27,6 +28,7 @@ app.use(cookieParser());
 
 app.use("/api/v1", userRoute);
 app.use("/api/v1", patternRoutes);
+app.use("/api/v1", stitchRoute);
 
 app.use(errorMiddleware);
 export { app };
