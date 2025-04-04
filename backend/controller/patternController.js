@@ -9,18 +9,37 @@ export const createPattern = async (req, res, next) => {
   if (!name || !user || !stitches) {
     throw new Error("pattern can't be created from null");
   }
+
   const newPattern = new pattern({
     name,
     user,
-    stitches,
   });
 
-  newPattern.save();
-  res.status(200).json({
-    success: true,
-    message: "pattern created successfuly",
-  });
   try {
+    await newPattern.save();
+    const savedStitches = await Promise.all(
+      stitches.map(async (stitchData) => {
+        const newStitch = new stitch(stitchData);
+        await newStitch.save();
+        return newStitch._id;
+      })
+    );
+
+    //console.log(JSON.stringify(savedStitches, null, 2));
+
+    newPattern.stitches = savedStitches;
+    await newPattern.save();
+
+    const populatedPattern = await pattern
+      .findById(newPattern._id)
+      .populate("stitches")
+      .exec();
+
+    res.status(200).json({
+      success: true,
+      message: "pattern created successfuly",
+      populatedPattern,
+    });
   } catch (error) {
     if (error.message === "pattern can't be created from null") {
       return next(new ErrorHandler(error.message, 400));
