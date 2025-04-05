@@ -1,0 +1,96 @@
+/* MainSection.module.css */
+.mainContainer {
+  flex: 1;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background-color: #f8f9fa;
+}
+
+.contentWrapper {
+  width: 97%;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 0 1rem;
+}
+.mainHeadingButton {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.editorButton {
+}
+.btn {
+  background-color: whitesmoke;
+  width: 130px;
+  font-size: medium;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+}
+
+.btn:hover {
+  background-color: #6b7e91;
+}
+
+.mainHeading {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 0;
+  margin-left: 15px;
+}
+
+.subheading {
+  font-size: 1.5rem;
+  color: #4a5568;
+  margin: 0;
+  margin-left: 20px;
+}
+
+.flexContent {
+  display: flex;
+  gap: 3rem;
+  align-items: center;
+  width: 100%;
+}
+
+.textSection {
+  flex: 1;
+  max-width: 500px;
+}
+
+.imageSection {
+  flex: 1;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.patternImage {
+  width: 360px;
+}
+
+.pieceImage {
+  width: 360px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .flexContent {
+    flex-direction: row;
+    text-align: center;
+  }
+  .patternImage {
+    max-width: 150px;
+    height: 150px;
+  }
+  .pieceImage {
+    max-width: 150px;
+    height: 150px;
+  }
+  .imageSection {
+    gap: 5rem;
+  }
+}
