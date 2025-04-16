@@ -133,7 +133,7 @@ to {
 `,dE=ii("div")`
   width: 12px;
   height: 12px;
-  box-sizing: border-box;
+   ;
   border: 2px solid;
   border-radius: 100%;
   border-color: ${t=>t.secondary||"#e0e0e0"};
@@ -175,7 +175,7 @@ to {
   animation-delay: 100ms;
   &:after {
     content: '';
-    box-sizing: border-box;
+     ;
     animation: ${pE} 0.2s ease-out forwards;
     opacity: 0;
     animation-delay: 200ms;

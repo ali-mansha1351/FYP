@@ -33,7 +33,7 @@ const CoverImageContainer = styled.div`
   align-items: center;
   border-bottom: 1px solid var(--secondary-color);
   border-radius:10px 10px 0px 0px;
-  box-sizing: border-box;
+   ;
   &:hover{
   
   }
@@ -154,7 +154,7 @@ function UerProfile() {
   const dispatch = useDispatch();
   const { logout } = useLogout();
   const navItems = [
-    { label: "Learn", path: "/" },
+    { label: "Learn", path: "/learn" },
     { label: "Community", path: "/" },
     { label: "Editor", path: "/editor" },
   ];

@@ -12,7 +12,7 @@ const Stitchesbar = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-sizing: border-box;
+   ;
   padding: 20px;
 `;
 
