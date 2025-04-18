@@ -10,7 +10,7 @@ export const FieldsContainer = styled.form`
   align-items: center;
   border-radius: 20px;
   padding: 50px;
-  box-sizing: border-box;
+   ;
 `;
 
 export const Container = styled.div`

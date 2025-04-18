@@ -5,14 +5,14 @@ import ChainStitch from "../../assets/chain.svg?react";
 import SingleCrochet from "../../assets/singleCrochet.svg?react";
 import DoubleCrochet from "../../assets/double.svg?react";
 import HalfDoubleCrochet from "../../assets/halfDouble.svg?react";
-import TrebleCrochet from "../../assets/treble.svg?react";
-import MagicRing from "../../assets/magicRing.svg?react";
-
+import TrebleCrochet from "../../assets/treble.svg?react"
+import { useDispatch } from "react-redux";
+import { addStitch } from "./editorSlice";
 const Stitchesbar = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-sizing: border-box;
+   ;
   padding: 20px;
 `;
 
@@ -41,41 +41,37 @@ const StitchSymbolWrapper = styled.div`
   }
 `;
 
-export default function StitchesBar({handleAddNode, handleRemoveNode}) {
+export default function StitchesBar() {
+  const dispatch = useDispatch()
   return (
     <Stitchesbar>
       <StitchContainer>
-        <StitchSymbolWrapper onClick={()=>handleAddNode('magicRing')} color="black">
-          <MagicRing />
-        </StitchSymbolWrapper>
-      </StitchContainer>
-      <StitchContainer>
-        <StitchSymbolWrapper onClick={()=>handleAddNode('chain')}  color="black">
+        <StitchSymbolWrapper onClick={()=>dispatch(addStitch({stitch: 'ch'}))} color="black">
           <ChainStitch />
         </StitchSymbolWrapper>
       </StitchContainer>
       <StitchContainer>
-        <StitchSymbolWrapper  onClick={()=>handleAddNode('slip')}  color="black">
+        <StitchSymbolWrapper  color="black">
           <SlipStitch />
         </StitchSymbolWrapper>
       </StitchContainer>
       <StitchContainer>
-        <StitchSymbolWrapper  onClick={()=>handleAddNode('singleCrochet')}  color="black">
+        <StitchSymbolWrapper  onClick={()=>dispatch(addStitch({stitch: 'sc'}))}  color="black">
           <SingleCrochet />
         </StitchSymbolWrapper>
       </StitchContainer>
       <StitchContainer>
-        <StitchSymbolWrapper  onClick={()=>handleAddNode('halfDouble')}  color="black">
+        <StitchSymbolWrapper  onClick={()=>dispatch(addStitch({stitch: 'hdc'}))}  color="black">
           <HalfDoubleCrochet />
         </StitchSymbolWrapper>
       </StitchContainer>
       <StitchContainer>
-        <StitchSymbolWrapper  onClick={()=>handleAddNode('double')}  color="black">
+        <StitchSymbolWrapper  onClick={()=>dispatch(addStitch({stitch: 'dc'}))} color="black">
           <DoubleCrochet />
         </StitchSymbolWrapper>
       </StitchContainer>
       <StitchContainer>
-        <StitchSymbolWrapper  onClick={()=>handleAddNode('treble')}  color="black">
+        <StitchSymbolWrapper  onClick={()=>dispatch(addStitch({stitch: 'tr'}))} color="black">
           <TrebleCrochet />
         </StitchSymbolWrapper>
       </StitchContainer>

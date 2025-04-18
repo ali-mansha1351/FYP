@@ -11,6 +11,7 @@ import UserProfile from "./features/userDashboard/UserProfile";
 import Error from "./ui/Error";
 import ProtectedRoute from "./ui/ProtectedRoute";
 import PublicRoute from "./ui/PublicRoute";
+import Learn from "./features/learn/Index"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +55,15 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: "/learn",
+
+        element: (
+          <ProtectedRoute>
+            <Learn />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);
@@ -64,7 +74,7 @@ function App() {
       <Toaster position="top-center" />
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} />
-        <RouterProvider router={router} />;
+        <RouterProvider router={router} />
       </QueryClientProvider>
     </>
   );
