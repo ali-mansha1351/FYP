@@ -5,6 +5,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import ForceGraph3D from '3d-force-graph';
 
 import * as THREE from 'three';
+import BeginningModal from "./BeginningModal";
+import { useSelector } from "react-redux";
 
 const Container = styled.div`
   display: flex;
@@ -55,20 +57,12 @@ const ActionButton = styled.button`
 `;
 
 export default function Canvas() {
+  const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(true)
   const containerRef = useRef();
   const graphRef = useRef();
   const [textures, setTextures] = useState({});
   const [slipStitchTarget, setSlipStitchTarget] = useState(null); 
-
-  const [data, setData] = useState({
-    nodes: [
-      { id: 'Node 1', name:'chain' },
-      { id: 'Node 2', name:'chain' },
-    ],
-    links: [
-      { source: 'Node 1', target: 'Node 2' },
-    ]
-  });
+  const patternData = useSelector((state)=>state.editor.patternData)
   const stitchPaths = {
     chain: '/chain.svg',
     slip: '/slip.svg',
@@ -105,7 +99,7 @@ export default function Canvas() {
       .trim();
 
     const graph = ForceGraph3D()(containerRef.current)
-      .graphData(data)
+      .graphData(patternData)
       .backgroundColor(bgColor)
       .nodeAutoColorBy('id')
       .linkColor(() => 'black')  
@@ -113,28 +107,6 @@ export default function Canvas() {
       .linkDirectionalArrowRelPos(1)
       .linkDirectionalArrowColor(() => 'black')
       .showNavInfo(false)
-      .onNodeClick(node => {
-        if (slipStitchTarget) {
-          const lastNode = data.nodes[data.nodes.length - 1];
-          
-          if (lastNode && lastNode.id !== node.id) {
-            const newLink={ 
-              source: lastNode.id, 
-              target: node.id 
-            }
-            console.log(newLink)
-            console.log(newLink)
-            setData(prev => ({
-              nodes: prev.nodes,
-              links: [...prev.links, newLink]
-            }));
-          }
-          
-          setSlipStitchTarget(false);
-        } else {
-          alert(`Clicked node: ${node.id}`);
-        }
-      })
       .nodeThreeObject(node => {
         const texture = textures[node.name] || textures.chain; 
         const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
@@ -167,15 +139,22 @@ export default function Canvas() {
         containerRef.current.innerHTML = '';
       }
     };
-  }, [data, textures]);
+  }, [patternData, textures]);
 
 
-  // Update graph when data changes
+  // Update graph when pattern data changes
   useEffect(() => {
     if (graphRef.current) {
-      graphRef.current.graphData(data);
+      graphRef.current.graphData(patternData);
     }
-  }, [data]);
+  }, [patternData]);
+
+  useEffect(() => {
+    if(patternData?.nodes.length === 0){
+      setIsBeginningModalOpen(true);
+    }
+  }, []);
+  
 
   // Add a new node
   const handleAddNode = (name) => {
@@ -184,48 +163,25 @@ export default function Canvas() {
       console.log('slip')
       return;
     }
-    const newNodeId = `Node ${data.nodes.length + 1}`;
+    const newNodeId = `Node ${patternData?.nodes.length + 1}`;
     const newNode = { id: newNodeId, name };
     console.log('new node', newNode)
-    const lastNodeId = data.nodes[data.nodes.length - 1]?.id;
+    const lastNodeId = patternData?.nodes[patternData?.nodes.length - 1]?.id;
     const newLink = { source: lastNodeId, target: newNodeId };
   
-    setData(prev => ({
-      nodes: [...prev.nodes, newNode],
-      links: [...prev.links, newLink]
-    }));
     
-    console.log(data);
+    
+    console.log(patternData);
   };
   
 
-  // Remove the last node
-  const handleRemoveNode = () => {
-    if (data.nodes.length <= 2) return; // Keep at least two nodes for demo
-    
-    // Get the last node's ID
-    const nodeToRemove = data.nodes[data.nodes.length - 1].id;
-    console.log("Node to remove:", nodeToRemove);
-  
-    // Filter out the node and the links connected to it
-    setData(prev => {
-      const updatedNodes = prev.nodes.filter(n => n.id !== nodeToRemove);
-      console.log("Updated Nodes:", updatedNodes);
-  
-      const updatedLinks = prev.links.filter(l => {
-        const linkRemoved =  l.source.id!== nodeToRemove && l.target.id !== nodeToRemove;
-        return linkRemoved;
-      });
-      return {
-        nodes: updatedNodes,
-        links: updatedLinks,
-      };
-    });
-  };
+
   
   return (
+    <>
+    {isBeginningModalOpen && <BeginningModal onClose={()=>setIsBeginningModalOpen(false)} isOpen={isBeginningModalOpen}/>}
     <Container>
-      <StitchesBar  handleAddNode={handleAddNode} handleRemoveNode={handleRemoveNode}/>
+      <StitchesBar  handleAddNode={handleAddNode}/>
       <CanvasContainer ref={containerRef}>
        
       </CanvasContainer>
@@ -233,5 +189,6 @@ export default function Canvas() {
           <img src={expandIcon} width={16} alt='expand icon' />
         </ExpandButton>
     </Container>
+    </>
   );
 }
