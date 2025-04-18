@@ -57,20 +57,21 @@ const ActionButton = styled.button`
 `;
 
 export default function Canvas() {
-  const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(true)
+  const isEmpty = useSelector((state)=>state.editor.pattern.nodes.length) === 0
+  const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(isEmpty)
   const containerRef = useRef();
   const graphRef = useRef();
   const [textures, setTextures] = useState({});
   const [slipStitchTarget, setSlipStitchTarget] = useState(null); 
-  const patternData = useSelector((state)=>state.editor.patternData)
+  const patternData = useSelector((state) => state.editor.pattern);
   const stitchPaths = {
-    chain: '/chain.svg',
+    ch: '/chain.svg',
     slip: '/slip.svg',
     singleCrochet: '/singleCrochet.svg',
     double: '/double.svg',
     halfDouble: '/halfDouble.svg',
     treble: '/treble.svg',
-    magicRing: '/magicRing.svg'
+    mr: '/magicRing.svg'
   };
   useEffect(() => {
     const loader = new THREE.TextureLoader();
@@ -89,7 +90,6 @@ export default function Canvas() {
       setTextures(loadedTextures);
     });
   }, []);
-
   
   useEffect(() => {
     if (Object.keys(textures).length === 0) return; // Wait for textures to load
@@ -99,7 +99,7 @@ export default function Canvas() {
       .trim();
 
     const graph = ForceGraph3D()(containerRef.current)
-      .graphData(patternData)
+      .graphData(JSON.parse(JSON.stringify(patternData)))
       .backgroundColor(bgColor)
       .nodeAutoColorBy('id')
       .linkColor(() => 'black')  
@@ -108,7 +108,7 @@ export default function Canvas() {
       .linkDirectionalArrowColor(() => 'black')
       .showNavInfo(false)
       .nodeThreeObject(node => {
-        const texture = textures[node.name] || textures.chain; 
+        const texture = textures[node.type] || textures.chain; 
         const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
           map: texture,
           color: 0x000000,
@@ -145,15 +145,14 @@ export default function Canvas() {
   // Update graph when pattern data changes
   useEffect(() => {
     if (graphRef.current) {
-      graphRef.current.graphData(patternData);
+      const clonedData = {
+        nodes: patternData.nodes.map(n => ({ ...n })),
+        links: patternData.links.map(l => ({ ...l })),
+      };
+      graphRef.current.graphData(clonedData);
     }
   }, [patternData]);
-
-  useEffect(() => {
-    if(patternData?.nodes.length === 0){
-      setIsBeginningModalOpen(true);
-    }
-  }, []);
+  
   
 
   // Add a new node
@@ -181,7 +180,7 @@ export default function Canvas() {
     <>
     {isBeginningModalOpen && <BeginningModal onClose={()=>setIsBeginningModalOpen(false)} isOpen={isBeginningModalOpen}/>}
     <Container>
-      <StitchesBar  handleAddNode={handleAddNode}/>
+      <StitchesBar/>
       <CanvasContainer ref={containerRef}>
        
       </CanvasContainer>
