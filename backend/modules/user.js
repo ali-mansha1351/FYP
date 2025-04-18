@@ -52,6 +52,18 @@ const userSchema = mongoose.Schema({
       values: ["beginner", "intermediate", "advance"],
     },
   },
+  following: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  followers: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+    },
+  ],
   //   images: [
   //     {
   //       punlicId: {
@@ -68,12 +80,6 @@ const userSchema = mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  //   booksRead: [
-  //     {
-  //       type: mongoose.Schema.Types.ObjectId,
-  //       ref: "Book",
-  //     },
-  //   ],
   resetPasswordToken: String,
   resetPasswordExpireDate: Date,
 });
