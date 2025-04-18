@@ -41,41 +41,41 @@ const StitchSymbolWrapper = styled.div`
   }
 `;
 
-export default function StitchesBar() {
+export default function StitchesBar({handleAddNode, handleRemoveNode}) {
   return (
     <Stitchesbar>
       <StitchContainer>
-        <StitchSymbolWrapper color="black">
+        <StitchSymbolWrapper onClick={()=>handleAddNode('magicRing')} color="black">
           <MagicRing />
         </StitchSymbolWrapper>
       </StitchContainer>
       <StitchContainer>
-        <StitchSymbolWrapper color="black">
+        <StitchSymbolWrapper onClick={()=>handleAddNode('chain')}  color="black">
           <ChainStitch />
         </StitchSymbolWrapper>
       </StitchContainer>
       <StitchContainer>
-        <StitchSymbolWrapper color="black">
+        <StitchSymbolWrapper  onClick={()=>handleAddNode('slip')}  color="black">
           <SlipStitch />
         </StitchSymbolWrapper>
       </StitchContainer>
       <StitchContainer>
-        <StitchSymbolWrapper color="black">
+        <StitchSymbolWrapper  onClick={()=>handleAddNode('singleCrochet')}  color="black">
           <SingleCrochet />
         </StitchSymbolWrapper>
       </StitchContainer>
       <StitchContainer>
-        <StitchSymbolWrapper color="black">
+        <StitchSymbolWrapper  onClick={()=>handleAddNode('halfDouble')}  color="black">
           <HalfDoubleCrochet />
         </StitchSymbolWrapper>
       </StitchContainer>
       <StitchContainer>
-        <StitchSymbolWrapper color="black">
+        <StitchSymbolWrapper  onClick={()=>handleAddNode('double')}  color="black">
           <DoubleCrochet />
         </StitchSymbolWrapper>
       </StitchContainer>
       <StitchContainer>
-        <StitchSymbolWrapper color="black">
+        <StitchSymbolWrapper  onClick={()=>handleAddNode('treble')}  color="black">
           <TrebleCrochet />
         </StitchSymbolWrapper>
       </StitchContainer>

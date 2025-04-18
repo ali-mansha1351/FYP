@@ -63,6 +63,26 @@ const stitchSchema = mongoose.Schema({
     required: true,
     default: 0,
   },
+  z_cordinates: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  vx: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  vy: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  vz: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
   color: {
     type: String,
     default: null,
