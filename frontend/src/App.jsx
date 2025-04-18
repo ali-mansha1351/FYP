@@ -6,12 +6,12 @@ import AppLayout from "./ui/AppLayout";
 import Login from "./features/login/Login";
 import Register from "./features/register/Register";
 import HomePage from "./ui/HomePage";
-import Editor from './features/editor/Index';
+import Editor from "./features/editor/Index";
 import UserProfile from "./features/userDashboard/UserProfile";
 import Error from "./ui/Error";
 import ProtectedRoute from "./ui/ProtectedRoute";
 import PublicRoute from "./ui/PublicRoute";
-import Learn from "./features/learn/Index"
+import Learn from "./features/learn/Index";
 
 const queryClient = new QueryClient({
   defaultOptions: {

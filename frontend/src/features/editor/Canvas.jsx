@@ -1,10 +1,10 @@
 import styled from "styled-components";
-import expandIcon from '../../assets/expand.svg';
+import expandIcon from "../../assets/expand.svg";
 import StitchesBar from "./StitchesBar";
-import React, { useEffect, useRef, useState } from 'react';
-import ForceGraph3D from '3d-force-graph';
+import React, { useEffect, useRef, useState } from "react";
+import ForceGraph3D from "3d-force-graph";
 
-import * as THREE from 'three';
+import * as THREE from "three";
 import BeginningModal from "./BeginningModal";
 import { useSelector } from "react-redux";
 
@@ -57,26 +57,27 @@ const ActionButton = styled.button`
 `;
 
 export default function Canvas() {
-  const isEmpty = useSelector((state)=>state.editor.pattern.nodes.length) === 0
-  const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(isEmpty)
+  const isEmpty =
+    useSelector((state) => state.editor.pattern.nodes.length) === 0;
+  const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(isEmpty);
   const containerRef = useRef();
   const graphRef = useRef();
   const [textures, setTextures] = useState({});
-  const [slipStitchTarget, setSlipStitchTarget] = useState(null); 
+  const [slipStitchTarget, setSlipStitchTarget] = useState(null);
   const patternData = useSelector((state) => state.editor.pattern);
   const stitchPaths = {
-    ch: '/chain.svg',
-    slip: '/slip.svg',
-    singleCrochet: '/singleCrochet.svg',
-    double: '/double.svg',
-    halfDouble: '/halfDouble.svg',
-    treble: '/treble.svg',
-    mr: '/magicRing.svg'
+    ch: "/chain.svg",
+    slip: "/slip.svg",
+    singleCrochet: "/singleCrochet.svg",
+    double: "/double.svg",
+    halfDouble: "/halfDouble.svg",
+    treble: "/treble.svg",
+    mr: "/magicRing.svg",
   };
   useEffect(() => {
     const loader = new THREE.TextureLoader();
     const loadedTextures = {};
-    
+
     Promise.all(
       Object.entries(stitchPaths).map(([name, path]) => {
         return new Promise((resolve) => {
@@ -90,31 +91,33 @@ export default function Canvas() {
       setTextures(loadedTextures);
     });
   }, []);
-  
+
   useEffect(() => {
     if (Object.keys(textures).length === 0) return; // Wait for textures to load
 
     const bgColor = getComputedStyle(document.documentElement)
-      .getPropertyValue('--third-color')
+      .getPropertyValue("--third-color")
       .trim();
 
     const graph = ForceGraph3D()(containerRef.current)
       .graphData(JSON.parse(JSON.stringify(patternData)))
       .backgroundColor(bgColor)
-      .nodeAutoColorBy('id')
-      .linkColor(() => 'black')  
+      .nodeAutoColorBy("id")
+      .linkColor(() => "black")
       .linkDirectionalArrowLength(0)
       .linkDirectionalArrowRelPos(1)
-      .linkDirectionalArrowColor(() => 'black')
+      .linkDirectionalArrowColor(() => "black")
       .showNavInfo(false)
-      .nodeThreeObject(node => {
-        const texture = textures[node.type] || textures.chain; 
-        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
-          map: texture,
-          color: 0x000000,
-          transparent: true,
-          opacity: 1
-        }));
+      .nodeThreeObject((node) => {
+        const texture = textures[node.type] || textures.chain;
+        const sprite = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: texture,
+            color: 0x000000,
+            transparent: true,
+            opacity: 1,
+          })
+        );
         sprite.scale.set(36, 36, 1);
         return sprite;
       });
@@ -129,65 +132,62 @@ export default function Canvas() {
       }
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
     handleResize();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       if (graphRef.current) {
         graphRef.current._destructor();
-        containerRef.current.innerHTML = '';
+        if (containerRef.current) {
+          containerRef.current.innerHTML = "";
+        }
       }
     };
   }, [patternData, textures]);
-
 
   // Update graph when pattern data changes
   useEffect(() => {
     if (graphRef.current) {
       const clonedData = {
-        nodes: patternData.nodes.map(n => ({ ...n })),
-        links: patternData.links.map(l => ({ ...l })),
+        nodes: patternData.nodes.map((n) => ({ ...n })),
+        links: patternData.links.map((l) => ({ ...l })),
       };
       graphRef.current.graphData(clonedData);
     }
   }, [patternData]);
-  
-  
 
   // Add a new node
   const handleAddNode = (name) => {
-    if (name === 'slip') {
+    if (name === "slip") {
       setSlipStitchTarget(true);
-      console.log('slip')
+      console.log("slip");
       return;
     }
     const newNodeId = `Node ${patternData?.nodes.length + 1}`;
     const newNode = { id: newNodeId, name };
-    console.log('new node', newNode)
+    console.log("new node", newNode);
     const lastNodeId = patternData?.nodes[patternData?.nodes.length - 1]?.id;
     const newLink = { source: lastNodeId, target: newNodeId };
-  
-    
-    
+
     console.log(patternData);
   };
-  
 
-
-  
   return (
     <>
-    {isBeginningModalOpen && <BeginningModal onClose={()=>setIsBeginningModalOpen(false)} isOpen={isBeginningModalOpen}/>}
-    <Container>
-      <StitchesBar/>
-      <CanvasContainer ref={containerRef}>
-       
-      </CanvasContainer>
+      {isBeginningModalOpen && (
+        <BeginningModal
+          onClose={() => setIsBeginningModalOpen(false)}
+          isOpen={isBeginningModalOpen}
+        />
+      )}
+      <Container>
+        <StitchesBar />
+        <CanvasContainer ref={containerRef}></CanvasContainer>
         <ExpandButton>
-          <img src={expandIcon} width={16} alt='expand icon' />
+          <img src={expandIcon} width={16} alt="expand icon" />
         </ExpandButton>
-    </Container>
+      </Container>
     </>
   );
 }
