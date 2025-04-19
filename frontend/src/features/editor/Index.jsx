@@ -9,7 +9,7 @@ export default function Index() {
   const navigate = useNavigate()
   const user = useSelector((store) => store.user);
   const navItemsForLggedIn =  [
-    { label: "Learn", path: "/" },
+    { label: "Learn", path: "/learn" },
     { label: "Community", path: "/" },
     { label: "Profile", path: "/user/me" },
   ];
