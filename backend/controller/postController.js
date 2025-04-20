@@ -79,10 +79,95 @@ export const updatePost = async (req, res, next) => {
 
 export const getPost = async (req, res, next) => {
   const user = req.user.id;
+  const postToGet = req.params.id;
+  try {
+    if (!user) {
+      throw new Error("unauthrized access");
+    }
+    const post = await Post.findOne({
+      _id: postToGet,
+      createdBy: new mongoose.Types.ObjectId(String(user)),
+    });
+    if (!post) {
+      throw new Error("post not found");
+    }
+    res.status(StatusCodes.OK).json({
+      success: true,
+      post,
+    });
+  } catch (error) {
+    if (error.message === "unauthrized access") {
+      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
+    }
+    if (error.message === "post not found") {
+      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
+    }
+    return next(
+      new ErrorHandler(
+        error.message || "internal server error",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
+  }
+};
+
+export const getAllPost = async (req, res, next) => {
+  const user = new mongoose.Types.ObjectId(String(req.user.id));
 
   try {
     if (!user) {
-      throw new Error();
+      throw new Error("unauthrized access");
     }
-  } catch (error) {}
+    const posts = await Post.find({ createdBy: user });
+    if (posts.length === 0) {
+      throw new Error("post not found");
+    }
+    res.status(StatusCodes.OK).json({
+      success: true,
+      posts,
+    });
+  } catch (error) {
+    if (error.message === "unauthrized access") {
+      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
+    }
+    if (error.message === "post not found") {
+      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
+    }
+    return next(
+      new ErrorHandler(
+        error.message || "internal server error",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
+  }
+};
+
+export const deletePost = async (req, res, next) => {
+  const user = req.user.id;
+  try {
+    const result = await Post.findByIdAndDelete(req.params.id);
+    if (!user) {
+      throw new Error("unauthorized access");
+    }
+    if (!result) {
+      throw new Error("post not found");
+    }
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "post deleted successfully",
+    });
+  } catch (error) {
+    if (error.message === "unauthorized access") {
+      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
+    }
+    if (error.message === "post not found") {
+      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
+    }
+    return next(
+      new ErrorHandler(
+        error.message || "internal server error",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
+  }
 };
