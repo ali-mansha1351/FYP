@@ -9,6 +9,8 @@ import { FaUserCircle } from 'react-icons/fa';
 import Header from "../../ui/Header";
 import addImg from '../../assets/add-image.png'
 import magicRing from '../../assets/magicRing.svg'
+import threeDots from '../../assets/three-dots.png'
+import { DropdownMenuWrapper, DropdownItem } from "../../ui/DropDownStyles";
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -21,7 +23,6 @@ const Profile = styled.div`
   background-color: var(--primary-color);
   width: 75vw;
   padding-bottom: 10px;
-  border: 1px solid ;
 `;
 const CoverImageContainer = styled.div`
   width: 100%;
@@ -31,6 +32,7 @@ const CoverImageContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
   border-bottom: 1px solid var(--secondary-color);
   border-radius:10px 10px 0px 0px;
    ;
@@ -50,7 +52,7 @@ const ProfileHeader = styled.div`
 `;
 const ProfileImageContainer = styled.div`
   position: absolute; 
-  border: 1px solid;
+  border: 1px solid var(--secondary-color);
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -137,9 +139,14 @@ const GridItem = styled.div`
     border-bottom: none;
   }
 `;
+const Icon = styled.img`
+  top: 8%;
+  right: 1%;
+  position: absolute;
+`;
 
 
-function UerProfile() {
+function UserProfile() {
   //testing useUser hook works fetching logged in user and geting the data?
   const userDetails = useSelector((store) => store.user);
   const isEffectRun = useRef(false);
@@ -150,7 +157,7 @@ function UerProfile() {
   const [coverImage, setCoverImage] = useState('')
   const profileInputRef = useRef(null);
   const coverInputRef = useRef(null);
-  
+  const [isDropDownOpen, setIsDropDownOpen] = useState()
   const dispatch = useDispatch();
   const { logout } = useLogout();
   const navItems = [
@@ -241,6 +248,14 @@ function UerProfile() {
                 <div>Click to add a cover photo</div>
               </>
             )}
+            <Icon src={threeDots} width={20} onClick={(e) =>{e.stopPropagation(); setIsDropDownOpen(!isDropDownOpen)}} />
+            {isDropDownOpen &&
+              <DropdownMenuWrapper $isOpen={isDropDownOpen} $top={'20%'} $right={'2%'}>
+                        <DropdownItem onClick={(e)=>{e.stopPropagation(); handleLogout(); setIsDropDownOpen(false)}}>
+                          Log out
+                        </DropdownItem>
+                    </DropdownMenuWrapper>
+            }
           </CoverImageContainer>
         <ProfileHeader>
           <input
@@ -321,4 +336,4 @@ function UerProfile() {
 //     */
 // }
 
-export default UerProfile;
+export default UserProfile;
