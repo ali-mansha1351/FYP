@@ -16,8 +16,7 @@ const HeaderBar = styled.div`
   width: 100%;
   background-color: var(--primary-color);
   padding: 10px 20px;
-   ;
-  margin-bottom: 20px;
+   
   .dropdown{
       display : none;
   }

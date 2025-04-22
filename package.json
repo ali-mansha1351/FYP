@@ -30,6 +30,7 @@
     "nodemailer": "^6.9.16",
     "nodemon": "^3.1.7",
     "prop-types": "^15.8.1",
+    "react-color": "^2.19.3",
     "react-datepicker": "^8.1.0",
     "react-hook-form": "^7.54.2",
     "react-hot-toast": "^2.4.1",

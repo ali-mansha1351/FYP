@@ -23,6 +23,7 @@ const Profile = styled.div`
   background-color: var(--primary-color);
   width: 75vw;
   padding-bottom: 10px;
+  margin-top: 15px;
 `;
 const CoverImageContainer = styled.div`
   width: 100%;

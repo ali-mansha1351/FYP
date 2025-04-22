@@ -2,9 +2,9 @@ import styled from "styled-components"
 const Menubar= styled.div`
   display: flex;
   justify-content: space-between;
-  background-color: var(--primary-color);
+  background-color: var(--sixth-color);
   padding: 10px 30px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 `;
 const MenuItemsContainer= styled.div`
   display: flex;

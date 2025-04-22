@@ -4,7 +4,7 @@ import MenuBar from "./MenuBar";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import Header from "../../ui/Header";
-
+import SubMenuBar from "./SubMenuBar";
 export default function Index() {
   const navigate = useNavigate()
   const user = useSelector((store) => store.user);
@@ -25,6 +25,7 @@ export default function Index() {
            <Header navItems={navItems}/>
       }
     <MenuBar />
+    <SubMenuBar menu='Stitch'/>
     <Canvas />
     </>
   )
