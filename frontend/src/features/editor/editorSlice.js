@@ -23,31 +23,62 @@ const editorSlice = createSlice({
         id: uuidv4(),
       };
       state.pattern.nodes.push(newNode);
-      console.log(JSON.parse(JSON.stringify(state.pattern)))
+      console.log(JSON.parse(JSON.stringify(state.pattern)));
     },
     addStitch: (state, action) => {
-      const {stitch} = action.payload
-      const newNodeId = uuidv4()
+      const { stitch } = action.payload;
+      const newNodeId = uuidv4();
+      const lastNode = state.pattern.nodes[state.pattern.nodes.length - 1];
+
       const newNode = {
         type: stitch,
         layer: state.currentLayerNumber,
-        start: true,
-        previous: null,
+        start: false,
+        previous: lastNode ? lastNode.id : null,
         inserts: null,
         isIncrease: null,
         surroundingNodes: null,
         id: newNodeId,
       };
-      
-      const lastNodeId =state.pattern.nodes[state.pattern.nodes.length - 1].id
-      const newLink = {source: lastNodeId, target: newNodeId, inserts: false, slipStitch: false}
 
-      state.pattern.nodes.push(newNode)
-      state.pattern.links.push(newLink)
+      const newLink = {
+        source: lastNode.id,
+        target: newNodeId,
+        inserts: false,
+        slipStitch: false,
+      };
 
-    }
+      state.pattern.nodes.push(newNode);
+      state.pattern.links.push(newLink);
+    },
+    insertStitch: (state, action) => {
+      const { stitch, insertedInto } = action.payload;
+      const newNodeId = uuidv4();
+      const lastNode = state.pattern.nodes[state.pattern.nodes.length - 1];
+
+      const newNode = {
+        type: stitch,
+        layer: state.currentLayerNumber,
+        start: false,
+        previous: lastNode ? lastNode.id : null,
+        inserts: insertedInto,
+        isIncrease: null,
+        surroundingNodes: null,
+        id: newNodeId,
+      };
+
+      const newLink = {
+        source: insertedInto,
+        target: newNodeId,
+        inserts: true,
+        slipStitch: false,
+      };
+
+      state.pattern.nodes.push(newNode);
+      state.pattern.links.push(newLink);
+    },
   },
 });
 
-export const { startPattern, addStitch } = editorSlice.actions;
+export const { startPattern, addStitch, insertStitch } = editorSlice.actions;
 export default editorSlice.reducer;

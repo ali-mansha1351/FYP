@@ -68,10 +68,10 @@ export default function Canvas() {
   const stitchPaths = {
     ch: "/chain.svg",
     slip: "/slip.svg",
-    singleCrochet: "/singleCrochet.svg",
-    double: "/double.svg",
-    halfDouble: "/halfDouble.svg",
-    treble: "/treble.svg",
+    sc: "/singleCrochet.svg",
+    dc: "/double.svg",
+    hdc: "/halfDouble.svg",
+    tr: "/treble.svg",
     mr: "/magicRing.svg",
   };
   useEffect(() => {
@@ -99,11 +99,13 @@ export default function Canvas() {
       .getPropertyValue("--third-color")
       .trim();
 
-    const graph = ForceGraph3D()(containerRef.current)
+      const graph = ForceGraph3D()(containerRef.current)
       .graphData(JSON.parse(JSON.stringify(patternData)))
       .backgroundColor(bgColor)
       .nodeAutoColorBy("id")
       .linkColor(() => "black")
+      .linkWidth(1) 
+      .linkOpacity(1) 
       .linkDirectionalArrowLength(0)
       .linkDirectionalArrowRelPos(1)
       .linkDirectionalArrowColor(() => "black")
@@ -118,9 +120,10 @@ export default function Canvas() {
             opacity: 1,
           })
         );
-        sprite.scale.set(36, 36, 1);
+        sprite.scale.set(60, 60, 1);
         return sprite;
       });
+    
 
     graphRef.current = graph;
 

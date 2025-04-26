@@ -22,6 +22,7 @@ const MenuItem = styled.div`
   font-size: 16px;
   cursor: pointer;
   position: relative;
+  gap: 6px;
 `;
 
 const ColorInput = styled.div`
@@ -29,7 +30,6 @@ const ColorInput = styled.div`
   align-items: center;
   gap: 8px;
   padding: 6px;
-  margin-top: 5px;
   border: 0.3px solid rgba(0, 0, 0, 0.12);
   border-radius: 8px;
   background: #f8f9fa;

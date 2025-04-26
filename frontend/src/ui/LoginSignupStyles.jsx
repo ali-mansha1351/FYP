@@ -9,8 +9,8 @@ export const FieldsContainer = styled.form`
   justify-content: space-between;
   align-items: center;
   border-radius: 20px;
-  padding: 50px;
-   ;
+  padding: 50px; 
+  margin-top: 20px;
 `;
 
 export const Container = styled.div`
