@@ -3,18 +3,17 @@ import expandIcon from "../../assets/expand.svg";
 import StitchesBar from "./StitchesBar";
 import React, { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
-
 import * as THREE from "three";
 import BeginningModal from "./BeginningModal";
-import { useSelector } from "react-redux";
-
+import { useDispatch, useSelector } from "react-redux";
+import { insertStitch } from "./editorSlice";
 const Container = styled.div`
   display: flex;
 `;
 
 const CanvasContainer = styled.div`
   width: 100%;
-  height: 67vh;
+  height: 60vh;
   background-color: var(--third-color);
   position: relative;
   margin: 10px 20px;
@@ -38,33 +37,15 @@ const ExpandButton = styled.div`
   z-index: 9999;
 `;
 
-const ButtonBar = styled.div`
-  position: absolute;
-  top: 20px;
-  left: 30px;
-  z-index: 10000;
-  display: flex;
-  gap: 10px;
-`;
-
-const ActionButton = styled.button`
-  background-color: #ffffffaa;
-  border: none;
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 14px;
-  cursor: pointer;
-`;
-
 export default function Canvas() {
-  const isEmpty =
-    useSelector((state) => state.editor.pattern.nodes.length) === 0;
+  const isEmpty = useSelector((state) => state.editor.pattern.nodes.length) === 0;
   const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(isEmpty);
   const containerRef = useRef();
   const graphRef = useRef();
   const [textures, setTextures] = useState({});
-  const [slipStitchTarget, setSlipStitchTarget] = useState(null);
   const patternData = useSelector((state) => state.editor.pattern);
+  const hoverNodeRef = useRef(null);
+  const dispatch = useDispatch()
   const stitchPaths = {
     ch: "/chain.svg",
     slip: "/slip.svg",
@@ -74,6 +55,7 @@ export default function Canvas() {
     tr: "/treble.svg",
     mr: "/magicRing.svg",
   };
+
   useEffect(() => {
     const loader = new THREE.TextureLoader();
     const loadedTextures = {};
@@ -93,88 +75,64 @@ export default function Canvas() {
   }, []);
 
   useEffect(() => {
-    if (Object.keys(textures).length === 0) return; // Wait for textures to load
+    if (Object.keys(textures).length === 0) return;
 
     const bgColor = getComputedStyle(document.documentElement)
       .getPropertyValue("--third-color")
       .trim();
 
-      const graph = ForceGraph3D()(containerRef.current)
+    const graph = ForceGraph3D()(containerRef.current)
       .graphData(JSON.parse(JSON.stringify(patternData)))
       .backgroundColor(bgColor)
       .nodeAutoColorBy("id")
       .linkColor(() => "black")
-      .linkWidth(1) 
-      .linkOpacity(1) 
+      .linkWidth(1)
+      .linkOpacity(1)
       .linkDirectionalArrowLength(0)
       .linkDirectionalArrowRelPos(1)
       .linkDirectionalArrowColor(() => "black")
       .showNavInfo(false)
       .nodeThreeObject((node) => {
         const texture = textures[node.type] || textures.chain;
-        const sprite = new THREE.Sprite(
-          new THREE.SpriteMaterial({
-            map: texture,
-            color: 0x000000,
-            transparent: true,
-            opacity: 1,
-          })
-        );
-        sprite.scale.set(60, 60, 1);
+        const spriteMaterial = new THREE.SpriteMaterial({
+          map: texture,
+          color: 0x000000,
+          transparent: true,
+          opacity: 1,
+        });
+        const sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(36, 36, 1);
+        node.__sprite = sprite; // Save reference for hover effects
         return sprite;
-      });
-    
+      })
+      .onNodeHover((node) => {
+        // Unhighlight previous
+        if (hoverNodeRef.current && hoverNodeRef.current.__sprite) {
+          hoverNodeRef.current.__sprite.material.opacity = 1; // Reset opacity
+          hoverNodeRef.current.__sprite.material.color.set(0x000000); // Reset color
+          hoverNodeRef.current.__sprite.material.needsUpdate = true;
+        }
+      
+        // Highlight new one
+        if (node && node.__sprite) {
+          node.__sprite.material.opacity = 0.6; // Make it semi-transparent
+          node.__sprite.material.color.set(0x00ffff); // Light grayish color
+          node.__sprite.material.needsUpdate = true;
+        }
+      
+        hoverNodeRef.current = node;
+      })
+      .onNodeClick((node) => {
+        if (node && node.id) {
+          dispatch(insertStitch({ insertedInto: node.id }));
+        }
+      })
+      
+      
+      
 
     graphRef.current = graph;
-
-    const handleResize = () => {
-      if (containerRef.current && graphRef.current) {
-        graphRef.current
-          .width(containerRef.current.clientWidth)
-          .height(containerRef.current.clientHeight);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize();
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (graphRef.current) {
-        graphRef.current._destructor();
-        if (containerRef.current) {
-          containerRef.current.innerHTML = "";
-        }
-      }
-    };
   }, [patternData, textures]);
-
-  // Update graph when pattern data changes
-  useEffect(() => {
-    if (graphRef.current) {
-      const clonedData = {
-        nodes: patternData.nodes.map((n) => ({ ...n })),
-        links: patternData.links.map((l) => ({ ...l })),
-      };
-      graphRef.current.graphData(clonedData);
-    }
-  }, [patternData]);
-
-  // Add a new node
-  const handleAddNode = (name) => {
-    if (name === "slip") {
-      setSlipStitchTarget(true);
-      console.log("slip");
-      return;
-    }
-    const newNodeId = `Node ${patternData?.nodes.length + 1}`;
-    const newNode = { id: newNodeId, name };
-    console.log("new node", newNode);
-    const lastNodeId = patternData?.nodes[patternData?.nodes.length - 1]?.id;
-    const newLink = { source: lastNodeId, target: newNodeId };
-
-    console.log(patternData);
-  };
 
   return (
     <>
