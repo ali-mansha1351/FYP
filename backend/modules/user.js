@@ -3,6 +3,7 @@ import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { select } from "three/tsl";
 const userSchema = mongoose.Schema({
   name: {
     type: String,
@@ -64,18 +65,39 @@ const userSchema = mongoose.Schema({
       ref: "User",
     },
   ],
-  //   images: [
-  //     {
-  //       punlicId: {
-  //         type: String,
-  //         require: true,
-  //       },
-  //       url: {
-  //         type: String,
-  //         require: true,
-  //       },
-  //     },
-  //   ],
+  profileImage: {
+    name: {
+      type: String,
+      //require: true,
+    },
+    url: {
+      type: String,
+      //require: true,
+    },
+    data: {
+      type: Buffer,
+      select: false,
+    },
+    mimetype: {
+      type: String,
+    },
+  },
+  coverImage: {
+    name: {
+      type: String,
+      //require: true,
+    },
+    url: {
+      type: String,
+    },
+    data: {
+      type: Buffer,
+      select: false,
+    },
+    mimetype: {
+      type: String,
+    },
+  },
   createdAt: {
     type: Date,
     default: Date.now,

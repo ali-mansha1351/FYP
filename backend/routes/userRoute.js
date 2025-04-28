@@ -1,4 +1,5 @@
 import express from "express";
+import { uploadProfileImages } from "../middlewares/profileImages.js";
 import {
   getUsers,
   registerUser,
@@ -37,7 +38,9 @@ router.route("/user/password/forgot").post(forgotPassword);
 
 router.route("/user/password/reset/:token").put(resetPassword);
 
-router.route("/user/update/:id").put(isAuthenticatedUser, updateUser);
+router
+  .route("/user/update")
+  .put(isAuthenticatedUser, uploadProfileImages, updateUser);
 
 router.route("/user/logout").get(logoutUser);
 
