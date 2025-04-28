@@ -1,39 +1,49 @@
-import styled from "styled-components"
-const Menubar= styled.div`
+import styled from "styled-components";
+import { useState } from "react";
+
+const Menubar = styled.div`
   display: flex;
   justify-content: space-between;
   background-color: var(--sixth-color);
-  padding: 10px 30px;
+  padding: 5px 30px;
   margin-bottom: 10px;
 `;
-const MenuItemsContainer= styled.div`
+
+const MenuItemsContainer = styled.div`
   display: flex;
   gap: 50px;
 `;
-const MenuItem= styled.div`
+
+const MenuItem = styled.div`
   font-size: 20px;
   cursor: pointer;
+  padding: 8px 12px;
+  border-bottom: ${({ selected }) => (selected ? "2px solid black" : "2px solid transparent")};
+  transition: border-bottom 0.3s;
 `;
+
 export default function MenuBar() {
+  const [selected, setSelected] = useState("Stitch");
+
   return (
     <Menubar>
-        <MenuItemsContainer>
-         <MenuItem>
-            File
-         </MenuItem>
-         <MenuItem>
-            Edit
-         </MenuItem>
-         <MenuItem>
-            View
-         </MenuItem>
-         <MenuItem>
-            Stitch
-         </MenuItem>
-        </MenuItemsContainer>
-        <MenuItem>
-            Export
-        </MenuItem>
+      <MenuItemsContainer>
+        {["File", "Edit", "View", "Stitch"].map((item) => (
+          <MenuItem
+            key={item}
+            selected={selected === item}
+            onClick={() => setSelected(item)}
+          >
+            {item}
+          </MenuItem>
+        ))}
+      </MenuItemsContainer>
+      <MenuItem
+        selected={selected === "Export"}
+        onClick={() => setSelected("Export")}
+      >
+        Export
+      </MenuItem>
     </Menubar>
-  )
+  );
 }
