@@ -3,8 +3,23 @@ import { User } from "../modules/user.js";
 import { ErrorHandler } from "../utils/errorhandler.js";
 import { sendToken } from "../utils/jwtToken.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { s3 } from "../utils/s3Client.js";
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+import dotenv from "dotenv";
 import crypto from "crypto";
 import mongoose from "mongoose";
+import {
+  deleteImage,
+  getImage,
+  uploadImage,
+} from "../utils/s3BucketCommands.js";
+
+dotenv.config({ path: "backend/config/config.env" });
 
 export const registerUser = async (req, res, next) => {
   const newuser = new User({
@@ -69,6 +84,21 @@ export const loginUser = async (req, res, next) => {
 export const currentUser = async (req, res, next) => {
   try {
     const user = await User.findById({ _id: req.user.id });
+    const getProfileImageParams = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: user.profileImage.name,
+    };
+    const getCoverImageParams = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: user.coverImage.name,
+    };
+    //const getCommand = new GetObjectCommand(getObjectParams);
+    const p_url = await getImage(getProfileImageParams);
+    const c_url = await getImage(getCoverImageParams);
+    // console.log(url);
+    user.profileImage.url = p_url;
+    user.coverImage.url = c_url;
+    await user.save();
     res.status(200).json({
       success: true,
       user,
@@ -199,8 +229,80 @@ export const deleteUser = async (req, res, next) => {
 
 export const updateUser = async (req, res, next) => {
   const updates = req.body;
+  const image = req.files["coverImage"]?.[0];
+  const pimage = req.files["profileImage"]?.[0];
+
   try {
-    const user = await User.findByIdAndUpdate({ _id: req.params.id }, updates, {
+    if (pimage) {
+      updates.profileImage = {
+        name: pimage.originalname,
+        mimetype: pimage.mimetype,
+      };
+      try {
+        const profileImageParams = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME,
+          Key: pimage.originalname,
+          Body: pimage.buffer,
+          ContentType: pimage.mimetype,
+        };
+
+        await uploadImage(profileImageParams);
+        console.log(uploadImage);
+      } catch (error) {
+        return next(new ErrorHandler(error.message, 404));
+      }
+    } else {
+      try {
+        const userToUpdate = await User.findById(req.user.id);
+        const deleteObjectParam = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME,
+          Key: userToUpdate.profileImage.name,
+        };
+
+        await deleteImage(deleteObjectParam);
+        userToUpdate.profileImage = {};
+        await userToUpdate.save();
+      } catch (error) {
+        return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
+      }
+    }
+
+    if (image) {
+      updates.coverImage = {
+        name: image.originalname,
+        mimetype: image.mimetype,
+      };
+      try {
+        const coverImageParams = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME,
+          Key: image.originalname,
+          Body: image.buffer,
+          ContentType: image.mimetype,
+        };
+
+        await uploadImage(coverImageParams);
+      } catch (error) {
+        return next(new ErrorHandler(error.message, 404));
+      }
+    } else {
+      try {
+        const userToUpdate = await User.findById(req.user.id);
+        if (userToUpdate.coverImage.name) {
+          const deleteObjectParam = {
+            Bucket: process.env.AWS_S3_BUCKET_NAME,
+            Key: userToUpdate.coverImage.name,
+          };
+
+          await deleteImage(deleteObjectParam);
+          userToUpdate.coverImage = {};
+          await userToUpdate.save();
+        }
+      } catch (error) {
+        return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
+      }
+    }
+
+    const user = await User.findByIdAndUpdate({ _id: req.user.id }, updates, {
       new: true,
       runValidators: true,
     });
@@ -214,7 +316,7 @@ export const updateUser = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: "user successfuly updated",
-      user: user,
+      user,
     });
   } catch (error) {
     if (error.message === "user not found,invalid ID") {
