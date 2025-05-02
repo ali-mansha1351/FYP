@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useUser } from "../login/useUser";
+import { useUser } from "./useUser";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
@@ -7,11 +7,12 @@ import { logoutUser, setUser } from "../login/loginSlice";
 import { useLogout } from "../login/useLogout";
 import { useQueryClient } from "@tanstack/react-query";
 import { FaUserCircle } from "react-icons/fa";
+import { DropdownMenuWrapper, DropdownItem } from "../../ui/DropDownStyles";
+import { useUpdatedUser } from "./useUpdateUser";
 import Header from "../../ui/Header";
 import addImg from "../../assets/add-image.png";
 import magicRing from "../../assets/magicRing.svg";
 import threeDots from "../../assets/three-dots.png";
-import { DropdownMenuWrapper, DropdownItem } from "../../ui/DropDownStyles";
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -145,18 +146,19 @@ const Icon = styled.img`
 
 function UserProfile() {
   //testing useUser hook works fetching logged in user and geting the data?
-  const userDetails = useSelector((store) => store.user);
-  const isEffectRun = useRef(false);
   const [followers, setFollowers] = useState(0);
   const [following, setFollowing] = useState(0);
   const [numOfPosts, setNumOfPosts] = useState(0);
   const [profileImage, setProfileImage] = useState("");
   const [coverImage, setCoverImage] = useState("");
+  const [isDropDownOpen, setIsDropDownOpen] = useState();
+  const { update, isLoading: updateLoading } = useUpdatedUser();
+  const { logout } = useLogout();
+  const isEffectRun = useRef(false);
+  const userDetails = useSelector((store) => store.user);
   const profileInputRef = useRef(null);
   const coverInputRef = useRef(null);
-  const [isDropDownOpen, setIsDropDownOpen] = useState();
   const dispatch = useDispatch();
-  const { logout } = useLogout();
   const queryClient = useQueryClient();
   const navItems = [
     { label: "Learn", path: "/learn" },
@@ -167,6 +169,14 @@ function UserProfile() {
   const { isLoading, refetch } = useUser();
   function handleProfileImageChange(e) {
     const file = e.target.files[0];
+    update(file, {
+      onSuccess: (response) => {
+        console.log(response);
+      },
+      onError: (error) => {
+        console.log(error);
+      },
+    });
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -235,6 +245,7 @@ function UserProfile() {
           ref={coverInputRef}
           onChange={handleCoverImageChange}
           style={{ display: "none" }}
+          name="coverImage"
         />
         <CoverImageContainer onClick={handleCoverClick}>
           {coverImage ? (
@@ -282,6 +293,7 @@ function UserProfile() {
             ref={profileInputRef}
             onChange={handleProfileImageChange}
             style={{ display: "none" }}
+            name="profileImage"
           />
           <LeftContainer>
             <ProfileImageContainer onClick={handleProfileClick}>

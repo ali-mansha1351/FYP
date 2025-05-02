@@ -1,7 +1,7 @@
 //import { useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import { useUser } from "../features/login/useUser";
+import { useUser } from "../features/userDashboard/useUser";
 import { useDispatch } from "react-redux";
 import { setUser, logoutUser } from "../features/login/loginSlice";
 import styles from "./HomePage.module.css";
@@ -16,8 +16,8 @@ function HomePage() {
     { label: "Register", path: "/register" },
     { label: "Learn", path: "/learn" },
   ];
-  
-  const navigate= useNavigate()
+
+  const navigate = useNavigate();
   const { refetch } = useUser(isLoggedIn);
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
@@ -51,7 +51,7 @@ function HomePage() {
 
   return (
     <Container>
-      <Header navItems={navItems}/>
+      <Header navItems={navItems} />
       <div className={styles.contentWrapper}>
         <div className={styles.mainHeadingButton}>
           <div>
@@ -61,7 +61,9 @@ function HomePage() {
             </p>
           </div>
           <div className={styles.editorButton}>
-            <button className={styles.btn} onClick={()=>navigate('/editor')}>Open Editor</button>
+            <button className={styles.btn} onClick={() => navigate("/editor")}>
+              Open Editor
+            </button>
           </div>
         </div>
 
