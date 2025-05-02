@@ -38,14 +38,16 @@ const ExpandButton = styled.div`
 `;
 
 export default function Canvas() {
-  const isEmpty = useSelector((state) => state.editor.pattern.nodes.length) === 0;
+  const isEmpty =
+    useSelector((state) => state.editor.pattern.nodes.length) === 0;
   const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(isEmpty);
+  const [selectedNode, setSelectedNode] = useState(null);
   const containerRef = useRef();
   const graphRef = useRef();
   const [textures, setTextures] = useState({});
   const patternData = useSelector((state) => state.editor.pattern);
   const hoverNodeRef = useRef(null);
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const stitchPaths = {
     ch: "/chain.svg",
     slip: "/slip.svg",
@@ -112,27 +114,32 @@ export default function Canvas() {
           hoverNodeRef.current.__sprite.material.color.set(0x000000); // Reset color
           hoverNodeRef.current.__sprite.material.needsUpdate = true;
         }
-      
+
         // Highlight new one
         if (node && node.__sprite) {
           node.__sprite.material.opacity = 0.6; // Make it semi-transparent
           node.__sprite.material.color.set(0x00ffff); // Light grayish color
           node.__sprite.material.needsUpdate = true;
         }
-      
+
         hoverNodeRef.current = node;
       })
       .onNodeClick((node) => {
         if (node && node.id) {
-          dispatch(insertStitch({ insertedInto: node.id }));
+          console.log("node id", node.id);
+          setSelectedNode(node.id);
         }
-      })
-      
-      
-      
+      });
 
     graphRef.current = graph;
-  }, [patternData, textures]);
+  }, [patternData, textures, dispatch]);
+
+  useEffect(() => {
+    if (selectedNode) dispatch(insertStitch({ insertedInto: selectedNode }));
+    return () => {
+      setSelectedNode(null);
+    };
+  }, [selectedNode, dispatch]);
 
   return (
     <>
@@ -143,6 +150,7 @@ export default function Canvas() {
         />
       )}
       <Container>
+        {console.log("mount")}
         <StitchesBar />
         <CanvasContainer ref={containerRef}></CanvasContainer>
         <ExpandButton>
