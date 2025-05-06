@@ -4,7 +4,15 @@ import MenuBar from "./MenuBar";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import Header from "../../ui/Header";
+import styled from "styled-components";
 import SubMenuBar from "./SubMenuBar";
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 95vh;
+`
+
 export default function Index() {
   const navigate = useNavigate()
   const user = useSelector((store) => store.user);
@@ -18,7 +26,7 @@ export default function Index() {
     { label: "Register", path: "/register" },
     { label: "Login", path: "/login" },
   ];
-  return (<>
+  return (<Container>
       {user.isLoggedIn ?
             <Header navItems={navItemsForLggedIn}/>
            :
@@ -27,6 +35,6 @@ export default function Index() {
     <MenuBar />
     <SubMenuBar menu='Stitch'/>
     <Canvas />
-    </>
+    </Container>
   )
 }

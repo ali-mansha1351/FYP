@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import Header from "../../ui/Header";
 import styled from 'styled-components';
 import Sidebar from './Sidebar';
+import MainContent from './MainContent';
 const Container = styled.div`
     display: flex;
     flex-direction: column;
@@ -14,7 +15,7 @@ const BodyContainer = styled.div`
     width: 100%;
     padding: 10px;
     flex: 1;
-     ;
+    gap: 10px;
 `
 export default function Index() {
     const navigate = useNavigate()
@@ -33,6 +34,7 @@ export default function Index() {
             }
         <BodyContainer>
             <Sidebar />
+            <MainContent />
         </BodyContainer>
     </Container>
   )

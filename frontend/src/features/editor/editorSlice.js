@@ -27,6 +27,8 @@ const editorSlice = createSlice({
       console.log(JSON.parse(JSON.stringify(state.pattern)));
     },
     insertStitch: (state, action) => {
+      if(state.selectedStitch === null)
+        return;
       const { insertedInto } = action.payload;
       const newNodeId = uuidv4();
       const lastNode = state.pattern.nodes[state.pattern.nodes.length - 1];
@@ -60,12 +62,13 @@ const editorSlice = createSlice({
 
       state.pattern.nodes.push(newNode)
       state.pattern.links.push(prevLink)
-     
+      
+      console.log(JSON.parse(JSON.stringify(state.pattern)));
       
     },
     selectStitch: (state, action) => {
       const { stitch } = action.payload;
-      state.selectedStitch = stitch;
+      state.selectedStitch = stitch?stitch:null;
     },
   },
 });

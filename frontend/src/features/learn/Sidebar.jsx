@@ -11,6 +11,7 @@ const SidebarContainer= styled.div`
     background-color: var(--primary-color);
     padding: 10px;
     align-items: center;
+    border-radius: 10px;
 `
 const TitleContainer = styled.div`
     display: flex;
@@ -54,7 +55,7 @@ const Icon = styled.img`
 `
 
 export default function Sidebar() {
-  const [activeTab, setActiveTab] = useState('crochet basics');
+  const [activeTab, setActiveTab] = useState('');
   const [openMenu, setOpenMenu] = useState(true)
   const toggleMenu = () =>{
     setOpenMenu(!openMenu)
