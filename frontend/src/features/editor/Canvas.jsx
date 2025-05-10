@@ -162,6 +162,8 @@ export default function Canvas() {
   
     const graph = graphRef.current;
     graph.graphData(JSON.parse(JSON.stringify(patternData)));
+
+    
   
     graph.onEngineStop(() => {
       patternData.links?.forEach((link) => {

@@ -27,41 +27,56 @@ const editorSlice = createSlice({
       console.log(JSON.parse(JSON.stringify(state.pattern)));
     },
     insertStitch: (state, action) => {
+      
       if(state.selectedStitch === null)
         return;
-      const { insertedInto } = action.payload;
-      const newNodeId = uuidv4();
+      
       const lastNode = state.pattern.nodes[state.pattern.nodes.length - 1];
+      const { insertedInto } = action.payload;
 
-      const newNode = {
-        type: state.selectedStitch,
-        layer: state.currentLayerNumber,
-        start: false,
-        previous: lastNode ? lastNode.id : null,
-        inserts: insertedInto,
-        isIncrease: null,
-        surroundingNodes: null,
-        id: newNodeId,
-      };
-
-      const prevLink = {
-        source: lastNode.id,
-        target: newNodeId,
-        inserts: false,
-        slipStitch: false,
-      };
-      if(state.selectedStitch !=='ch'){
-        const insertLink = {
-          source: insertedInto,
-          target: newNodeId,
+      if(state.selectedStitch === 'slip'){
+        const slipStitchLink = {
+          source: lastNode.id,
+          target: insertedInto,
           inserts: true,
+          slipStitch: true,
+        };
+        
+        state.pattern.links.push(slipStitchLink)
+      }
+      else{
+        const newNodeId = uuidv4();
+
+        const newNode = {
+          type: state.selectedStitch,
+          layer: state.currentLayerNumber,
+          start: false,
+          previous: lastNode ? lastNode.id : null,
+          inserts: insertedInto,
+          isIncrease: null,
+          surroundingNodes: null,
+          id: newNodeId,
+        };
+
+        const prevLink = {
+          source: lastNode.id,
+          target: newNodeId,
+          inserts: false,
           slipStitch: false,
         };
-        state.pattern.links.push(insertLink)
-      }
+        if(state.selectedStitch !=='ch'){
+          const insertLink = {
+            source: insertedInto,
+            target: newNodeId,
+            inserts: true,
+            slipStitch: false,
+          };
+          state.pattern.links.push(insertLink)
+        }
 
-      state.pattern.nodes.push(newNode)
-      state.pattern.links.push(prevLink)
+        state.pattern.nodes.push(newNode)
+        state.pattern.links.push(prevLink)
+      }
       
       console.log(JSON.parse(JSON.stringify(state.pattern)));
       
@@ -70,6 +85,7 @@ const editorSlice = createSlice({
       const { stitch } = action.payload;
       state.selectedStitch = stitch?stitch:null;
     },
+    
   },
 });
 
