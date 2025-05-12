@@ -7,7 +7,7 @@ import ForceGraph3D from "3d-force-graph";
 import * as THREE from "three";
 import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
-import { insertStitch } from "./editorSlice";
+import { insertStitch, selectNode } from "./editorSlice";
 const Container = styled.div`
   display: flex;
   position: relative;
@@ -78,13 +78,42 @@ export default function Canvas() {
   const hoverNodeRef = useRef(null);
   const dispatch = useDispatch();
   const stitchPaths = {
-    ch: "/chain.svg",
-    slip: "/slip.svg",
-    sc: "/singleCrochet.svg",
-    dc: "/double.svg",
-    hdc: "/halfDouble.svg",
-    tr: "/treble.svg",
-    mr: "/magicRing.svg",
+    ch: "/ch.svg",
+    slip: "/slst.svg",
+    sc: "/sc.svg",
+    dc: "/dc.svg",
+    hdc: "/hdc.svg",
+    tr: "/tr.svg",
+    mr: "/mr.svg",
+  };
+  
+  const getNodeObject = (node) => {
+
+    const texturePath = stitchPaths[node.type] || stitchPaths['ch']; 
+  
+    if (node.type === 'slip') {
+      let geometry = new THREE.SphereGeometry(2, 16, 16);
+      let material = new THREE.MeshBasicMaterial({ color: node.color }); 
+      return new THREE.Mesh(geometry, material);
+    } else {
+      const obj = new THREE.Mesh(
+        new THREE.SphereGeometry(7),
+        new THREE.MeshBasicMaterial({ depthWrite: false, transparent: true, opacity: 0 })
+      );
+  
+      // Load the texture based on the node type
+      const imgTexture = new THREE.TextureLoader().load(texturePath);
+      const material = new THREE.SpriteMaterial({
+        map: imgTexture,
+        depthFunc: THREE.NotEqualDepth,
+        color: node.color 
+      });
+      const sprite = new THREE.Sprite(material);
+      sprite.scale.set(15, 15, 15);
+      obj.add(sprite);
+  
+      return obj;
+    }
   };
 
   useEffect(() => {
@@ -116,25 +145,15 @@ export default function Canvas() {
       .backgroundColor(bgColor)
       .nodeAutoColorBy("id")
       .linkColor(() => "black")
+      .nodeColor(() => "transparent")
       .linkWidth(1)
       .linkOpacity(1)
       .linkDirectionalArrowLength(0)
       .linkDirectionalArrowRelPos(1)
       .linkDirectionalArrowColor(() => "black")
       .showNavInfo(false)
-      .nodeThreeObject((node) => {
-        const texture = textures[node.type] || textures.chain;
-        const spriteMaterial = new THREE.SpriteMaterial({
-          map: texture,
-          color: 0x000000,
-          transparent: true,
-          opacity: 1,
-        });
-        const sprite = new THREE.Sprite(spriteMaterial);
-        sprite.scale.set(36, 36, 1);
-        node.__sprite = sprite;
-        return sprite;
-      })
+      .nodeThreeObjectExtend(true)
+      .nodeThreeObject((node)=>getNodeObject(node))
       .onNodeHover((node) => {
         if (hoverNodeRef.current?.__sprite) {
           hoverNodeRef.current.__sprite.material.opacity = 1;
@@ -162,8 +181,6 @@ export default function Canvas() {
   
     const graph = graphRef.current;
     graph.graphData(JSON.parse(JSON.stringify(patternData)));
-
-    
   
     graph.onEngineStop(() => {
       patternData.links?.forEach((link) => {
@@ -191,7 +208,10 @@ export default function Canvas() {
   
 
   useEffect(() => {
-    if (selectedNode) dispatch(insertStitch({ insertedInto: selectedNode }));
+    if (selectedNode) {
+      dispatch(insertStitch({ insertedInto: selectedNode }));
+      dispatch(selectNode({selectedNode}))
+    }
     return () => {
       setSelectedNode(null);
     };

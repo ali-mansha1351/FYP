@@ -5,6 +5,8 @@ const initialState = {
   pattern: { nodes: [], links: [] },
   currentLayerNumber: 0,
   selectedStitch: null,
+  currentIndex:0,
+  selectedNode: null,
 };
 
 const editorSlice = createSlice({
@@ -22,7 +24,10 @@ const editorSlice = createSlice({
         isIncrease: null,
         surroundingNodes: null,
         id: uuidv4(),
+        index: state.currentIndex ,
+        color: 0xffc0cb
       };
+      state.selectedNode = newNode
       state.pattern.nodes.push(newNode);
       console.log(JSON.parse(JSON.stringify(state.pattern)));
     },
@@ -56,6 +61,8 @@ const editorSlice = createSlice({
           isIncrease: null,
           surroundingNodes: null,
           id: newNodeId,
+          index: state.currentIndex +1,
+          color: 0xffc0cb
         };
 
         const prevLink = {
@@ -73,9 +80,10 @@ const editorSlice = createSlice({
           };
           state.pattern.links.push(insertLink)
         }
-
+        state.selectedNode = newNode
         state.pattern.nodes.push(newNode)
         state.pattern.links.push(prevLink)
+        state.currentIndex++
       }
       
       console.log(JSON.parse(JSON.stringify(state.pattern)));
@@ -85,9 +93,27 @@ const editorSlice = createSlice({
       const { stitch } = action.payload;
       state.selectedStitch = stitch?stitch:null;
     },
+    selectNode: (state, action) => {
+      const {selectedNode} = action.payload
+      const node = state.pattern.nodes.find(node=>node.id === selectedNode)
+      state.selectedNode = node?node:null
+      console.log('selectedNode',JSON.parse(JSON.stringify(node)))
+    },
+    updateSelectedNodeColor: (state, action) => {
+      const newColor = action.payload;
+    
+      if (state.selectedNode) {
+        state.selectedNode.color = newColor;
+    
+        const nodeIndex = state.pattern.nodes.findIndex(node => node.id === state.selectedNode.id);
+        if (nodeIndex !== -1) {
+          state.pattern.nodes[nodeIndex].color = newColor;
+        }
+      }
+    }
     
   },
 });
 
-export const { startPattern, addStitch, insertStitch, selectStitch } = editorSlice.actions;
+export const { startPattern, addStitch, insertStitch, selectStitch, selectNode, updateSelectedNodeColor } = editorSlice.actions;
 export default editorSlice.reducer;
