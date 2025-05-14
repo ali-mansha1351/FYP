@@ -26,6 +26,9 @@ const StitchContainer = styled.div`
   width: fit-content;
   cursor: pointer;
   box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
+  &:hover {
+    background-color: var(--secondary-color);
+  }
 `;
 
 const StitchSymbolWrapper = styled.div`
@@ -49,6 +52,9 @@ export default function StitchesBar() {
   const handleSelect = (stitch) => {
     if (selectedStitch !== stitch) {
       dispatch(selectStitch({ stitch }));
+    }
+    else{
+      dispatch(selectStitch({stitch:null}))
     }
   };
 

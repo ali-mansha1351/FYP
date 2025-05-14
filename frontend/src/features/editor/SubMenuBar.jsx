@@ -1,6 +1,8 @@
-import styled from "styled-components"
-import { useState } from "react";
+import styled from "styled-components";
+import { useState, useEffect, useRef } from "react";
 import { ChromePicker } from 'react-color';
+import { useSelector, useDispatch } from "react-redux";
+import { updateSelectedNodeColor } from "./editorSlice";
 
 const Menubar = styled.div`
   display: flex;
@@ -43,7 +45,6 @@ const ColorPreview = styled.div`
   border: 0.5px solid rgba(87, 98, 114, 1);
   border-radius: 3px;
   background: ${(props) => props.$color};
-
 `;
 
 const ColorText = styled.span`
@@ -60,11 +61,51 @@ const PickerContainer = styled.div`
 `;
 
 export default function SubMenuBar({ menu }) {
-  const [stitchColor, setStitchColor] = useState('#000000');
-  const [pickerVisible, setPickerVisible] = useState(false);
+  const selectedNode = useSelector((state) => state.editor.selectedNode);
+  const dispatch = useDispatch();
 
-  const handleColorChange = (newColor) => {
-    setStitchColor(newColor.hex);
+  const stitchColor = selectedNode?.color
+    ? typeof selectedNode.color === 'string'
+      ? selectedNode.color
+      : `#${selectedNode.color.toString(16).padStart(6, '0')}`
+    : '#ffffff';
+
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [tempColor, setTempColor] = useState(stitchColor);
+  const pickerRef = useRef(null);
+
+  // Sync local color when selectedNode changes
+  useEffect(() => {
+    setTempColor(stitchColor);
+  }, [stitchColor]);
+
+  // Close picker on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+        setPickerVisible(false);
+        if (tempColor !== stitchColor) {
+          dispatch(updateSelectedNodeColor(tempColor));
+        }
+      }
+    };
+
+    if (pickerVisible) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [pickerVisible, tempColor, stitchColor, dispatch]);
+
+  const togglePicker = (e) => {
+    e.stopPropagation();
+    setPickerVisible((prev) => !prev);
+  };
+
+  const handleColorChange = (color) => {
+    setTempColor(color.hex);
   };
 
   return (
@@ -73,15 +114,12 @@ export default function SubMenuBar({ menu }) {
         {menu === 'Stitch' && (
           <MenuItem>
             Stitch Color
-            <ColorInput onClick={(e) => { 
-              e.stopPropagation(); 
-              setPickerVisible(!pickerVisible); 
-            }}>
-              <ColorPreview $color={stitchColor} />
-              <ColorText>{stitchColor.toUpperCase()}</ColorText>
+            <ColorInput onClick={togglePicker}>
+              <ColorPreview $color={tempColor} />
+              <ColorText>{tempColor.toUpperCase()}</ColorText>
               {pickerVisible && (
-                <PickerContainer onClick={(e) => e.stopPropagation()}>
-                  <ChromePicker color={stitchColor} onChange={handleColorChange} />
+                <PickerContainer ref={pickerRef} onClick={(e) => e.stopPropagation()}>
+                  <ChromePicker color={tempColor} onChange={handleColorChange} />
                 </PickerContainer>
               )}
             </ColorInput>
