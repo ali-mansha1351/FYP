@@ -3,13 +3,6 @@ import { User } from "../modules/user.js";
 import { ErrorHandler } from "../utils/errorhandler.js";
 import { sendToken } from "../utils/jwtToken.js";
 import { sendEmail } from "../utils/sendEmail.js";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { s3 } from "../utils/s3Client.js";
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import mongoose from "mongoose";
@@ -239,6 +232,7 @@ export const updateUser = async (req, res, next) => {
   console.log(req.body);
 
   try {
+    //if profile image exists than upload that image to the aws s3 bucket
     if (pimage) {
       updates.profileImage = {
         name: pimage.originalname,
@@ -253,11 +247,12 @@ export const updateUser = async (req, res, next) => {
         };
 
         await uploadImage(profileImageParams);
-        console.log(uploadImage);
+        // console.log(uploadImage);
       } catch (error) {
         return next(new ErrorHandler(error.message, 404));
       }
     } else {
+      //if the field name is there but the field is empty get name from the mongodb and delete the image from the aws s3 bucket
       try {
         const userToUpdate = await User.findById(req.user.id);
         if (userToUpdate.profileImage.name) {
@@ -276,6 +271,7 @@ export const updateUser = async (req, res, next) => {
     }
 
     if (image) {
+      //if cover image exists than upload that image to the aws s3 bucket
       updates.coverImage = {
         name: image.originalname,
         mimetype: image.mimetype,
@@ -293,6 +289,7 @@ export const updateUser = async (req, res, next) => {
         return next(new ErrorHandler(error.message, 404));
       }
     } else {
+      //if the field name is there but the field is empty get name from the mongodb and delete the image from the aws s3 bucket
       try {
         const userToUpdate = await User.findById(req.user.id);
         if (userToUpdate.coverImage.name) {

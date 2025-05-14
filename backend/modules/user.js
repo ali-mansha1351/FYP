@@ -3,7 +3,6 @@ import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { select } from "three/tsl";
 const userSchema = mongoose.Schema({
   name: {
     type: String,
@@ -57,22 +56,26 @@ const userSchema = mongoose.Schema({
     {
       type: mongoose.Types.ObjectId,
       ref: "User",
+      default: null,
     },
   ],
   followers: [
     {
       type: mongoose.Types.ObjectId,
       ref: "User",
+      default: null,
     },
   ],
   profileImage: {
     name: {
       type: String,
       //require: true,
+      default: null,
     },
     url: {
       type: String,
       //require: true,
+      default: null,
     },
     data: {
       type: Buffer,
@@ -80,15 +83,18 @@ const userSchema = mongoose.Schema({
     },
     mimetype: {
       type: String,
+      default: null,
     },
   },
   coverImage: {
     name: {
       type: String,
       //require: true,
+      default: null,
     },
     url: {
       type: String,
+      default: null,
     },
     data: {
       type: Buffer,
@@ -96,6 +102,7 @@ const userSchema = mongoose.Schema({
     },
     mimetype: {
       type: String,
+      default: null,
     },
   },
   createdAt: {

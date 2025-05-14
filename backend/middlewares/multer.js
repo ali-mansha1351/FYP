@@ -2,7 +2,7 @@ import multer from "multer";
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  limits: { filesize: 5 * 1024 * 1920 },
+  limits: { filesize: 100 * 1024 * 1920 },
 });
 
 //creating middleware for image upload
@@ -11,5 +11,19 @@ export const uploadProfileImages = upload.fields([
     name: "coverImage",
     maxCount: 1,
   },
-  { name: "profileImage", maxCount: 1 },
+  {
+    name: "profileImage",
+    maxCount: 1,
+  },
+]);
+
+export const uploadPostMedia = upload.fields([
+  {
+    name: "postImages",
+    maxCount: 10,
+  },
+  {
+    name: "postVideos",
+    maxCount: 10,
+  },
 ]);

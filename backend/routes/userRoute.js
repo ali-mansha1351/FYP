@@ -1,5 +1,5 @@
 import express from "express";
-import { uploadProfileImages } from "../middlewares/profileImages.js";
+import { uploadProfileImages } from "../middlewares/multer.js";
 import {
   getUsers,
   registerUser,
