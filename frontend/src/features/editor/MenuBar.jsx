@@ -1,5 +1,7 @@
 import styled from "styled-components";
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setSelectedMenu } from "./editorSlice";
 
 const Menubar = styled.div`
   display: flex;
@@ -23,8 +25,8 @@ const MenuItem = styled.div`
 `;
 
 export default function MenuBar() {
-  const [selected, setSelected] = useState("Stitch");
-
+  const selected = useSelector(state=>state.editor.selectedMenu)
+  const dispatch = useDispatch()
   return (
     <Menubar>
       <MenuItemsContainer>
@@ -32,7 +34,7 @@ export default function MenuBar() {
           <MenuItem
             key={item}
             selected={selected === item}
-            onClick={() => setSelected(item)}
+            onClick={() => dispatch(setSelectedMenu(item))}
           >
             {item}
           </MenuItem>
@@ -40,7 +42,7 @@ export default function MenuBar() {
       </MenuItemsContainer>
       <MenuItem
         selected={selected === "Export"}
-        onClick={() => setSelected("Export")}
+        onClick={() => dispatch(setSelectedMenu("Export"))}
       >
         Export
       </MenuItem>

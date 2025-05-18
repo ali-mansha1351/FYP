@@ -3,65 +3,103 @@ import { useState, useEffect, useRef } from "react";
 import { ChromePicker } from 'react-color';
 import { useSelector, useDispatch } from "react-redux";
 import { updateSelectedNodeColor } from "./editorSlice";
+import { FaUndo, FaRedo, FaProjectDiagram, FaThLarge } from "react-icons/fa";
 
 const Menubar = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: center;
   background-color: var(--sixth-color);
-  padding: 10px 30px;
+  padding: 8px 36px;
   margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 `;
 
 const MenuItemsContainer = styled.div`
   display: flex;
-  gap: 50px;
+  gap: 40px;
   align-items: center;
 `;
 
 const MenuItem = styled.div`
   display: flex;
   align-items: center;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
   position: relative;
-  gap: 6px;
+  gap: 10px;
+`;
+
+const ViewButton = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 15px;
+  font-weight: 500;
+  background-color: transparent;
+  border-radius: 6px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(0, 0, 255, 0.1);
+  }
+`;
+
+const EditButton = styled(ViewButton)`
+  &:hover {
+    background-color: rgba(0, 128, 0, 0.1); /* Light green hover */
+  }
 `;
 
 const ColorInput = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px;
-  border: 0.3px solid rgba(0, 0, 0, 0.12);
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 8px;
-  background: #f8f9fa;
+  background: #f1f3f5;
   cursor: pointer;
   position: relative;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.25);
+  }
 `;
 
 const ColorPreview = styled.div`
   width: 20px;
   height: 20px;
-  border: 0.5px solid rgba(87, 98, 114, 1);
-  border-radius: 3px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
   background: ${(props) => props.$color};
 `;
 
 const ColorText = styled.span`
-  font-size: 11px;
-  font-weight: 400;
-  color: rgba(4, 4, 4, 1);
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  letter-spacing: 0.3px;
 `;
 
 const PickerContainer = styled.div`
   position: absolute;
-  top: 100%;
+  top: 110%;
   left: 0;
-  z-index: 2;
+  z-index: 5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
 `;
 
-export default function SubMenuBar({ menu }) {
+export default function SubMenuBar() {
   const selectedNode = useSelector((state) => state.editor.selectedNode);
+  const selectedMenu = useSelector((state) => state.editor.selectedMenu);
   const dispatch = useDispatch();
 
   const stitchColor = selectedNode?.color
@@ -74,12 +112,10 @@ export default function SubMenuBar({ menu }) {
   const [tempColor, setTempColor] = useState(stitchColor);
   const pickerRef = useRef(null);
 
-  // Sync local color when selectedNode changes
   useEffect(() => {
     setTempColor(stitchColor);
   }, [stitchColor]);
 
-  // Close picker on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target)) {
@@ -108,10 +144,12 @@ export default function SubMenuBar({ menu }) {
     setTempColor(color.hex);
   };
 
+  if (selectedMenu === null) return;
+
   return (
     <Menubar>
       <MenuItemsContainer>
-        {menu === 'Stitch' && (
+        {selectedMenu === 'Stitch' && (
           <MenuItem>
             Stitch Color
             <ColorInput onClick={togglePicker}>
@@ -124,6 +162,32 @@ export default function SubMenuBar({ menu }) {
               )}
             </ColorInput>
           </MenuItem>
+        )}
+
+        {selectedMenu === 'View' && (
+          <>
+            <ViewButton>
+              <FaProjectDiagram />
+              Graphical View
+            </ViewButton>
+            <ViewButton>
+              <FaThLarge />
+              2D View
+            </ViewButton>
+          </>
+        )}
+
+        {selectedMenu === 'Edit' && (
+          <>
+            <EditButton>
+              <FaUndo />
+              Undo
+            </EditButton>
+            <EditButton>
+              <FaRedo />
+              Redo
+            </EditButton>
+          </>
         )}
       </MenuItemsContainer>
     </Menubar>

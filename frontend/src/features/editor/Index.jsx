@@ -14,7 +14,7 @@ const Container = styled.div`
 `
 
 export default function Index() {
-  const navigate = useNavigate()
+  const expanded = useSelector(state => state.editor.expanded)
   const user = useSelector((store) => store.user);
   const navItemsForLggedIn =  [
     { label: "Learn", path: "/learn" },
@@ -27,13 +27,16 @@ export default function Index() {
     { label: "Login", path: "/login" },
   ];
   return (<Container>
+    {!expanded && <>
       {user.isLoggedIn ?
             <Header navItems={navItemsForLggedIn}/>
            :
            <Header navItems={navItems}/>
       }
     <MenuBar />
-    <SubMenuBar menu='Stitch'/>
+    <SubMenuBar />
+    </>
+    }
     <Canvas />
     </Container>
   )
