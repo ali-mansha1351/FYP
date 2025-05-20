@@ -200,7 +200,7 @@ export const getPost = async (req, res, next) => {
 
 export const getAllPost = async (req, res, next) => {
   const user = new mongoose.Types.ObjectId(String(req.user.id));
-
+  var flag = false;
   try {
     if (!user) {
       throw new Error("unauthrized access");
@@ -211,9 +211,8 @@ export const getAllPost = async (req, res, next) => {
     }
     var allFiles = [];
     posts.forEach((post) => allFiles.push(...post.content));
-    //console.log(allFiles);
+    console.log(allFiles);
     const { urls } = await getMultipleImages(allFiles);
-    //console.log(urls);
     let index = 0;
     posts.forEach((post) => {
       post.content.forEach((content) => {
