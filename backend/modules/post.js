@@ -20,6 +20,7 @@ const postSchema = mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: User,
+        default: null,
       },
     ],
     comments: [
@@ -27,6 +28,7 @@ const postSchema = mongoose.Schema(
         user: {
           type: mongoose.Schema.Types.ObjectId,
           ref: User,
+          default: null,
         },
         commentStr: {
           type: String,
@@ -39,12 +41,30 @@ const postSchema = mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: User,
+        default: null,
       },
     ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: User,
+      required: true,
     },
+    content: [
+      {
+        name: {
+          type: String,
+          default: null,
+        },
+        url: {
+          type: String,
+          default: null,
+        },
+        mimetype: {
+          type: String,
+          default: null,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

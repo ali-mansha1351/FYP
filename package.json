@@ -40,7 +40,9 @@
     "react-icons": "^5.5.0",
     "react-redux": "^9.2.0",
     "redux-persist": "^6.0.0",
+    "socket.io": "^4.8.1",
     "three": "^0.175.0",
-    "validator": "^13.12.0"
+    "validator": "^13.12.0",
+    "ws": "^8.18.2"
   }
 }
