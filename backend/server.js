@@ -1,4 +1,4 @@
-import { app } from "./app.js";
+import { app, httpServer } from "./app.js";
 import { connectDatabse } from "./config/database.js";
 import dotenv from "dotenv";
 
@@ -13,7 +13,7 @@ dotenv.config({ path: "backend/config/config.env" });
 //connecting to db
 connectDatabse();
 
-const server = app.listen(process.env.PORT, "0.0.0.0", () => {
+const server = httpServer.listen(process.env.PORT, "0.0.0.0", () => {
   console.log(
     `server started in port ${process.env.PORT} in ${process.env.NODE_ENV} mode`
   );
