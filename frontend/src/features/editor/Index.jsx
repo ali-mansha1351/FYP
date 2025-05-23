@@ -1,4 +1,3 @@
-
 import Canvas from "./Canvas";
 import MenuBar from "./MenuBar";
 import { useSelector } from "react-redux";
@@ -16,16 +15,17 @@ const Container = styled.div`
 export default function Index() {
   const expanded = useSelector(state => state.editor.expanded)
   const user = useSelector((store) => store.user);
-  const navItemsForLggedIn =  [
+  const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
     { label: "Community", path: "/" },
     { label: "Profile", path: "/user/me" },
   ];
-  const navItems=  [
+  const navItems = [
     { label: "Home", path: "/" },
     { label: "Register", path: "/register" },
     { label: "Login", path: "/login" },
   ];
+
   return (<Container>
     {!expanded && <>
       {user.isLoggedIn ?
@@ -39,5 +39,5 @@ export default function Index() {
     }
     <Canvas />
     </Container>
-  )
+  );
 }
