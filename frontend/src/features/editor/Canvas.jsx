@@ -7,7 +7,9 @@ import ForceGraph3D from "3d-force-graph";
 import * as THREE from "three";
 import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
-import { insertStitch, selectNode } from "./editorSlice";
+import { toggleExpandCanvas, insertStitch, selectNode } from "./editorSlice";
+import { FaExpand, FaCompress } from "react-icons/fa";
+
 const Container = styled.div`
   display: flex;
   position: relative;
@@ -15,14 +17,20 @@ const Container = styled.div`
 
 const CanvasContainer = styled.div`
   width: 100%;
-  height: 65vh;
   background-color: var(--third-color);
-  position: relative;
-  margin: 10px 20px;
+  margin: ${({ expanded }) => (expanded ? "0px" : "10px 20px")};
+  height: ${({ expanded, selectedMenu }) =>
+    expanded
+      ? "100%"  
+      : selectedMenu
+      ? "65vh"
+      : "75vh"};
   border-radius: 30px;
   overflow: hidden;
+  box-sizing: border-box;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 `;
+
 
 const ExpandButton = styled.div`
   cursor: pointer;
@@ -68,6 +76,9 @@ const ZoomButton = styled.div`
 export default function Canvas() {
   const isEmpty =
     useSelector((state) => state.editor.pattern.nodes.length) === 0;
+    
+  const expanded = useSelector(state => state.editor.expanded)
+  const selectedMenu = useSelector(state => state.editor.selectedMenu)
   const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(isEmpty);
   const [selectedNode, setSelectedNode] = useState(null);
   const containerRef = useRef();
@@ -243,7 +254,7 @@ export default function Canvas() {
       )}
       <Container>
         <StitchesBar />
-        <CanvasContainer ref={containerRef}></CanvasContainer>
+        <CanvasContainer expanded={expanded} selectedMenu={selectedMenu} ref={containerRef}></CanvasContainer>
         <ZoomButtonsContainer>
           <ZoomButton onClick={() => handleZoom(true)}>
             <FaPlus size={12} />
@@ -253,9 +264,11 @@ export default function Canvas() {
           </ZoomButton>
         </ZoomButtonsContainer>
 
-        <ExpandButton>
-          <img src={expandIcon} width={16} alt="expand icon" />
+        <ExpandButton onClick={() => dispatch(toggleExpandCanvas())}>
+          {expanded ? <FaCompress size={16} /> : <FaExpand size={16} />}
+
         </ExpandButton>
+
       </Container>
     </>
   );

@@ -7,6 +7,8 @@ const initialState = {
   selectedStitch: null,
   currentIndex:0,
   selectedNode: null,
+  selectedMenu: null,
+  expanded: false,
 };
 
 const editorSlice = createSlice({
@@ -81,6 +83,7 @@ const editorSlice = createSlice({
           state.pattern.links.push(insertLink)
         }
         state.selectedNode = newNode
+        state.selectedMenu = 'Stitch'
         state.pattern.nodes.push(newNode)
         state.pattern.links.push(prevLink)
         state.currentIndex++
@@ -97,6 +100,7 @@ const editorSlice = createSlice({
       const {selectedNode} = action.payload
       const node = state.pattern.nodes.find(node=>node.id === selectedNode)
       state.selectedNode = node?node:null
+      state.selectedMenu = 'Stitch'
       console.log('selectedNode',JSON.parse(JSON.stringify(node)))
     },
     updateSelectedNodeColor: (state, action) => {
@@ -110,10 +114,23 @@ const editorSlice = createSlice({
           state.pattern.nodes[nodeIndex].color = newColor;
         }
       }
+    },
+    setSelectedMenu: (state, action) => {
+      if (state.selectedMenu === action.payload) {
+        state.selectedMenu = null;  // Set to null if the selectedMenu is the same as the payload
+      } else {
+        state.selectedMenu = action.payload;
+      }
+    },
+    toggleExpandCanvas: (state)=>{
+      state.expanded = !state.expanded
     }
+    
     
   },
 });
 
-export const { startPattern, addStitch, insertStitch, selectStitch, selectNode, updateSelectedNodeColor } = editorSlice.actions;
+export const { startPattern, addStitch, insertStitch, selectStitch, selectNode, updateSelectedNodeColor
+  , setSelectedMenu, toggleExpandCanvas
+ } = editorSlice.actions;
 export default editorSlice.reducer;
