@@ -7,10 +7,13 @@ export const getChats = async (req, res, next) => {
   const userId = req.user.id;
   try {
     let chats = await Chat.find({
-      users: { $elemMatch: { $eq: userId } },
+      participants: { $elemMatch: { $eq: userId } },
     })
-      .populate("participants")
-      .populate("lastMessage")
+      .populate({ path: "participants", select: "name email" })
+      .populate({
+        path: "lastMessage",
+        select: "content sender readBy createdAt",
+      })
       .sort({ updatedAt: -1 });
 
     chats = await User.populate(chats, {
@@ -45,8 +48,11 @@ export const accessChat = async (req, res, next) => {
         { participants: { $elemMatch: { $eq: userId } } },
       ],
     })
-      .populate("participants")
-      .populate("lastMessage")
+      .populate({ path: "participants", select: "name email" })
+      .populate({
+        path: "lastMessage",
+        select: "content sender readBy createdAt",
+      })
       .sort({ updatedAt: -1 });
 
     chat = await User.populate(chat, {
@@ -65,9 +71,10 @@ export const accessChat = async (req, res, next) => {
         participants: [req.user.id, userId],
       });
 
-      const fullChat = await Chat.findOne({ _id: newChat._id }).populate(
-        "participants"
-      );
+      const fullChat = await Chat.findOne({ _id: newChat._id }).populate({
+        path: "participants",
+        select: "name email",
+      });
 
       res.status(StatusCodes.OK).json({
         success: true,
