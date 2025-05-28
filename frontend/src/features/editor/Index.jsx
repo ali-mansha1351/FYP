@@ -13,7 +13,7 @@ const Container = styled.div`
 `;
 
 export default function Index() {
-  const navigate = useNavigate();
+  const expanded = useSelector((state) => state.editor.expanded);
   const user = useSelector((store) => store.user);
   const { name } = user.userDetail;
   const navItemsForLggedIn = [
@@ -29,13 +29,17 @@ export default function Index() {
 
   return (
     <Container>
-      {user.isLoggedIn ? (
-        <Header navItems={navItemsForLggedIn} />
-      ) : (
-        <Header navItems={navItems} />
+      {!expanded && (
+        <>
+          {user.isLoggedIn ? (
+            <Header navItems={navItemsForLggedIn} />
+          ) : (
+            <Header navItems={navItems} />
+          )}
+          <MenuBar />
+          <SubMenuBar />
+        </>
       )}
-      <MenuBar />
-      <SubMenuBar menu="Stitch" />
       <Canvas />
     </Container>
   );
