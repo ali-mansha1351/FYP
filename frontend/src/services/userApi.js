@@ -84,6 +84,7 @@ export async function getLoggedInUser() {
   if (!response.ok) {
     const errData = await response.json();
     console.log(errData);
+
     throw new Error(errData.message || "failed to get currenly logged in user");
   }
   const data = await response.json();

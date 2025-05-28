@@ -6,6 +6,7 @@ import { sendEmail } from "../utils/sendEmail.js";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import mongoose from "mongoose";
+import sharp from "sharp";
 import {
   deleteImage,
   getImage,
@@ -229,7 +230,7 @@ export const updateUser = async (req, res, next) => {
   const updates = req.body;
   const image = req.files["coverImage"]?.[0];
   const pimage = req.files["profileImage"]?.[0];
-  console.log(req.body);
+  // console.log(pimage);
 
   try {
     //if profile image exists than upload that image to the aws s3 bucket
@@ -238,14 +239,24 @@ export const updateUser = async (req, res, next) => {
         name: pimage.originalname,
         mimetype: pimage.mimetype,
       };
+
+      const resizedProfileImage = await sharp(pimage.buffer)
+        .resize({
+          width: 135,
+          height: 135,
+          fit: sharp.fit.contain, // Maintain aspect ratio with cropping
+        })
+        .png()
+        .toBuffer();
+
       try {
         const profileImageParams = {
           Bucket: process.env.AWS_S3_BUCKET_NAME,
           Key: pimage.originalname,
-          Body: pimage.buffer,
-          ContentType: pimage.mimetype,
+          Body: resizedProfileImage,
+          ContentType: "image/png",
         };
-
+        updates.profileImage.mimetype = "image/png";
         await uploadImage(profileImageParams);
         // console.log(uploadImage);
       } catch (error) {
@@ -276,14 +287,24 @@ export const updateUser = async (req, res, next) => {
         name: image.originalname,
         mimetype: image.mimetype,
       };
+
+      const resizedCoverImage = await sharp(image.buffer)
+        .resize({
+          width: 850,
+          height: 150,
+          fit: sharp.fit.contain, // Maintain aspect ratio with cropping
+        })
+        .jpeg({ quality: 90 })
+        .toBuffer();
+
       try {
         const coverImageParams = {
           Bucket: process.env.AWS_S3_BUCKET_NAME,
           Key: image.originalname,
-          Body: image.buffer,
-          ContentType: image.mimetype,
+          Body: resizedCoverImage,
+          ContentType: "image/jpeg",
         };
-
+        updates.coverImage.mimetype = "image/jpeg";
         await uploadImage(coverImageParams);
       } catch (error) {
         return next(new ErrorHandler(error.message, 404));
@@ -356,7 +377,7 @@ export const followUser = async (req, res, next) => {
     //const followId = mongoose.Types.ObjectId(user_to_follow);
 
     if (updatedUser.following.includes(user_to_follow)) {
-      console.log(user_to_follow);
+      // console.log(updatedUser.following.length);
       throw new Error("already following this user");
     }
 
@@ -366,9 +387,10 @@ export const followUser = async (req, res, next) => {
 
     updatedUser.following.push(userToFollow._id);
     userToFollow.followers.push(user);
-    userToFollow.save();
-    updatedUser.save();
+    await userToFollow.save();
+    await updatedUser.save();
 
+    console.log(updateUser.following.length);
     res.status(StatusCodes.OK).json({
       success: true,
       message: "user successfully followed",
