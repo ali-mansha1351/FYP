@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useState, useEffect, useRef } from "react";
 import { ChromePicker } from 'react-color';
 import { useSelector, useDispatch } from "react-redux";
-import { updateSelectedNodeColor } from "./editorSlice";
+import { updateSelectedNodeColor, setGraphicalView } from "./editorSlice";
 import { FaUndo, FaRedo, FaProjectDiagram, FaThLarge } from "react-icons/fa";
 
 const Menubar = styled.div`
@@ -37,8 +37,9 @@ const ViewButton = styled.div`
   gap: 8px;
   padding: 6px 12px;
   font-size: 15px;
-  font-weight: 500;
-  background-color: transparent;
+  font-weight: 500; 
+  background-color: ${({ $graphicalView }) =>
+    $graphicalView ? 'rgba(0, 0, 255, 0.1)' : 'transparent'};
   border-radius: 6px;
   color: #333;
   cursor: pointer;
@@ -59,7 +60,7 @@ const ColorInput = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 10px;
+  padding: 2px 3px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 8px;
   background: #f1f3f5;
@@ -100,6 +101,7 @@ const PickerContainer = styled.div`
 export default function SubMenuBar() {
   const selectedNode = useSelector((state) => state.editor.selectedNode);
   const selectedMenu = useSelector((state) => state.editor.selectedMenu);
+  const graphicalView = useSelector((state) => state.editor.graphicalView);
   const dispatch = useDispatch();
 
   const stitchColor = selectedNode?.color
@@ -166,7 +168,7 @@ export default function SubMenuBar() {
 
         {selectedMenu === 'View' && (
           <>
-            <ViewButton>
+            <ViewButton $graphicalView={graphicalView} onClick={()=>dispatch(setGraphicalView())}>
               <FaProjectDiagram />
               Graphical View
             </ViewButton>

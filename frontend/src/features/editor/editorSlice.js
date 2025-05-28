@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { TOO_MANY_REQUESTS } from "http-status-codes";
 import { v4 as uuidv4 } from 'uuid';
 
 const initialState = {
@@ -9,6 +10,8 @@ const initialState = {
   selectedNode: null,
   selectedMenu: null,
   expanded: false,
+  graphicalView: false,
+  primaryColor:'#0D0C0D'
 };
 
 const editorSlice = createSlice({
@@ -27,24 +30,29 @@ const editorSlice = createSlice({
         surroundingNodes: null,
         id: uuidv4(),
         index: state.currentIndex ,
-        color: 0xffc0cb
+        color: state.primaryColor
       };
       state.selectedNode = newNode
       state.pattern.nodes.push(newNode);
       console.log(JSON.parse(JSON.stringify(state.pattern)));
     },
     insertStitch: (state, action) => {
-      
-      if(state.selectedStitch === null)
+      const { node: nodeId  } = action.payload;
+      if(state.selectedStitch === null){
+        const n = state.pattern.nodes.find(node=>node.id === nodeId)
+        state.selectedNode = n?n:null
+        state.selectedMenu = 'Stitch'
+        console.log(JSON.parse(JSON.stringify(state)));
         return;
+      }
       
       const lastNode = state.pattern.nodes[state.pattern.nodes.length - 1];
-      const { insertedInto } = action.payload;
+      
 
       if(state.selectedStitch === 'slip'){
         const slipStitchLink = {
           source: lastNode.id,
-          target: insertedInto,
+          target: nodeId,
           inserts: true,
           slipStitch: true,
         };
@@ -59,12 +67,12 @@ const editorSlice = createSlice({
           layer: state.currentLayerNumber,
           start: false,
           previous: lastNode ? lastNode.id : null,
-          inserts: insertedInto,
+          inserts: nodeId,
           isIncrease: null,
           surroundingNodes: null,
           id: newNodeId,
           index: state.currentIndex +1,
-          color: 0xffc0cb
+          color: state.primaryColor
         };
 
         const prevLink = {
@@ -75,7 +83,7 @@ const editorSlice = createSlice({
         };
         if(state.selectedStitch !=='ch'){
           const insertLink = {
-            source: insertedInto,
+            source: nodeId,
             target: newNodeId,
             inserts: true,
             slipStitch: false,
@@ -105,9 +113,10 @@ const editorSlice = createSlice({
     },
     updateSelectedNodeColor: (state, action) => {
       const newColor = action.payload;
-    
+      
       if (state.selectedNode) {
         state.selectedNode.color = newColor;
+        state.primaryColor = newColor
     
         const nodeIndex = state.pattern.nodes.findIndex(node => node.id === state.selectedNode.id);
         if (nodeIndex !== -1) {
@@ -124,6 +133,10 @@ const editorSlice = createSlice({
     },
     toggleExpandCanvas: (state)=>{
       state.expanded = !state.expanded
+    },
+    setGraphicalView: (state)=>{
+      state.graphicalView= !state.graphicalView
+      console.log(JSON.parse(JSON.stringify(state)));
     }
     
     
@@ -131,6 +144,6 @@ const editorSlice = createSlice({
 });
 
 export const { startPattern, addStitch, insertStitch, selectStitch, selectNode, updateSelectedNodeColor
-  , setSelectedMenu, toggleExpandCanvas
+  , setSelectedMenu, toggleExpandCanvas, setGraphicalView
  } = editorSlice.actions;
 export default editorSlice.reducer;
