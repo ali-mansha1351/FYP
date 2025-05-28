@@ -10,15 +10,16 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 95vh;
-`
+`;
 
 export default function Index() {
-  const expanded = useSelector(state => state.editor.expanded)
+  const expanded = useSelector((state) => state.editor.expanded);
   const user = useSelector((store) => store.user);
+  const { name } = user.userDetail;
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
-    { label: "Community", path: "/" },
-    { label: "Profile", path: "/user/me" },
+    { label: "Community", path: "/user/newsfeed" },
+    { label: `${name}`, path: "/user/me" },
   ];
   const navItems = [
     { label: "Home", path: "/" },
@@ -26,18 +27,20 @@ export default function Index() {
     { label: "Login", path: "/login" },
   ];
 
-  return (<Container>
-    {!expanded && <>
-      {user.isLoggedIn ?
-            <Header navItems={navItemsForLggedIn}/>
-           :
-           <Header navItems={navItems}/>
-      }
-    <MenuBar />
-    <SubMenuBar />
-    </>
-    }
-    <Canvas />
+  return (
+    <Container>
+      {!expanded && (
+        <>
+          {user.isLoggedIn ? (
+            <Header navItems={navItemsForLggedIn} />
+          ) : (
+            <Header navItems={navItems} />
+          )}
+          <MenuBar />
+          <SubMenuBar />
+        </>
+      )}
+      <Canvas />
     </Container>
   );
 }

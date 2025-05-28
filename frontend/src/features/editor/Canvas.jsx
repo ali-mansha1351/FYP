@@ -59,7 +59,7 @@ const ZoomButtonsContainer = styled.div`
   z-index: 99;
   top: 28px;
   right: 40px;
-`
+`;
 const ZoomButton = styled.div`
   cursor: pointer;
   padding: 10px;
@@ -72,7 +72,6 @@ const ZoomButton = styled.div`
     background-color: var(--primary-color);
   }
 `;
-
 
 export default function Canvas() {
  const isEmpty =
@@ -99,7 +98,7 @@ export default function Canvas() {
     tr: "/tr.svg",
     mr: "/mr.svg",
   };
-  
+
   const getNodeObject = (node) => {
   if (graphicalView) {
     // Traditional simple geometry (e.g., a gray sphere)
@@ -136,6 +135,36 @@ export default function Canvas() {
   return obj;
 };
 
+    const texturePath = stitchPaths[node.type] || stitchPaths["ch"];
+
+    if (node.type === "slip") {
+      let geometry = new THREE.SphereGeometry(2, 16, 16);
+      let material = new THREE.MeshBasicMaterial({ color: node.color });
+      return new THREE.Mesh(geometry, material);
+    } else {
+      const obj = new THREE.Mesh(
+        new THREE.SphereGeometry(7),
+        new THREE.MeshBasicMaterial({
+          depthWrite: false,
+          transparent: true,
+          opacity: 0,
+        })
+      );
+
+      // Load the texture based on the node type
+      const imgTexture = new THREE.TextureLoader().load(texturePath);
+      const material = new THREE.SpriteMaterial({
+        map: imgTexture,
+        depthFunc: THREE.NotEqualDepth,
+        color: node.color,
+      });
+      const sprite = new THREE.Sprite(material);
+      sprite.scale.set(15, 15, 15);
+      obj.add(sprite);
+
+      return obj;
+    }
+  };
 
   useEffect(() => {
     if(graphicalView) return
@@ -199,20 +228,66 @@ export default function Canvas() {
 }, [textures, graphicalView]);
 
   
+    if (!containerRef.current || !Object.keys(textures).length) return;
+
+    const bgColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--third-color")
+      .trim();
+
+    const graph = ForceGraph3D()(containerRef.current)
+      .backgroundColor(bgColor)
+      .nodeAutoColorBy("id")
+      .linkColor(() => "black")
+      .nodeColor(() => "transparent")
+      .linkWidth(1)
+      .linkOpacity(1)
+      .linkDirectionalArrowLength(0)
+      .linkDirectionalArrowRelPos(1)
+      .linkDirectionalArrowColor(() => "black")
+      .showNavInfo(false)
+      .nodeThreeObjectExtend(true)
+      .nodeThreeObject((node) => getNodeObject(node))
+      .onNodeHover((node) => {
+        if (hoverNodeRef.current?.__sprite) {
+          hoverNodeRef.current.__sprite.material.opacity = 1;
+          hoverNodeRef.current.__sprite.material.color.set(0x000000);
+          hoverNodeRef.current.__sprite.material.needsUpdate = true;
+        }
+
+        if (node?.__sprite) {
+          node.__sprite.material.opacity = 0.6;
+          node.__sprite.material.color.set(0x00ffff);
+          node.__sprite.material.needsUpdate = true;
+        }
+
+        hoverNodeRef.current = node;
+      })
+      .onNodeClick((node) => {
+        if (node?.id) setSelectedNode(node.id);
+      });
+
+    graphRef.current = graph;
+  }, [textures]);
+
   useEffect(() => {
     if (!graphRef.current) return;
-  
+
     const graph = graphRef.current;
     graph.graphData(JSON.parse(JSON.stringify(patternData)));
-  
+
     graph.onEngineStop(() => {
+      console.log("pppppppppppp", patternData);
       patternData.links?.forEach((link) => {
         if (!link.inserts) return;
-  
-        const sourceNode = graph.graphData().nodes.find(n => n.id === link.source);
-        const targetNode = graph.graphData().nodes.find(n => n.id === link.target);
+
+        const sourceNode = graph
+          .graphData()
+          .nodes.find((n) => n.id === link.source);
+        const targetNode = graph
+          .graphData()
+          .nodes.find((n) => n.id === link.target);
         if (!sourceNode || !targetNode || !sourceNode.__sprite) return;
-  
+
         const vec = new THREE.Vector3(
           targetNode.x - sourceNode.x,
           targetNode.y - sourceNode.y,
@@ -220,10 +295,9 @@ export default function Canvas() {
         );
         const yAxis = new THREE.Vector3(0, 1, 0);
         const angle = vec.angleTo(yAxis);
-        const rotationAngle = (targetNode.x - sourceNode.x) < 0
-          ? Math.PI + angle
-          : Math.PI - angle;
-  
+        const rotationAngle =
+          targetNode.x - sourceNode.x < 0 ? Math.PI + angle : Math.PI - angle;
+
         sourceNode.__sprite.material.rotation = rotationAngle;
       });
     });
@@ -233,6 +307,7 @@ export default function Canvas() {
   useEffect(() => {
     if (selectedNode) {
       dispatch(insertStitch({ node: selectedNode }));
+
     }
     return () => {
       setSelectedNode(null);
@@ -241,15 +316,14 @@ export default function Canvas() {
 
   const handleZoom = (zoomIn = true) => {
     if (!graphRef.current) return;
-  
-    const distance = graphRef.current.camera().position.distanceTo(
-      graphRef.current.scene().position
-    );
-  
-    const zoomFactor = zoomIn ? 0.8 : 1.4; 
-    graphRef.current.camera().translateZ((distance * (zoomFactor - 1)));
+
+    const distance = graphRef.current
+      .camera()
+      .position.distanceTo(graphRef.current.scene().position);
+
+    const zoomFactor = zoomIn ? 0.8 : 1.4;
+    graphRef.current.camera().translateZ(distance * (zoomFactor - 1));
   };
-  
 
   return (
     <>
@@ -270,8 +344,10 @@ export default function Canvas() {
             <FaMinus size={12} />
           </ZoomButton>
         </ZoomButtonsContainer>
+
         <ExpandButton onClick={() => dispatch(toggleExpandCanvas())}>
           {expanded ? <FaCompress size={16} /> : <FaExpand size={16} />}
+
         </ExpandButton>
 
       </Container>
