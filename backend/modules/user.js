@@ -3,6 +3,7 @@ import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+
 const userSchema = mongoose.Schema({
   name: {
     type: String,
@@ -64,6 +65,12 @@ const userSchema = mongoose.Schema({
       type: mongoose.Types.ObjectId,
       ref: "User",
       default: null,
+    },
+  ],
+  savedPosts: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
     },
   ],
   profileImage: {

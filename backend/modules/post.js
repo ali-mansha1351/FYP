@@ -1,4 +1,3 @@
-import { User } from "./user.js";
 import mongoose from "mongoose";
 import validator from "validator";
 
@@ -19,7 +18,7 @@ const postSchema = mongoose.Schema(
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: User,
+        ref: "User",
         default: null,
       },
     ],
@@ -27,7 +26,7 @@ const postSchema = mongoose.Schema(
       {
         user: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: User,
+          ref: "User",
           default: null,
         },
         commentStr: {
@@ -40,13 +39,13 @@ const postSchema = mongoose.Schema(
     shares: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: User,
+        ref: "User",
         default: null,
       },
     ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: User,
+      ref: "User",
       required: true,
     },
     content: [
