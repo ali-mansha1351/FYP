@@ -1,5 +1,5 @@
-import Canvas2D from "./Canvas3D";
-import Canvas3D from "./Canvas2D";
+import Canvas3D from "./Canvas3D";
+import Canvas2D from "./Canvas2D";
 import MenuBar from "./MenuBar";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
@@ -41,9 +41,9 @@ export default function Index() {
     </>
     }
     {view3D?
-    <Canvas2D />
-    :
     <Canvas3D />
+    :
+    <Canvas2D />
     }
     </Container>
   );
