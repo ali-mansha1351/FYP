@@ -228,7 +228,7 @@ export default function Canvas() {
 }, [textures, graphicalView]);
 
   
-    if (!containerRef.current || !Object.keys(textures).length) return;
+  if (!containerRef.current || !Object.keys(textures).length) return;
 
     const bgColor = getComputedStyle(document.documentElement)
       .getPropertyValue("--third-color")
