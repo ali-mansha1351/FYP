@@ -13,6 +13,7 @@ import Header from "../../ui/Header";
 import addImg from "../../assets/add-image.png";
 import magicRing from "../../assets/magicRing.svg";
 import threeDots from "../../assets/three-dots.png";
+import { useNavigate } from "react-router-dom";
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -23,10 +24,12 @@ const Profile = styled.div`
   margin-inline: 10px;
   border-radius: 10px;
   background-color: var(--primary-color);
-  width: 75vw;
+  width: 65vw;
   padding-bottom: 10px;
   margin-top: 15px;
 `;
+
+const SidePanel = styled.div``;
 const CoverImageContainer = styled.div`
   width: 100%;
   height: 150px;
@@ -149,11 +152,8 @@ const Icon = styled.img`
 
 function UserProfile() {
   //testing useUser hook works fetching logged in user and geting the data?
-  const [followers, setFollowers] = useState(0);
-  const [following, setFollowing] = useState(0);
-  const [numOfPosts, setNumOfPosts] = useState(0);
-  const [profileImage, setProfileImage] = useState("");
-  const [coverImage, setCoverImage] = useState("");
+  const [profile_Image, setProfileImage] = useState("");
+  const [cover_Image, setCoverImage] = useState("");
   const [isDropDownOpen, setIsDropDownOpen] = useState();
   const { update, isLoading: updateLoading } = useUpdatedUser();
   const { logout } = useLogout();
@@ -162,10 +162,11 @@ function UserProfile() {
   const profileInputRef = useRef(null);
   const coverInputRef = useRef(null);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const navItems = [
     { label: "Learn", path: "/learn" },
-    { label: "Community", path: "/" },
+    { label: "Community", path: "/user/newsfeed" },
     { label: "Editor", path: "/editor" },
   ];
 
@@ -208,21 +209,23 @@ function UserProfile() {
     coverInputRef.current?.click();
   };
 
-  useEffect(() => {
-    if (isEffectRun.current) return; // Prevent redundant calls
-    isEffectRun.current = true;
+  // useEffect(() => {
+  //   if (isEffectRun.current) return; // Prevent redundant calls
+  //   isEffectRun.current = true;
 
-    refetch()
-      .then((response) => {
-        if (response.data) {
-          console.log(response.data);
-          dispatch(setUser(response.data)); // Dispatch the user data to Redux
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch user data:", error);
-      });
-  }, [refetch, dispatch]);
+  //   refetch()
+  //     .then((response) => {
+  //       if (response.data) {
+  //         dispatch(setUser(response.data)); // Dispatch the user data to Redux
+  //       } else {
+  //         dispatch(logoutUser());
+  //         navigate("/login", { replace: true });
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.error("Failed to fetch user data:", error);
+  //     });
+  // }, [refetch, dispatch, navigate]);
 
   function handleLogout() {
     logout(null, {
@@ -236,121 +239,125 @@ function UserProfile() {
   }
 
   if (isLoading) return <p>Loading user data...</p>;
-  const { name, gender, email, skillLevel } = userDetails.userDetail;
+  const { name, skillLevel, profileImage, coverImage, followers, following } =
+    userDetails.userDetail;
+  const countFollowing = following.length;
+  const countFollowers = followers.length;
   return (
-    <Container>
-      <Header navItems={navItems} />
-      <Profile>
-        {/* Hidden Inputs */}
-        <input
-          type="file"
-          accept="image/*"
-          ref={coverInputRef}
-          onChange={handleCoverImageChange}
-          style={{ display: "none" }}
-          name="coverImage"
-        />
-        <CoverImageContainer onClick={handleCoverClick}>
-          {coverImage ? (
-            <CoverImg
-              src={coverImage}
-              alt="cover"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          ) : (
-            <>
-              <img src={addImg} width={45} />
-              <div>Click to add a cover photo</div>
-            </>
-          )}
-          <Icon
-            src={threeDots}
-            width={20}
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsDropDownOpen(!isDropDownOpen);
-            }}
-          />
-          {isDropDownOpen && (
-            <DropdownMenuWrapper
-              $isOpen={isDropDownOpen}
-              $top={"20%"}
-              $right={"2%"}
-            >
-              <DropdownItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLogout();
-                  setIsDropDownOpen(false);
-                }}
-              >
-                Log out
-              </DropdownItem>
-            </DropdownMenuWrapper>
-          )}
-        </CoverImageContainer>
-        <ProfileHeader>
+    <>
+      <Container>
+        <Header navItems={navItems} />
+
+        <Profile>
+          {/* Hidden Inputs */}
           <input
             type="file"
             accept="image/*"
-            ref={profileInputRef}
-            onChange={handleProfileImageChange}
+            ref={coverInputRef}
+            onChange={handleCoverImageChange}
             style={{ display: "none" }}
-            name="profileImage"
+            name="coverImage"
           />
-          <LeftContainer>
-            <ProfileImageContainer onClick={handleProfileClick}>
-              {profileImage ? (
-                <img
-                  src={profileImage}
-                  alt="profile"
-                  style={{
-                    width: 135,
-                    height: 135,
-                    borderRadius: "50%",
-                    objectFit: "cover",
+          <CoverImageContainer onClick={handleCoverClick}>
+            {coverImage ? (
+              <CoverImg
+                src={coverImage.url}
+                alt="cover"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              <>
+                <img src={addImg} width={45} />
+                <div>Click to add a cover photo</div>
+              </>
+            )}
+            <Icon
+              src={threeDots}
+              width={20}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDropDownOpen(!isDropDownOpen);
+              }}
+            />
+            {isDropDownOpen && (
+              <DropdownMenuWrapper
+                $isOpen={isDropDownOpen}
+                $top={"20%"}
+                $right={"2%"}
+              >
+                <DropdownItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLogout();
+                    setIsDropDownOpen(false);
                   }}
-                />
-              ) : (
-                <FaUserCircle size={135} color="#333" />
-              )}
-            </ProfileImageContainer>
-            <Name>{name}</Name>
-            <SkillLevelContainer>{skillLevel}</SkillLevelContainer>
-          </LeftContainer>
-          <RightContainer>
-            <FollowersContainer>
-              {followers} Followers | {following} Following
-            </FollowersContainer>
-            <PostsNumContainer>{numOfPosts} Posts</PostsNumContainer>
-          </RightContainer>
-        </ProfileHeader>
-        <SubContainer>
-          <Label>Saved Items</Label>
-          <ItemsContainer>
-            <GridItem>1</GridItem>
-            <GridItem>2</GridItem>
-            <GridItem>3</GridItem>
-            <GridItem>4</GridItem>
-            <GridItem>5</GridItem>
-            <GridItem>6</GridItem>
-          </ItemsContainer>
-          <BottomButton>Click to see more</BottomButton>
-        </SubContainer>
-        <SubContainer>
-          <Label>Your Posts</Label>
-          <ItemsContainer>
-            <GridItem>1</GridItem>
-            <GridItem>2</GridItem>
-            <GridItem>3</GridItem>
-            <GridItem>4</GridItem>
-            <GridItem>5</GridItem>
-            <GridItem>6</GridItem>
-          </ItemsContainer>
-          <BottomButton>Click to see more</BottomButton>
-        </SubContainer>
-      </Profile>
-    </Container>
+                >
+                  Log out
+                </DropdownItem>
+              </DropdownMenuWrapper>
+            )}
+          </CoverImageContainer>
+          <ProfileHeader>
+            <input
+              type="file"
+              accept="image/*"
+              ref={profileInputRef}
+              onChange={handleProfileImageChange}
+              style={{ display: "none" }}
+              name="profileImage"
+            />
+            <LeftContainer>
+              <ProfileImageContainer onClick={handleProfileClick}>
+                {profileImage ? (
+                  <img
+                    src={profileImage.url}
+                    alt="profile"
+                    style={{
+                      width: 135,
+                      height: 135,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <FaUserCircle size={135} color="#333" />
+                )}
+              </ProfileImageContainer>
+              <Name>{name}</Name>
+              <SkillLevelContainer>{skillLevel}</SkillLevelContainer>
+            </LeftContainer>
+            <RightContainer>
+              <FollowersContainer>
+                {countFollowers} Followers | {countFollowing} Following
+              </FollowersContainer>
+              <PostsNumContainer>{} Posts</PostsNumContainer>
+            </RightContainer>
+          </ProfileHeader>
+          <SubContainer>
+            <Label>Saved Items</Label>
+            <ItemsContainer>
+              <GridItem>1</GridItem>
+              <GridItem>2</GridItem>
+              <GridItem>3</GridItem>
+              <GridItem>4</GridItem>
+            </ItemsContainer>
+            <BottomButton>Click to see more</BottomButton>
+          </SubContainer>
+          <SubContainer>
+            <Label>Your Posts</Label>
+            <ItemsContainer>
+              <GridItem>1</GridItem>
+              <GridItem>2</GridItem>
+              <GridItem>3</GridItem>
+              <GridItem>4</GridItem>
+              <GridItem>5</GridItem>
+              <GridItem>6</GridItem>
+            </ItemsContainer>
+            <BottomButton>Click to see more</BottomButton>
+          </SubContainer>
+        </Profile>
+      </Container>
+    </>
   );
 }
 

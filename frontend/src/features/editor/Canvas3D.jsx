@@ -58,7 +58,7 @@ const ZoomButtonsContainer = styled.div`
   z-index: 99;
   top: 28px;
   right: 40px;
-`
+`;
 const ZoomButton = styled.div`
   cursor: pointer;
   padding: 10px;
@@ -177,7 +177,7 @@ useEffect(() => {
 
   useEffect(() => {
     if (!graphRef.current) return;
-  
+
     const graph = graphRef.current;
     graph.graphData(JSON.parse(JSON.stringify(patternData)));
   
@@ -187,6 +187,7 @@ useEffect(() => {
   useEffect(() => {
     if (selectedNode) {
       dispatch(insertStitch({ node: selectedNode }));
+
     }
     return () => {
       setSelectedNode(null);
@@ -195,15 +196,14 @@ useEffect(() => {
 
   const handleZoom = (zoomIn = true) => {
     if (!graphRef.current) return;
-  
-    const distance = graphRef.current.camera().position.distanceTo(
-      graphRef.current.scene().position
-    );
-  
-    const zoomFactor = zoomIn ? 0.8 : 1.4; 
-    graphRef.current.camera().translateZ((distance * (zoomFactor - 1)));
+
+    const distance = graphRef.current
+      .camera()
+      .position.distanceTo(graphRef.current.scene().position);
+
+    const zoomFactor = zoomIn ? 0.8 : 1.4;
+    graphRef.current.camera().translateZ(distance * (zoomFactor - 1));
   };
-  
 
   return (
     <>
@@ -224,8 +224,10 @@ useEffect(() => {
             <FaMinus size={12} />
           </ZoomButton>
         </ZoomButtonsContainer>
+
         <ExpandButton onClick={() => dispatch(toggleExpandCanvas())}>
           {expanded ? <FaCompress size={16} /> : <FaExpand size={16} />}
+
         </ExpandButton>
 
       </Container>

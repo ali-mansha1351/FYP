@@ -10,48 +10,60 @@ import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 
 function HomePage() {
-  const { isLoggedIn } = useSelector((store) => store.user.isLoggedIn);
+  const user = useSelector((store) => store.user);
   const navItems = [
+    { label: "Learn", path: "/learn" },
     { label: "Login", path: "/login" },
     { label: "Register", path: "/register" },
+  ];
+  const navItemsForLoggedIn = [
     { label: "Learn", path: "/learn" },
+    { label: "Community", path: "/user/newsfeed" },
+    { label: `${user.userDetail.name}`, path: "/user/me" },
   ];
 
   const navigate = useNavigate();
-  const { refetch } = useUser(isLoggedIn);
-  const dispatch = useDispatch();
+  // const { refetch } = useUser(user.isLoggedIn);
+  // const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      return; // Don't refetch if not logged in
-    }
+  // useEffect(() => {
+  //   if (!isLoggedIn) {
+  //     return; // Don't refetch if not logged in
+  //   }
 
-    const fetchUserData = async () => {
-      try {
-        const response = await refetch();
-        if (response.data) {
-          dispatch(setUser(response.data));
-        }
-      } catch (error) {
-        console.error("Failed to fetch user data:", error);
-        // If fetch fails, assume user is not logged in
-        if (isLoggedIn) {
-          dispatch(logoutUser());
-        }
-      }
-    };
+  //   const fetchUserData = async () => {
+  //     try {
+  //       const response = await refetch();
+  //       if (response.data) {
+  //         dispatch(setUser(response.data));
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to fetch user data:", error);
+  //       // If fetch fails, assume user is not logged in
+  //       if (isLoggedIn) {
+  //         dispatch(logoutUser());
+  //       }
+  //     }
+  //   };
 
-    fetchUserData();
-  }, [refetch, dispatch, isLoggedIn]);
-
+  //   fetchUserData();
+  // }, [refetch, dispatch, isLoggedIn]);
+  {
+    console.log(user.isLoggedIn);
+  }
   return (
     <Container>
-      <Header navItems={navItems} />
+      {user.isLoggedIn ? (
+        <Header navItems={navItemsForLoggedIn} />
+      ) : (
+        <Header navItems={navItems} />
+      )}
+
       <div className={styles.contentWrapper}>
         <div className={styles.mainHeadingButton}>
           <div>

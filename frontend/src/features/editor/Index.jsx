@@ -11,7 +11,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 95vh;
-`
+`;
 
 export default function Index() {
   const expanded = useSelector(state => state.editor.expanded)
@@ -20,8 +20,8 @@ export default function Index() {
   
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
-    { label: "Community", path: "/" },
-    { label: "Profile", path: "/user/me" },
+    { label: "Community", path: "/user/newsfeed" },
+    { label: `${name}`, path: "/user/me" },
   ];
   const navItems = [
     { label: "Home", path: "/" },

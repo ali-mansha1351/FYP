@@ -12,6 +12,7 @@ import Error from "./ui/Error";
 import ProtectedRoute from "./ui/ProtectedRoute";
 import PublicRoute from "./ui/PublicRoute";
 import Learn from "./features/learn/Index";
+import NewsFeed from "./features/community/NewsFeed";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +62,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Learn />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/user/newsfeed",
+        element: (
+          <ProtectedRoute>
+            <NewsFeed />
           </ProtectedRoute>
         ),
       },
