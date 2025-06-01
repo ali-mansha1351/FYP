@@ -72,8 +72,9 @@ function Login() {
         reset();
         queryClient.invalidateQueries({ queryKey: ["token"] });
         dispatch(loginUser(response));
-        refetch(userIsLaoding)
+        refetch()
           .then((response) => {
+            console.log(response);
             if (response.data) {
               dispatch(setUser(response.data)); // Dispatch the user data to Redux
             } else {

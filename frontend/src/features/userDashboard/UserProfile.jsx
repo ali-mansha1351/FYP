@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { useUser } from "./useUser";
+import { useUpdatedUser } from "./useUpdateUser";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
@@ -8,12 +9,13 @@ import { useLogout } from "../login/useLogout";
 import { useQueryClient } from "@tanstack/react-query";
 import { FaUserCircle } from "react-icons/fa";
 import { DropdownMenuWrapper, DropdownItem } from "../../ui/DropDownStyles";
-import { useUpdatedUser } from "./useUpdateUser";
+import { useNavigate } from "react-router-dom";
+import updateUserModal from "./UpdateUserModal";
 import Header from "../../ui/Header";
 import addImg from "../../assets/add-image.png";
-import magicRing from "../../assets/magicRing.svg";
 import threeDots from "../../assets/three-dots.png";
-import { useNavigate } from "react-router-dom";
+import UpdateUserModal from "./UpdateUserModal";
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -150,9 +152,11 @@ const Icon = styled.img`
 function UserProfile() {
   //testing useUser hook works fetching logged in user and geting the data?
   const [profile_Image, setProfileImage] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [cover_Image, setCoverImage] = useState("");
   const [isDropDownOpen, setIsDropDownOpen] = useState();
   const { update, isLoading: updateLoading } = useUpdatedUser();
+  const { isLoading, refetch } = useUser();
   const { logout } = useLogout();
   const isEffectRun = useRef(false);
   const userDetails = useSelector((store) => store.user);
@@ -167,7 +171,6 @@ function UserProfile() {
     { label: "Editor", path: "/editor" },
   ];
 
-  const { isLoading, refetch } = useUser();
   function handleProfileImageChange(e) {
     const file = e.target.files[0];
     update(file, {
@@ -190,11 +193,14 @@ function UserProfile() {
   function handleCoverImageChange(e) {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+      update(file, {
+        onSuccess: (response) => {
+          console.log(response);
+        },
+        onError: (error) => {
+          console.log(error);
+        },
+      });
     }
   }
 
@@ -206,6 +212,12 @@ function UserProfile() {
     coverInputRef.current?.click();
   };
 
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
+  const handleModalOpen = () => {
+    setIsModalOpen(true);
+  };
   // useEffect(() => {
   //   if (isEffectRun.current) return; // Prevent redundant calls
   //   isEffectRun.current = true;
@@ -238,8 +250,8 @@ function UserProfile() {
   if (isLoading) return <p>Loading user data...</p>;
   const { name, skillLevel, profileImage, coverImage, followers, following } =
     userDetails.userDetail;
-  const countFollowing = following.length;
-  const countFollowers = followers.length;
+  const countFollowing = following?.length;
+  const countFollowers = followers?.length;
   return (
     <>
       <Container>
@@ -290,6 +302,15 @@ function UserProfile() {
                   }}
                 >
                   Log out
+                </DropdownItem>
+                <DropdownItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleModalOpen();
+                    setIsDropDownOpen(false);
+                  }}
+                >
+                  Edit Profile
                 </DropdownItem>
               </DropdownMenuWrapper>
             )}
@@ -354,18 +375,13 @@ function UserProfile() {
           </SubContainer>
         </Profile>
       </Container>
+      <UpdateUserModal
+        show={isModalOpen}
+        onHide={handleModalClose}
+        userDetail={userDetails.userDetail}
+      />
     </>
   );
 }
-
-//loader function
-// export async function loader() {
-//   //fetch logic
-//   //calling fcuntion with await from services folder from the api in which end points are created
-//   /*
-//     const books = await getBooks();
-//     return books
-//     */
-// }
 
 export default UserProfile;
