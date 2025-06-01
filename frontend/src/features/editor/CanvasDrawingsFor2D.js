@@ -26,9 +26,6 @@ export default class CrochetCanvas {
             case 'tr':
                 this.drawTrebleCrochet(ctx, x, y);
                 break;
-            case 'dtr':
-                this.drawDoubleTrebleCrochet(ctx, x, y);
-                break;
             case 'hole':
                 this.drawHole(ctx, x, y);
         }
@@ -62,14 +59,13 @@ export default class CrochetCanvas {
     }
 
     drawChainStitch(ctx, x, y) {
-        console.log('draw chain stitch')
-        ctx.save(); ctx.scale(1.3, 1); // save() saves settings before scaling
+        ctx.save(); 
         ctx.arc(x/1.3, y, 5, 0, 2 * Math.PI, false); ctx.stroke(); // drawing circle, normalizing scaled x coordinate
         ctx.closePath(); ctx.restore(); // restores settings from last save (next drawings are unaffected by scaling)
     }
 
     drawSlipstitch(ctx, x, y) {
-        ctx.arc(x, y, 1, 0, 2 * Math.PI);
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
         ctx.fill();
     }
 

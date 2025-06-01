@@ -1,4 +1,5 @@
-import Canvas from "./Canvas2";
+import Canvas2D from "./Canvas3D";
+import Canvas3D from "./Canvas2D";
 import MenuBar from "./MenuBar";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
@@ -14,7 +15,9 @@ const Container = styled.div`
 
 export default function Index() {
   const expanded = useSelector(state => state.editor.expanded)
+  const view3D = useSelector((state) => state.editor.view3D);
   const user = useSelector((store) => store.user);
+  
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
     { label: "Community", path: "/" },
@@ -37,7 +40,11 @@ export default function Index() {
     <SubMenuBar />
     </>
     }
-    <Canvas />
+    {view3D?
+    <Canvas2D />
+    :
+    <Canvas3D />
+    }
     </Container>
   );
 }

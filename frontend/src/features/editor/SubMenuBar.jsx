@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useState, useEffect, useRef } from "react";
 import { ChromePicker } from 'react-color';
 import { useSelector, useDispatch } from "react-redux";
-import { updateSelectedNodeColor, setGraphicalView } from "./editorSlice";
+import { updateSelectedNodeColor, setGraphicalView, toggle3D } from "./editorSlice";
 import { FaUndo, FaRedo, FaProjectDiagram, FaThLarge } from "react-icons/fa";
 
 const Menubar = styled.div`
@@ -102,6 +102,7 @@ export default function SubMenuBar() {
   const selectedNode = useSelector((state) => state.editor.selectedNode);
   const selectedMenu = useSelector((state) => state.editor.selectedMenu);
   const graphicalView = useSelector((state) => state.editor.graphicalView);
+  const view3D = useSelector((state) => state.editor.view3D);
   const dispatch = useDispatch();
 
   const stitchColor = selectedNode?.color
@@ -171,13 +172,14 @@ export default function SubMenuBar() {
 
         {selectedMenu === 'View' && (
           <>
-            <ViewButton $graphicalView={graphicalView} onClick={()=>dispatch(setGraphicalView())}>
+            <ViewButton $active={graphicalView} onClick={() => dispatch(setGraphicalView())}>
               <FaProjectDiagram />
               Graphical View
             </ViewButton>
-            <ViewButton>
+
+            <ViewButton onClick={() => dispatch(toggle3D())}>
               <FaThLarge />
-              2D View
+              {view3D ? 'Switch to 2D' : 'Switch to 3D'}
             </ViewButton>
           </>
         )}

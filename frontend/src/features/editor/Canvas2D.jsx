@@ -6,9 +6,9 @@ import ForceGraph2D from "force-graph";
 import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleExpandCanvas, insertStitch } from "./editorSlice";
-import CrochetCanvas from "./CanvasDrawingsFor2D"; // <-- added
+import CrochetCanvas from "./CanvasDrawingsFor2D"; 
 
-const stitchCanvas = new CrochetCanvas(); // <-- added
+const stitchCanvas = new CrochetCanvas(); 
 
 const Container = styled.div`
   display: flex;
@@ -69,7 +69,7 @@ const ZoomButton = styled.div`
   }
 `;
 
-export default function Canvas() {
+export default function Canvas3D() {
   const isEmpty = useSelector((state) => state.editor.pattern.nodes.length) === 0;
   const expanded = useSelector((state) => state.editor.expanded);
   const graphicalView = useSelector((state) => state.editor.graphicalView);
@@ -80,6 +80,19 @@ export default function Canvas() {
   const containerRef = useRef();
   const graphRef = useRef();
   const dispatch = useDispatch();
+  const stitchDistances = {
+  mr: 30,
+  ch: 20,
+  sc: 25,
+  hdc: 35,
+  dc: 45,
+  tr: 55,
+  dtr: 65,
+  slst: 10,
+  hole: 0
+};
+
+
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -103,21 +116,19 @@ export default function Canvas() {
         const xMid = (source.x + target.x) / 2;
         const yMid = (source.y + target.y) / 2;
         const color = source.color || "#000";
-
-        if (link.inserts) {
-          ctx.save();
-          stitchCanvas.draw(source.type, ctx, xMid, yMid, color);
-          ctx.restore();
-        }
-        //  else if (link.slipStitch) {
-        //   stitchCanvas.draw("slst", ctx, xMid, yMid, color);
-        // }
+          if (link.slipStitch) {
+            stitchCanvas.draw("slst", ctx, xMid, yMid, color);
+          }
       })
       .onNodeClick((node) => {
         if (node?.id) setSelectedNode(node.id);
       });
+      graph.d3Force('link').distance(link =>
+        link.inserts || link.slipstitch ? stitchDistances[link.source.type] : 10
+      );
 
     graphRef.current = graph;
+    
 
     return () => {
       graph._destructor?.();
@@ -139,15 +150,6 @@ export default function Canvas() {
     };
   }, [selectedNode, dispatch]);
 
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && graphRef.current) {
-        graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [patternData]);
 
   useEffect(() => {
     return () => {

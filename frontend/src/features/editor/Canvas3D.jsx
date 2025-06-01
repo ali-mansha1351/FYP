@@ -17,11 +17,11 @@ const Container = styled.div`
 const CanvasContainer = styled.div`
   width: 100%;
   background-color: var(--third-color);
-  margin: ${({ expanded }) => (expanded ? "0px" : "10px 20px")};
-  height: ${({ expanded, selectedMenu }) =>
-    expanded
+  margin: ${({ $expanded }) => ($expanded ? "0px" : "10px 20px")};
+  height: ${({ $expanded, $selectedMenu }) =>
+    $expanded
       ? "100%"  
-      : selectedMenu
+      : $selectedMenu
       ? "65vh"
       : "75vh"};
   border-radius: 30px;
@@ -73,7 +73,7 @@ const ZoomButton = styled.div`
 `;
 
 
-export default function Canvas() {
+export default function Canvas2D() {
  const isEmpty =
     useSelector((state) => state.editor.pattern.nodes.length) === 0;
   
@@ -215,7 +215,7 @@ useEffect(() => {
       )}
       <Container>
         <StitchesBar />
-        <CanvasContainer expanded={expanded} selectedMenu={selectedMenu} ref={containerRef}></CanvasContainer>
+        <CanvasContainer $expanded={expanded} $selectedMenu={selectedMenu} ref={containerRef}></CanvasContainer>
         <ZoomButtonsContainer>
           <ZoomButton onClick={() => handleZoom(true)}>
             <FaPlus size={12} />
