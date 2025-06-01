@@ -30,7 +30,6 @@ const CanvasContainer = styled.div`
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 `;
 
-
 const ExpandButton = styled.div`
   cursor: pointer;
   position: absolute;
@@ -59,6 +58,7 @@ const ZoomButtonsContainer = styled.div`
   top: 28px;
   right: 40px;
 `;
+
 const ZoomButton = styled.div`
   cursor: pointer;
   padding: 10px;
@@ -85,7 +85,6 @@ export default function Canvas2D() {
   const containerRef = useRef();
   const graphRef = useRef();
   const patternData = useSelector((state) => state.editor.pattern);
-  const hoverNodeRef = useRef(null);
   const dispatch = useDispatch();
 
   
@@ -97,16 +96,16 @@ export default function Canvas2D() {
     );
   }
 
-  if (node.type === "slip") {
-    let geometry = new THREE.SphereGeometry(2, 16, 16);
-    let material = new THREE.MeshBasicMaterial({ color: node.color });
-    return new THREE.Mesh(geometry, material);
-  }
+    if (node.type === "slip") {
+      let geometry = new THREE.SphereGeometry(2, 16, 16);
+      let material = new THREE.MeshBasicMaterial({ color: node.color });
+      return new THREE.Mesh(geometry, material);
+    }
 
-  const obj = new THREE.Mesh(
-    new THREE.SphereGeometry(7),
-    new THREE.MeshBasicMaterial({ depthWrite: false, transparent: true, opacity: 0 })
-  );
+    const obj = new THREE.Mesh(
+      new THREE.SphereGeometry(7),
+      new THREE.MeshBasicMaterial({ depthWrite: false, transparent: true, opacity: 0 })
+    );
 
   const imgTexture = textures[node.type] || textures["ch"];
   const material = new THREE.SpriteMaterial({
@@ -115,9 +114,9 @@ export default function Canvas2D() {
     color: node.color,
   });
 
-  const sprite = new THREE.Sprite(material);
-  sprite.scale.set(15, 15, 15);
-  obj.add(sprite);
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(15, 15, 15);
+    obj.add(sprite);
 
   return obj;
 };
@@ -129,9 +128,9 @@ export default function Canvas2D() {
   if (!container || (!graphicalView && !Object.keys(textures).length)) return;
 
 
-  const bgColor = getComputedStyle(document.documentElement)
-    .getPropertyValue("--third-color")
-    .trim();
+    const bgColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--third-color")
+      .trim();
 
   const graphInstance = ForceGraph3D()(container)
     .backgroundColor(bgColor)
@@ -153,17 +152,17 @@ export default function Canvas2D() {
         hoverNodeRef.current.__sprite.material.needsUpdate = true;
       }
 
-      if (node?.__sprite) {
-        node.__sprite.material.opacity = 0.6;
-        node.__sprite.material.color.set(0x00ffff);
-        node.__sprite.material.needsUpdate = true;
-      }
+        if (node?.__sprite) {
+          node.__sprite.material.opacity = 0.6;
+          node.__sprite.material.color.set(0x00ffff);
+          node.__sprite.material.needsUpdate = true;
+        }
 
-      hoverNodeRef.current = node;
-    })
-    .onNodeClick((node) => {
-      if (node?.id) setSelectedNode(node.id);
-    });
+        hoverNodeRef.current = node;
+      })
+      .onNodeClick((node) => {
+        if (node?.id) setSelectedNode(node.id);
+      });
 
   graphRef.current = graphInstance;
 
@@ -182,12 +181,10 @@ useEffect(() => {
     graph.graphData(JSON.parse(JSON.stringify(patternData)));
   
   }, [patternData, graphicalView]);
-  
 
   useEffect(() => {
     if (selectedNode) {
       dispatch(insertStitch({ node: selectedNode }));
-
     }
     return () => {
       setSelectedNode(null);
@@ -227,9 +224,7 @@ useEffect(() => {
 
         <ExpandButton onClick={() => dispatch(toggleExpandCanvas())}>
           {expanded ? <FaCompress size={16} /> : <FaExpand size={16} />}
-
         </ExpandButton>
-
       </Container>
     </>
   );

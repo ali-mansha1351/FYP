@@ -34,7 +34,7 @@ const HeaderButton = styled.button`
   font-size: 20px;
   width: 130px;
   display: flex;
-  border: none;
+  border: 2px solid var(--secondary-color);
   justify-content: center;
   align-items: center;
   border-radius: 30px;
