@@ -74,10 +74,11 @@ const ZoomButton = styled.div`
 `;
 
 export default function Canvas() {
-  const isEmpty =
+ const isEmpty =
     useSelector((state) => state.editor.pattern.nodes.length) === 0;
-    
+  
   const expanded = useSelector(state => state.editor.expanded)
+  const graphicalView = useSelector(state => state.editor.graphicalView)
   const selectedMenu = useSelector(state => state.editor.selectedMenu)
   const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(isEmpty);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -87,6 +88,7 @@ export default function Canvas() {
   const patternData = useSelector((state) => state.editor.pattern);
   const hoverNodeRef = useRef(null);
   const dispatch = useDispatch();
+
   const stitchPaths = {
     ch: "/ch.svg",
     slip: "/slst.svg",
@@ -98,6 +100,41 @@ export default function Canvas() {
   };
 
   const getNodeObject = (node) => {
+  if (graphicalView) {
+    // Traditional simple geometry (e.g., a gray sphere)
+    return new THREE.Mesh(
+      new THREE.SphereGeometry(6, 16, 16),
+      new THREE.MeshBasicMaterial({ color: node.color || "#999" })
+    );
+  }
+
+  const texturePath = stitchPaths[node.type] || stitchPaths["ch"];
+
+  if (node.type === "slip") {
+    let geometry = new THREE.SphereGeometry(2, 16, 16);
+    let material = new THREE.MeshBasicMaterial({ color: node.color });
+    return new THREE.Mesh(geometry, material);
+  }
+
+  const obj = new THREE.Mesh(
+    new THREE.SphereGeometry(7),
+    new THREE.MeshBasicMaterial({ depthWrite: false, transparent: true, opacity: 0 })
+  );
+
+  const imgTexture = new THREE.TextureLoader().load(texturePath);
+  const material = new THREE.SpriteMaterial({
+    map: imgTexture,
+    depthFunc: THREE.NotEqualDepth,
+    color: node.color,
+  });
+
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(15, 15, 15);
+  obj.add(sprite);
+
+  return obj;
+};
+
     const texturePath = stitchPaths[node.type] || stitchPaths["ch"];
 
     if (node.type === "slip") {
@@ -130,6 +167,7 @@ export default function Canvas() {
   };
 
   useEffect(() => {
+    if(graphicalView) return
     const loader = new THREE.TextureLoader();
     const loadedTextures = {};
 
@@ -148,6 +186,48 @@ export default function Canvas() {
   }, []);
 
   useEffect(() => {
+  if (!containerRef.current || (!graphicalView && !Object.keys(textures).length)) return;
+
+  const bgColor = getComputedStyle(document.documentElement)
+    .getPropertyValue("--third-color")
+    .trim();
+
+  const graph = ForceGraph3D()(containerRef.current)
+    .backgroundColor(bgColor)
+    .nodeAutoColorBy("id")
+    .linkColor(() => "black")
+    .nodeColor(() => "transparent")
+    .linkWidth(1)
+    .linkOpacity(1)
+    .linkDirectionalArrowLength(0)
+    .linkDirectionalArrowRelPos(1)
+    .linkDirectionalArrowColor(() => "black")
+    .showNavInfo(false)
+    .nodeThreeObjectExtend(true)
+    .nodeThreeObject((node) => getNodeObject(node))
+    .onNodeHover((node) => {
+      if (hoverNodeRef.current?.__sprite) {
+        hoverNodeRef.current.__sprite.material.opacity = 1;
+        hoverNodeRef.current.__sprite.material.color.set(0x000000);
+        hoverNodeRef.current.__sprite.material.needsUpdate = true;
+      }
+
+      if (node?.__sprite) {
+        node.__sprite.material.opacity = 0.6;
+        node.__sprite.material.color.set(0x00ffff);
+        node.__sprite.material.needsUpdate = true;
+      }
+
+      hoverNodeRef.current = node;
+    })
+    .onNodeClick((node) => {
+      if (node?.id) setSelectedNode(node.id);
+    });
+
+  graphRef.current = graph;
+}, [textures, graphicalView]);
+
+  
     if (!containerRef.current || !Object.keys(textures).length) return;
 
     const bgColor = getComputedStyle(document.documentElement)
@@ -221,12 +301,13 @@ export default function Canvas() {
         sourceNode.__sprite.material.rotation = rotationAngle;
       });
     });
-  }, [patternData]);
+  }, [patternData, graphicalView]);
+  
 
   useEffect(() => {
     if (selectedNode) {
-      dispatch(insertStitch({ insertedInto: selectedNode }));
-      dispatch(selectNode({ selectedNode }));
+      dispatch(insertStitch({ node: selectedNode }));
+
     }
     return () => {
       setSelectedNode(null);
