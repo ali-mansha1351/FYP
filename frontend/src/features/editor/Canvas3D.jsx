@@ -73,7 +73,7 @@ const ZoomButton = styled.div`
 `;
 
 
-export default function Canvas2D() {
+export default function Canvas3D() {
  const isEmpty =
     useSelector((state) => state.editor.pattern.nodes.length) === 0;
   
@@ -86,7 +86,7 @@ export default function Canvas2D() {
   const graphRef = useRef();
   const patternData = useSelector((state) => state.editor.pattern);
   const dispatch = useDispatch();
-
+  const hoverNodeRef = useRef();
   
   const getNodeObject = (node) => {
   if (graphicalView) {
@@ -145,6 +145,7 @@ export default function Canvas2D() {
     .showNavInfo(false)
     .nodeThreeObjectExtend(true)
     .nodeThreeObject((node) => getNodeObject(node))
+    .enableNodeDrag(true)
     .onNodeHover((node) => {
       if (hoverNodeRef.current?.__sprite) {
         hoverNodeRef.current.__sprite.material.opacity = 1;
