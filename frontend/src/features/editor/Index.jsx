@@ -1,4 +1,5 @@
-import Canvas from "./Canvas";
+import Canvas2D from "./Canvas3D";
+import Canvas3D from "./Canvas2D";
 import MenuBar from "./MenuBar";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
@@ -13,9 +14,10 @@ const Container = styled.div`
 `;
 
 export default function Index() {
-  const expanded = useSelector((state) => state.editor.expanded);
+  const expanded = useSelector(state => state.editor.expanded)
+  const view3D = useSelector((state) => state.editor.view3D);
   const user = useSelector((store) => store.user);
-  const { name } = user.userDetail;
+  
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
     { label: "Community", path: "/user/newsfeed" },
@@ -27,20 +29,22 @@ export default function Index() {
     { label: "Login", path: "/login" },
   ];
 
-  return (
-    <Container>
-      {!expanded && (
-        <>
-          {user.isLoggedIn ? (
-            <Header navItems={navItemsForLggedIn} />
-          ) : (
-            <Header navItems={navItems} />
-          )}
-          <MenuBar />
-          <SubMenuBar />
-        </>
-      )}
-      <Canvas />
+  return (<Container>
+    {!expanded && <>
+      {user.isLoggedIn ?
+            <Header navItems={navItemsForLggedIn}/>
+           :
+           <Header navItems={navItems}/>
+      }
+    <MenuBar />
+    <SubMenuBar />
+    </>
+    }
+    {view3D?
+    <Canvas2D />
+    :
+    <Canvas3D />
+    }
     </Container>
   );
 }

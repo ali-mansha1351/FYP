@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { TOO_MANY_REQUESTS } from "http-status-codes";
 import { v4 as uuidv4 } from 'uuid';
 
 const initialState = {
@@ -11,7 +10,8 @@ const initialState = {
   selectedMenu: null,
   expanded: false,
   graphicalView: false,
-  primaryColor:'#0D0C0D'
+  primaryColor:'#0D0C0D',
+  view3D: false,
 };
 
 const editorSlice = createSlice({
@@ -41,7 +41,6 @@ const editorSlice = createSlice({
       if(state.selectedStitch === null){
         const n = state.pattern.nodes.find(node=>node.id === nodeId)
         state.selectedNode = n?n:null
-        state.selectedMenu = 'Stitch'
         console.log(JSON.parse(JSON.stringify(state)));
         return;
       }
@@ -91,7 +90,6 @@ const editorSlice = createSlice({
           state.pattern.links.push(insertLink)
         }
         state.selectedNode = newNode
-        state.selectedMenu = 'Stitch'
         state.pattern.nodes.push(newNode)
         state.pattern.links.push(prevLink)
         state.currentIndex++
@@ -137,6 +135,9 @@ const editorSlice = createSlice({
     setGraphicalView: (state)=>{
       state.graphicalView= !state.graphicalView
       console.log(JSON.parse(JSON.stringify(state)));
+    },
+    toggle3D:(state)=>{
+      state.view3D= !state.view3D
     }
     
     
@@ -144,6 +145,6 @@ const editorSlice = createSlice({
 });
 
 export const { startPattern, addStitch, insertStitch, selectStitch, selectNode, updateSelectedNodeColor
-  , setSelectedMenu, toggleExpandCanvas, setGraphicalView
+  , setSelectedMenu, toggleExpandCanvas, setGraphicalView, toggle3D
  } = editorSlice.actions;
 export default editorSlice.reducer;

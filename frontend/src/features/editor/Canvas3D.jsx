@@ -1,16 +1,14 @@
 import styled from "styled-components";
-import expandIcon from "../../assets/expand.svg";
 import StitchesBar from "./StitchesBar";
 import { FaPlus, FaMinus } from "react-icons/fa";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import * as THREE from "three";
 import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleExpandCanvas, insertStitch, selectNode } from "./editorSlice";
 import { FaExpand, FaCompress } from "react-icons/fa";
-
-
+import textures from "./TexturesFor3D";
 const Container = styled.div`
   display: flex;
   position: relative;
@@ -19,9 +17,13 @@ const Container = styled.div`
 const CanvasContainer = styled.div`
   width: 100%;
   background-color: var(--third-color);
-  margin: ${({ expanded }) => (expanded ? "0px" : "10px 20px")};
-  height: ${({ expanded, selectedMenu }) =>
-    expanded ? "100%" : selectedMenu ? "65vh" : "75vh"};
+  margin: ${({ $expanded }) => ($expanded ? "0px" : "10px 20px")};
+  height: ${({ $expanded, $selectedMenu }) =>
+    $expanded
+      ? "100%"  
+      : $selectedMenu
+      ? "65vh"
+      : "75vh"};
   border-radius: 30px;
   overflow: hidden;
   box-sizing: border-box;
@@ -70,39 +72,29 @@ const ZoomButton = styled.div`
   }
 `;
 
-export default function Canvas() {
-  const isEmpty = useSelector((state) => state.editor.pattern.nodes.length === 0);
-  const expanded = useSelector((state) => state.editor.expanded);
-  const graphicalView = useSelector((state) => state.editor.graphicalView);
-  const selectedMenu = useSelector((state) => state.editor.selectedMenu);
+
+export default function Canvas2D() {
+ const isEmpty =
+    useSelector((state) => state.editor.pattern.nodes.length) === 0;
+  
+  const expanded = useSelector(state => state.editor.expanded)
+  const graphicalView = useSelector(state => state.editor.graphicalView)
+  const selectedMenu = useSelector(state => state.editor.selectedMenu)
   const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(isEmpty);
   const [selectedNode, setSelectedNode] = useState(null);
   const containerRef = useRef();
   const graphRef = useRef();
-  const hoverNodeRef = useRef(null);
-  const [textures, setTextures] = useState({});
   const patternData = useSelector((state) => state.editor.pattern);
   const dispatch = useDispatch();
 
-  const stitchPaths = {
-    ch: "/ch.svg",
-    slip: "/slst.svg",
-    sc: "/sc.svg",
-    dc: "/dc.svg",
-    hdc: "/hdc.svg",
-    tr: "/tr.svg",
-    mr: "/mr.svg",
-  };
-
+  
   const getNodeObject = (node) => {
-    if (graphicalView) {
-      return new THREE.Mesh(
-        new THREE.SphereGeometry(6, 16, 16),
-        new THREE.MeshBasicMaterial({ color: node.color || "#999" })
-      );
-    }
-
-    const texturePath = stitchPaths[node.type] || stitchPaths["ch"];
+  if (graphicalView) {
+    return new THREE.Mesh(
+      new THREE.SphereGeometry(6, 16, 16),
+      new THREE.MeshBasicMaterial({ color: node.color || "#999" })
+    );
+  }
 
     if (node.type === "slip") {
       let geometry = new THREE.SphereGeometry(2, 16, 16);
@@ -115,66 +107,50 @@ export default function Canvas() {
       new THREE.MeshBasicMaterial({ depthWrite: false, transparent: true, opacity: 0 })
     );
 
-    const imgTexture = new THREE.TextureLoader().load(texturePath);
-    const material = new THREE.SpriteMaterial({
-      map: imgTexture,
-      depthFunc: THREE.NotEqualDepth,
-      color: node.color,
-    });
+  const imgTexture = textures[node.type] || textures["ch"];
+  const material = new THREE.SpriteMaterial({
+    map: imgTexture,
+    depthFunc: THREE.NotEqualDepth,
+    color: node.color,
+  });
 
     const sprite = new THREE.Sprite(material);
     sprite.scale.set(15, 15, 15);
     obj.add(sprite);
 
-    node.__sprite = sprite; // <-- Store for hover effect
-    return obj;
-  };
+  return obj;
+};
 
+  
   useEffect(() => {
-    if (graphicalView) return;
-    const loader = new THREE.TextureLoader();
-    const loadedTextures = {};
+  const container = containerRef.current;
 
-    Promise.all(
-      Object.entries(stitchPaths).map(([name, path]) => {
-        return new Promise((resolve) => {
-          loader.load(path, (texture) => {
-            loadedTextures[name] = texture;
-            resolve();
-          });
-        });
-      })
-    ).then(() => {
-      setTextures(loadedTextures);
-    });
-  }, []);
+  if (!container || (!graphicalView && !Object.keys(textures).length)) return;
 
-  useEffect(() => {
-    if (!containerRef.current || (!graphicalView && !Object.keys(textures).length)) return;
 
     const bgColor = getComputedStyle(document.documentElement)
       .getPropertyValue("--third-color")
       .trim();
 
-    const graph = ForceGraph3D()(containerRef.current)
-      .backgroundColor(bgColor)
-      .nodeAutoColorBy("id")
-      .linkColor(() => "black")
-      .nodeColor(() => "transparent")
-      .linkWidth(1)
-      .linkOpacity(1)
-      .linkDirectionalArrowLength(0)
-      .linkDirectionalArrowRelPos(1)
-      .linkDirectionalArrowColor(() => "black")
-      .showNavInfo(false)
-      .nodeThreeObjectExtend(true)
-      .nodeThreeObject((node) => getNodeObject(node))
-      .onNodeHover((node) => {
-        if (hoverNodeRef.current?.__sprite) {
-          hoverNodeRef.current.__sprite.material.opacity = 1;
-          hoverNodeRef.current.__sprite.material.color.set(0x000000);
-          hoverNodeRef.current.__sprite.material.needsUpdate = true;
-        }
+  const graphInstance = ForceGraph3D()(container)
+    .backgroundColor(bgColor)
+    .nodeAutoColorBy("id")
+    .linkColor(() => "black")
+    .nodeColor(() => "transparent")
+    .linkWidth(1)
+    .linkOpacity(1)
+    .linkDirectionalArrowLength(0)
+    .linkDirectionalArrowRelPos(1)
+    .linkDirectionalArrowColor(() => "black")
+    .showNavInfo(false)
+    .nodeThreeObjectExtend(true)
+    .nodeThreeObject((node) => getNodeObject(node))
+    .onNodeHover((node) => {
+      if (hoverNodeRef.current?.__sprite) {
+        hoverNodeRef.current.__sprite.material.opacity = 1;
+        hoverNodeRef.current.__sprite.material.color.set(0x000000);
+        hoverNodeRef.current.__sprite.material.needsUpdate = true;
+      }
 
         if (node?.__sprite) {
           node.__sprite.material.opacity = 0.6;
@@ -188,36 +164,22 @@ export default function Canvas() {
         if (node?.id) setSelectedNode(node.id);
       });
 
-    graphRef.current = graph;
-  }, [textures, graphicalView]);
+  graphRef.current = graphInstance;
+
+}, [textures, graphicalView]);
+
+useEffect(() => {
+  if (!graphRef.current) return;
+  graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
+}, [textures]);
+
 
   useEffect(() => {
     if (!graphRef.current) return;
 
     const graph = graphRef.current;
     graph.graphData(JSON.parse(JSON.stringify(patternData)));
-
-    graph.onEngineStop(() => {
-      patternData.links?.forEach((link) => {
-        if (!link.inserts) return;
-
-        const sourceNode = graph.graphData().nodes.find((n) => n.id === link.source);
-        const targetNode = graph.graphData().nodes.find((n) => n.id === link.target);
-        if (!sourceNode || !targetNode || !sourceNode.__sprite) return;
-
-        const vec = new THREE.Vector3(
-          targetNode.x - sourceNode.x,
-          targetNode.y - sourceNode.y,
-          targetNode.z - sourceNode.z
-        );
-        const yAxis = new THREE.Vector3(0, 1, 0);
-        const angle = vec.angleTo(yAxis);
-        const rotationAngle =
-          targetNode.x - sourceNode.x < 0 ? Math.PI + angle : Math.PI - angle;
-
-        sourceNode.__sprite.material.rotation = rotationAngle;
-      });
-    });
+  
   }, [patternData, graphicalView]);
 
   useEffect(() => {
@@ -250,11 +212,7 @@ export default function Canvas() {
       )}
       <Container>
         <StitchesBar />
-        <CanvasContainer
-          expanded={expanded}
-          selectedMenu={selectedMenu}
-          ref={containerRef}
-        />
+        <CanvasContainer $expanded={expanded} $selectedMenu={selectedMenu} ref={containerRef}></CanvasContainer>
         <ZoomButtonsContainer>
           <ZoomButton onClick={() => handleZoom(true)}>
             <FaPlus size={12} />
