@@ -1,15 +1,14 @@
 import styled from "styled-components";
-import expandIcon from "../../assets/expand.svg";
 import StitchesBar from "./StitchesBar";
 import { FaPlus, FaMinus } from "react-icons/fa";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ForceGraph3D from "3d-force-graph";
 import * as THREE from "three";
 import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleExpandCanvas, insertStitch, selectNode } from "./editorSlice";
 import { FaExpand, FaCompress } from "react-icons/fa";
-
+import textures from "./TexturesFor3D";
 const Container = styled.div`
   display: flex;
   position: relative;
@@ -18,11 +17,11 @@ const Container = styled.div`
 const CanvasContainer = styled.div`
   width: 100%;
   background-color: var(--third-color);
-  margin: ${({ expanded }) => (expanded ? "0px" : "10px 20px")};
-  height: ${({ expanded, selectedMenu }) =>
-    expanded
+  margin: ${({ $expanded }) => ($expanded ? "0px" : "10px 20px")};
+  height: ${({ $expanded, $selectedMenu }) =>
+    $expanded
       ? "100%"  
-      : selectedMenu
+      : $selectedMenu
       ? "65vh"
       : "75vh"};
   border-radius: 30px;
@@ -30,7 +29,6 @@ const CanvasContainer = styled.div`
   box-sizing: border-box;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 `;
-
 
 const ExpandButton = styled.div`
   cursor: pointer;
@@ -60,6 +58,7 @@ const ZoomButtonsContainer = styled.div`
   top: 28px;
   right: 40px;
 `;
+
 const ZoomButton = styled.div`
   cursor: pointer;
   padding: 10px;
@@ -73,7 +72,8 @@ const ZoomButton = styled.div`
   }
 `;
 
-export default function Canvas() {
+
+export default function Canvas2D() {
  const isEmpty =
     useSelector((state) => state.editor.pattern.nodes.length) === 0;
   
@@ -84,115 +84,55 @@ export default function Canvas() {
   const [selectedNode, setSelectedNode] = useState(null);
   const containerRef = useRef();
   const graphRef = useRef();
-  const [textures, setTextures] = useState({});
   const patternData = useSelector((state) => state.editor.pattern);
-  const hoverNodeRef = useRef(null);
   const dispatch = useDispatch();
 
-  const stitchPaths = {
-    ch: "/ch.svg",
-    slip: "/slst.svg",
-    sc: "/sc.svg",
-    dc: "/dc.svg",
-    hdc: "/hdc.svg",
-    tr: "/tr.svg",
-    mr: "/mr.svg",
-  };
-
+  
   const getNodeObject = (node) => {
   if (graphicalView) {
-    // Traditional simple geometry (e.g., a gray sphere)
     return new THREE.Mesh(
       new THREE.SphereGeometry(6, 16, 16),
       new THREE.MeshBasicMaterial({ color: node.color || "#999" })
     );
   }
 
-  const texturePath = stitchPaths[node.type] || stitchPaths["ch"];
+    if (node.type === "slip") {
+      let geometry = new THREE.SphereGeometry(2, 16, 16);
+      let material = new THREE.MeshBasicMaterial({ color: node.color });
+      return new THREE.Mesh(geometry, material);
+    }
 
-  if (node.type === "slip") {
-    let geometry = new THREE.SphereGeometry(2, 16, 16);
-    let material = new THREE.MeshBasicMaterial({ color: node.color });
-    return new THREE.Mesh(geometry, material);
-  }
+    const obj = new THREE.Mesh(
+      new THREE.SphereGeometry(7),
+      new THREE.MeshBasicMaterial({ depthWrite: false, transparent: true, opacity: 0 })
+    );
 
-  const obj = new THREE.Mesh(
-    new THREE.SphereGeometry(7),
-    new THREE.MeshBasicMaterial({ depthWrite: false, transparent: true, opacity: 0 })
-  );
-
-  const imgTexture = new THREE.TextureLoader().load(texturePath);
+  const imgTexture = textures[node.type] || textures["ch"];
   const material = new THREE.SpriteMaterial({
     map: imgTexture,
     depthFunc: THREE.NotEqualDepth,
     color: node.color,
   });
 
-  const sprite = new THREE.Sprite(material);
-  sprite.scale.set(15, 15, 15);
-  obj.add(sprite);
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(15, 15, 15);
+    obj.add(sprite);
 
   return obj;
 };
 
-    const texturePath = stitchPaths[node.type] || stitchPaths["ch"];
-
-    if (node.type === "slip") {
-      let geometry = new THREE.SphereGeometry(2, 16, 16);
-      let material = new THREE.MeshBasicMaterial({ color: node.color });
-      return new THREE.Mesh(geometry, material);
-    } else {
-      const obj = new THREE.Mesh(
-        new THREE.SphereGeometry(7),
-        new THREE.MeshBasicMaterial({
-          depthWrite: false,
-          transparent: true,
-          opacity: 0,
-        })
-      );
-
-      // Load the texture based on the node type
-      const imgTexture = new THREE.TextureLoader().load(texturePath);
-      const material = new THREE.SpriteMaterial({
-        map: imgTexture,
-        depthFunc: THREE.NotEqualDepth,
-        color: node.color,
-      });
-      const sprite = new THREE.Sprite(material);
-      sprite.scale.set(15, 15, 15);
-      obj.add(sprite);
-
-      return obj;
-    }
-  };
-
+  
   useEffect(() => {
-    if(graphicalView) return
-    const loader = new THREE.TextureLoader();
-    const loadedTextures = {};
+  const container = containerRef.current;
 
-    Promise.all(
-      Object.entries(stitchPaths).map(([name, path]) => {
-        return new Promise((resolve) => {
-          loader.load(path, (texture) => {
-            loadedTextures[name] = texture;
-            resolve();
-          });
-        });
-      })
-    ).then(() => {
-      setTextures(loadedTextures);
-    });
-  }, []);
+  if (!container || (!graphicalView && !Object.keys(textures).length)) return;
 
-  useEffect(() => {
-  if (!containerRef.current || (!graphicalView && !Object.keys(textures).length)) return;
 
-  const bgColor = getComputedStyle(document.documentElement)
-    .getPropertyValue("--third-color")
-    .trim();
+    const bgColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--third-color")
+      .trim();
 
-  const graph = ForceGraph3D()(containerRef.current)
+  const graphInstance = ForceGraph3D()(container)
     .backgroundColor(bgColor)
     .nodeAutoColorBy("id")
     .linkColor(() => "black")
@@ -212,6 +152,7 @@ export default function Canvas() {
         hoverNodeRef.current.__sprite.material.needsUpdate = true;
       }
 
+<<<<<<< HEAD:frontend/src/features/editor/Canvas.jsx
       if (node?.__sprite) {
         node.__sprite.material.opacity = 0.6;
         node.__sprite.material.color.set(0x00ffff);
@@ -254,6 +195,8 @@ export default function Canvas() {
           hoverNodeRef.current.__sprite.material.needsUpdate = true;
         }
 
+=======
+>>>>>>> a485f42469b990bcfbd31c3165a9a8a36717ecbe:frontend/src/features/editor/Canvas3D.jsx
         if (node?.__sprite) {
           node.__sprite.material.opacity = 0.6;
           node.__sprite.material.color.set(0x00ffff);
@@ -266,48 +209,27 @@ export default function Canvas() {
         if (node?.id) setSelectedNode(node.id);
       });
 
-    graphRef.current = graph;
-  }, [textures]);
+  graphRef.current = graphInstance;
+
+}, [textures, graphicalView]);
+
+useEffect(() => {
+  if (!graphRef.current) return;
+  graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
+}, [textures]);
+
 
   useEffect(() => {
     if (!graphRef.current) return;
 
     const graph = graphRef.current;
     graph.graphData(JSON.parse(JSON.stringify(patternData)));
-
-    graph.onEngineStop(() => {
-      console.log("pppppppppppp", patternData);
-      patternData.links?.forEach((link) => {
-        if (!link.inserts) return;
-
-        const sourceNode = graph
-          .graphData()
-          .nodes.find((n) => n.id === link.source);
-        const targetNode = graph
-          .graphData()
-          .nodes.find((n) => n.id === link.target);
-        if (!sourceNode || !targetNode || !sourceNode.__sprite) return;
-
-        const vec = new THREE.Vector3(
-          targetNode.x - sourceNode.x,
-          targetNode.y - sourceNode.y,
-          targetNode.z - sourceNode.z
-        );
-        const yAxis = new THREE.Vector3(0, 1, 0);
-        const angle = vec.angleTo(yAxis);
-        const rotationAngle =
-          targetNode.x - sourceNode.x < 0 ? Math.PI + angle : Math.PI - angle;
-
-        sourceNode.__sprite.material.rotation = rotationAngle;
-      });
-    });
-  }, [patternData, graphicalView]);
   
+  }, [patternData, graphicalView]);
 
   useEffect(() => {
     if (selectedNode) {
       dispatch(insertStitch({ node: selectedNode }));
-
     }
     return () => {
       setSelectedNode(null);
@@ -335,7 +257,7 @@ export default function Canvas() {
       )}
       <Container>
         <StitchesBar />
-        <CanvasContainer expanded={expanded} selectedMenu={selectedMenu} ref={containerRef}></CanvasContainer>
+        <CanvasContainer $expanded={expanded} $selectedMenu={selectedMenu} ref={containerRef}></CanvasContainer>
         <ZoomButtonsContainer>
           <ZoomButton onClick={() => handleZoom(true)}>
             <FaPlus size={12} />
@@ -347,9 +269,7 @@ export default function Canvas() {
 
         <ExpandButton onClick={() => dispatch(toggleExpandCanvas())}>
           {expanded ? <FaCompress size={16} /> : <FaExpand size={16} />}
-
         </ExpandButton>
-
       </Container>
     </>
   );

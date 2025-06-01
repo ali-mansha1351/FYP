@@ -48,6 +48,9 @@ const CoverImageContainer = styled.div`
 `;
 const CoverImg = styled.img`
   border-radius: 10px 10px 0px 0px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 `;
 const ProfileHeader = styled.div`
   display: flex;
