@@ -138,9 +138,12 @@ export default function SubMenuBar() {
   }, [pickerVisible, tempColor, stitchColor, dispatch]);
 
   const togglePicker = (e) => {
-    e.stopPropagation();
-    setPickerVisible((prev) => !prev);
-  };
+  e.stopPropagation();
+  if (!pickerVisible) {
+    setPickerVisible(true);
+  }
+};
+
 
   const handleColorChange = (color) => {
     setTempColor(color.hex);

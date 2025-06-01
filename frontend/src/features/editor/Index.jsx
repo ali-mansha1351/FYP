@@ -1,4 +1,4 @@
-import Canvas from "./Canvas";
+import Canvas from "./Canvas2";
 import MenuBar from "./MenuBar";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
