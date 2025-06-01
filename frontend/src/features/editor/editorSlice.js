@@ -41,7 +41,6 @@ const editorSlice = createSlice({
       if(state.selectedStitch === null){
         const n = state.pattern.nodes.find(node=>node.id === nodeId)
         state.selectedNode = n?n:null
-        state.selectedMenu = 'Stitch'
         console.log(JSON.parse(JSON.stringify(state)));
         return;
       }
@@ -91,7 +90,6 @@ const editorSlice = createSlice({
           state.pattern.links.push(insertLink)
         }
         state.selectedNode = newNode
-        state.selectedMenu = 'Stitch'
         state.pattern.nodes.push(newNode)
         state.pattern.links.push(prevLink)
         state.currentIndex++
