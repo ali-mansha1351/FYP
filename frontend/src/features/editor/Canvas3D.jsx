@@ -19,11 +19,7 @@ const CanvasContainer = styled.div`
   background-color: var(--third-color);
   margin: ${({ $expanded }) => ($expanded ? "0px" : "10px 20px")};
   height: ${({ $expanded, $selectedMenu }) =>
-    $expanded
-      ? "100%"  
-      : $selectedMenu
-      ? "65vh"
-      : "75vh"};
+    $expanded ? "100%" : $selectedMenu ? "65vh" : "75vh"};
   border-radius: 30px;
   overflow: hidden;
   box-sizing: border-box;
@@ -72,14 +68,13 @@ const ZoomButton = styled.div`
   }
 `;
 
-
 export default function Canvas2D() {
- const isEmpty =
+  const isEmpty =
     useSelector((state) => state.editor.pattern.nodes.length) === 0;
-  
-  const expanded = useSelector(state => state.editor.expanded)
-  const graphicalView = useSelector(state => state.editor.graphicalView)
-  const selectedMenu = useSelector(state => state.editor.selectedMenu)
+
+  const expanded = useSelector((state) => state.editor.expanded);
+  const graphicalView = useSelector((state) => state.editor.graphicalView);
+  const selectedMenu = useSelector((state) => state.editor.selectedMenu);
   const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(isEmpty);
   const [selectedNode, setSelectedNode] = useState(null);
   const containerRef = useRef();
@@ -87,14 +82,13 @@ export default function Canvas2D() {
   const patternData = useSelector((state) => state.editor.pattern);
   const dispatch = useDispatch();
 
-  
   const getNodeObject = (node) => {
-  if (graphicalView) {
-    return new THREE.Mesh(
-      new THREE.SphereGeometry(6, 16, 16),
-      new THREE.MeshBasicMaterial({ color: node.color || "#999" })
-    );
-  }
+    if (graphicalView) {
+      return new THREE.Mesh(
+        new THREE.SphereGeometry(6, 16, 16),
+        new THREE.MeshBasicMaterial({ color: node.color || "#999" })
+      );
+    }
 
     if (node.type === "slip") {
       let geometry = new THREE.SphereGeometry(2, 16, 16);
@@ -104,78 +98,37 @@ export default function Canvas2D() {
 
     const obj = new THREE.Mesh(
       new THREE.SphereGeometry(7),
-      new THREE.MeshBasicMaterial({ depthWrite: false, transparent: true, opacity: 0 })
+      new THREE.MeshBasicMaterial({
+        depthWrite: false,
+        transparent: true,
+        opacity: 0,
+      })
     );
 
-  const imgTexture = textures[node.type] || textures["ch"];
-  const material = new THREE.SpriteMaterial({
-    map: imgTexture,
-    depthFunc: THREE.NotEqualDepth,
-    color: node.color,
-  });
+    const imgTexture = textures[node.type] || textures["ch"];
+    const material = new THREE.SpriteMaterial({
+      map: imgTexture,
+      depthFunc: THREE.NotEqualDepth,
+      color: node.color,
+    });
 
     const sprite = new THREE.Sprite(material);
     sprite.scale.set(15, 15, 15);
     obj.add(sprite);
 
-  return obj;
-};
+    return obj;
+  };
 
-  
   useEffect(() => {
-  const container = containerRef.current;
+    const container = containerRef.current;
 
-  if (!container || (!graphicalView && !Object.keys(textures).length)) return;
-
-
-    const bgColor = getComputedStyle(document.documentElement)
-      .getPropertyValue("--third-color")
-      .trim();
-
-  const graphInstance = ForceGraph3D()(container)
-    .backgroundColor(bgColor)
-    .nodeAutoColorBy("id")
-    .linkColor(() => "black")
-    .nodeColor(() => "transparent")
-    .linkWidth(1)
-    .linkOpacity(1)
-    .linkDirectionalArrowLength(0)
-    .linkDirectionalArrowRelPos(1)
-    .linkDirectionalArrowColor(() => "black")
-    .showNavInfo(false)
-    .nodeThreeObjectExtend(true)
-    .nodeThreeObject((node) => getNodeObject(node))
-    .onNodeHover((node) => {
-      if (hoverNodeRef.current?.__sprite) {
-        hoverNodeRef.current.__sprite.material.opacity = 1;
-        hoverNodeRef.current.__sprite.material.color.set(0x000000);
-        hoverNodeRef.current.__sprite.material.needsUpdate = true;
-      }
-
-<<<<<<< HEAD:frontend/src/features/editor/Canvas.jsx
-      if (node?.__sprite) {
-        node.__sprite.material.opacity = 0.6;
-        node.__sprite.material.color.set(0x00ffff);
-        node.__sprite.material.needsUpdate = true;
-      }
-
-      hoverNodeRef.current = node;
-    })
-    .onNodeClick((node) => {
-      if (node?.id) setSelectedNode(node.id);
-    });
-
-  graphRef.current = graph;
-}, [textures, graphicalView]);
-
-  
-  if (!containerRef.current || !Object.keys(textures).length) return;
+    if (!container || (!graphicalView && !Object.keys(textures).length)) return;
 
     const bgColor = getComputedStyle(document.documentElement)
       .getPropertyValue("--third-color")
       .trim();
 
-    const graph = ForceGraph3D()(containerRef.current)
+    const graphInstance = ForceGraph3D()(container)
       .backgroundColor(bgColor)
       .nodeAutoColorBy("id")
       .linkColor(() => "black")
@@ -195,8 +148,6 @@ export default function Canvas2D() {
           hoverNodeRef.current.__sprite.material.needsUpdate = true;
         }
 
-=======
->>>>>>> a485f42469b990bcfbd31c3165a9a8a36717ecbe:frontend/src/features/editor/Canvas3D.jsx
         if (node?.__sprite) {
           node.__sprite.material.opacity = 0.6;
           node.__sprite.material.color.set(0x00ffff);
@@ -209,22 +160,19 @@ export default function Canvas2D() {
         if (node?.id) setSelectedNode(node.id);
       });
 
-  graphRef.current = graphInstance;
+    graphRef.current = graphInstance;
+  }, [textures, graphicalView]);
 
-}, [textures, graphicalView]);
-
-useEffect(() => {
-  if (!graphRef.current) return;
-  graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
-}, [textures]);
-
+  useEffect(() => {
+    if (!graphRef.current) return;
+    graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
+  }, [textures]);
 
   useEffect(() => {
     if (!graphRef.current) return;
 
     const graph = graphRef.current;
     graph.graphData(JSON.parse(JSON.stringify(patternData)));
-  
   }, [patternData, graphicalView]);
 
   useEffect(() => {
@@ -257,7 +205,11 @@ useEffect(() => {
       )}
       <Container>
         <StitchesBar />
-        <CanvasContainer $expanded={expanded} $selectedMenu={selectedMenu} ref={containerRef}></CanvasContainer>
+        <CanvasContainer
+          $expanded={expanded}
+          $selectedMenu={selectedMenu}
+          ref={containerRef}
+        ></CanvasContainer>
         <ZoomButtonsContainer>
           <ZoomButton onClick={() => handleZoom(true)}>
             <FaPlus size={12} />

@@ -81,33 +81,33 @@ export const currentUser = async (req, res, next) => {
 
     //const getCommand = new GetObjectCommand(getObjectParams);
 
-    if (user.profileImage && user.profileImage.name) {
-      const getProfileImageParams = {
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: user.profileImage.name,
-      };
-      const p_url = await getImage(getProfileImageParams);
-      user.profileImage.url = p_url;
-    } else {
-      user.profileImage.name = "";
-      user.profileImage.mimetype = "";
-      user.profileImage.url = "";
-    }
+    // if (user.profileImage && user.profileImage.name) {
+    //   const getProfileImageParams = {
+    //     Bucket: process.env.AWS_S3_BUCKET_NAME,
+    //     Key: user.profileImage.name,
+    //   };
+    //   const p_url = await getImage(getProfileImageParams);
+    //   user.profileImage.url = p_url;
+    // } else {
+    //   user.profileImage.name = "";
+    //   user.profileImage.mimetype = "";
+    //   user.profileImage.url = "";
+    // }
 
-    if (user.coverImage && user.coverImage.name) {
-      const getCoverImageParams = {
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: user.coverImage.name,
-      };
-      const c_url = await getImage(getCoverImageParams);
-      user.coverImage.url = c_url;
-    } else {
-      user.coverImage.name = "";
-      user.coverImage.mimetype = "";
-      user.coverImage.url = "";
-    }
+    // if (user.coverImage && user.coverImage.name) {
+    //   const getCoverImageParams = {
+    //     Bucket: process.env.AWS_S3_BUCKET_NAME,
+    //     Key: user.coverImage.name,
+    //   };
+    //   const c_url = await getImage(getCoverImageParams);
+    //   user.coverImage.url = c_url;
+    // } else {
+    //   user.coverImage.name = "";
+    //   user.coverImage.mimetype = "";
+    //   user.coverImage.url = "";
+    // }
 
-    await user.save();
+    // await user.save();
     res.status(200).json({
       success: true,
       user,
@@ -268,6 +268,14 @@ export const updateUser = async (req, res, next) => {
         };
         updates.profileImage.mimetype = "image/png";
         await uploadImage(profileImageParams);
+
+        const getProfileImageParams = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME,
+          Key: pimage.originalname,
+        };
+        const p_url = await getImage(getProfileImageParams);
+        updates.profileImage.url = p_url;
+
         // console.log(uploadImage);
       } catch (error) {
         return next(new ErrorHandler(error.message, 404));
@@ -275,17 +283,16 @@ export const updateUser = async (req, res, next) => {
     } else {
       //if the field name is there but the field is empty get name from the mongodb and delete the image from the aws s3 bucket
       try {
-        const userToUpdate = await User.findById(req.user.id);
-        if (userToUpdate.profileImage.name) {
-          const deleteObjectParam = {
-            Bucket: process.env.AWS_S3_BUCKET_NAME,
-            Key: userToUpdate.profileImage.name,
-          };
-
-          await deleteImage(deleteObjectParam);
-          userToUpdate.profileImage = {};
-          await userToUpdate.save();
-        }
+        // const userToUpdate = await User.findById(req.user.id);
+        // if (userToUpdate.profileImage.name) {
+        //   const deleteObjectParam = {
+        //     Bucket: process.env.AWS_S3_BUCKET_NAME,
+        //     Key: userToUpdate.profileImage.name,
+        //   };
+        //   await deleteImage(deleteObjectParam);
+        //   userToUpdate.profileImage = {};
+        //   await userToUpdate.save();
+        // }
       } catch (error) {
         return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
       }
@@ -316,28 +323,42 @@ export const updateUser = async (req, res, next) => {
         };
         updates.coverImage.mimetype = "image/jpeg";
         await uploadImage(coverImageParams);
+
+        const getCoverImageParams = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME,
+          Key: image.originalname,
+        };
+        const c_url = await getImage(getCoverImageParams);
+        updates.coverImage.url = c_url;
       } catch (error) {
         return next(new ErrorHandler(error.message, 404));
       }
-    } else {
-      //if the field name is there but the field is empty get name from the mongodb and delete the image from the aws s3 bucket
-      try {
-        const userToUpdate = await User.findById(req.user.id);
-        if (userToUpdate.coverImage.name) {
-          const deleteObjectParam = {
-            Bucket: process.env.AWS_S3_BUCKET_NAME,
-            Key: userToUpdate.coverImage.name,
-          };
-
-          await deleteImage(deleteObjectParam);
-          userToUpdate.coverImage = {};
-          await userToUpdate.save();
-        }
-      } catch (error) {
-        return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
-      }
     }
+    // else {
+    //   //if the field name is there but the field is empty get name from the mongodb and delete the image from the aws s3 bucket
+    //   try {
+    //     const userToUpdate = await User.findById(req.user.id);
+    //     if (userToUpdate.coverImage.name) {
+    //       const deleteObjectParam = {
+    //         Bucket: process.env.AWS_S3_BUCKET_NAME,
+    //         Key: userToUpdate.coverImage.name,
+    //       };
 
+    //       await deleteImage(deleteObjectParam);
+    //       userToUpdate.coverImage = {};
+    //       await userToUpdate.save();
+    //     }
+    //   } catch (error) {
+    //     return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
+    //   }
+    // }
+
+    if (!pimage && "profileImage" in updates) {
+      delete updates.profileImage;
+    }
+    if (!image && "coverImage" in updates) {
+      delete updates.coverImage;
+    }
     const user = await User.findByIdAndUpdate({ _id: req.user.id }, updates, {
       new: true,
       runValidators: true,

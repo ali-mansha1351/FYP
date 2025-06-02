@@ -23,18 +23,9 @@ export const createPost = async (req, res, next) => {
     if (!user) {
       throw new Error("unauthorized access");
     }
-    if (files.postImages) {
-      allFiles = [...files.postImages];
-      files.postImages.forEach((element) => {
-        data.content.push({
-          name: element.originalname,
-          mimetype: element.mimetype,
-        });
-      });
-    }
-    if (files.postVideos) {
-      allFiles = [...files.postVideos];
-      files.postVideos.forEach((element) => {
+    if (files.postContent) {
+      allFiles = [...files.postContent];
+      files.postContent.forEach((element) => {
         data.content.push({
           name: element.originalname,
           mimetype: element.mimetype,
@@ -54,11 +45,6 @@ export const createPost = async (req, res, next) => {
   } catch (error) {
     if (error.message === "unauthorized access") {
       return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
-    }
-    if (
-      error.messaage === "file type not supported should only be image or video"
-    ) {
-      return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
     }
     return next(
       new ErrorHandler(

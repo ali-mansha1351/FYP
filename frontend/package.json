@@ -12,6 +12,7 @@
   "dependencies": {
     "3d-force-graph": "^1.77.0",
     "browser-router": "^0.2.0",
+    "force-graph": "^1.49.6",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.10",
     "react-color": "^2.19.3",

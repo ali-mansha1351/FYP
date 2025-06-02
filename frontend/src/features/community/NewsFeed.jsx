@@ -1,7 +1,11 @@
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { useForm } from "react-hook-form";
 import Header from "../../ui/Header";
 import styled from "styled-components";
 import React, { useState } from "react";
+import { createPost } from "./postSlice";
+import toast from "react-hot-toast";
+import { useCreatePost } from "./useCreatePost";
 
 const Container = styled.div`
   min-height: 100vh;
@@ -413,15 +417,60 @@ const SubmitButton = styled.button`
     background-color: #4a5ac0;
   }
 `;
+const ErrorMessage = styled.span`
+  color: #f44336;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+`;
+const FilePreview = styled.div`
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
 
+const FileItem = styled.div`
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+`;
+const RemoveFileButton = styled.button`
+  background: none;
+  border: none;
+  color: #f44336;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+
+  &:hover {
+    color: #d32f2f;
+  }
+`;
 function NewsFeed() {
+  const dispatch = useDispatch();
+  const { createPost: createPostApi, isLoading } = useCreatePost();
   const user = useSelector((store) => store.user);
   const { name } = user.userDetail;
+  const [selectedFiles, setIsSelectedFiles] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    file: null,
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+    watch,
+  } = useForm({
+    defaultValues: {
+      title: "",
+      description: "",
+      files: null,
+    },
   });
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
@@ -451,25 +500,65 @@ function NewsFeed() {
                                     ★ 10  9  8  7  6  5  4  3  2  1  ★`;
 
   const handleInputChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
+    const files = Array.from(e.target.files);
+    setIsSelectedFiles(files);
+    setValue("files", files);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    setIsModalOpen(false);
-    setFormData({ title: "", description: "", file: null });
+  const removeFile = (indexToRemove) => {
+    const updatedFiles = selectedFiles.filter(
+      (_, index) => index !== indexToRemove
+    );
+    setIsSelectedFiles(updatedFiles);
+    setValue("files", updatedFiles);
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      setIsSubmitting(true);
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("description", data.description);
+
+      selectedFiles.forEach((file) => {
+        formData.append("postContent", file);
+      });
+
+      const postPayLoadData = {
+        title: data.title,
+        description: data.description,
+        files: selectedFiles.map((file) => file.name),
+      };
+      createPostApi(formData, {
+        onSuccess: (response) => {
+          toast.success("posted successfully", { id: "postSuccess" });
+        },
+        onError: (error) => {
+          toast.error("could not create post,try again", { id: "postFail" });
+        },
+      });
+      dispatch(createPost(postPayLoadData));
+      console.log(data);
+      handleCancel();
+    } catch (error) {
+      toast.error(`please try again=>${error.message}`, {
+        duration: 4000,
+        position: "top-center",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
     setIsModalOpen(false);
-    setFormData({ title: "", description: "", file: null });
+    setIsSelectedFiles([]);
+    reset();
   };
 
+  const handleOpen = () => {
+    setIsModalOpen(true);
+  };
   return (
     <>
       <Container>
@@ -483,7 +572,7 @@ function NewsFeed() {
           <FeedSection>
             <FeedTab>Feed</FeedTab>
             <FeedContent>
-              <NewPostButton onClick={() => setIsModalOpen(true)}>
+              <NewPostButton onClick={handleOpen}>
                 Start a new post
               </NewPostButton>
 
@@ -586,26 +675,51 @@ function NewsFeed() {
                 <CloseButton onClick={handleCancel}>×</CloseButton>
               </ModalHeader>
 
-              <div>
+              <form onSubmit={handleSubmit(onSubmit)}>
                 <FormGroup>
                   <Label>Title</Label>
                   <Input
                     type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
+                    {...register("title", {
+                      required: true,
+                      minLength: {
+                        value: 3,
+                        message: "title must be atleast 3 characters",
+                      },
+                      maxLength: {
+                        value: 500,
+                        message: "title must be at most 500 characters",
+                      },
+                    })}
                     placeholder="Enter post title..."
+                    error={errors.title}
                   />
+                  {errors.title && (
+                    <ErrorMessage>{errors.title.message}</ErrorMessage>
+                  )}
                 </FormGroup>
 
                 <FormGroup>
                   <Label>Description</Label>
                   <TextArea
                     name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
+                    {...register("description", {
+                      required: false,
+                      minLength: {
+                        value: 50,
+                        message: "description must of atleast 50 characters",
+                      },
+                      maxLength: {
+                        value: 1000,
+                        message: "description can be max of 1000 characters",
+                      },
+                    })}
                     placeholder="Share your crochet experience, pattern details, or tips..."
+                    error={errors.description}
                   />
+                  {errors.description && (
+                    <ErrorMessage>{errors.description.message}</ErrorMessage>
+                  )}
                 </FormGroup>
 
                 <FormGroup>
@@ -615,16 +729,37 @@ function NewsFeed() {
                     name="file"
                     onChange={handleInputChange}
                     accept="image/*,video/*"
+                    multiple
+                    error={errors.files}
                   />
+                  {errors.files && (
+                    <ErrorMessage>{errors.files.message}</ErrorMessage>
+                  )}
+                  {selectedFiles.length > 0 && (
+                    <FilePreview>
+                      {selectedFiles.map((file, index) => (
+                        <FileItem key={index}>
+                          <span>{file.name}</span>
+                          <RemoveFileButton
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            title="Remove File"
+                          >
+                            x
+                          </RemoveFileButton>
+                        </FileItem>
+                      ))}
+                    </FilePreview>
+                  )}
                 </FormGroup>
 
                 <ModalButtons>
                   <CancelButton onClick={handleCancel}>Cancel</CancelButton>
-                  <SubmitButton onClick={handleSubmit}>
-                    Create Post
+                  <SubmitButton type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Creating..." : "Create Post"}
                   </SubmitButton>
                 </ModalButtons>
-              </div>
+              </form>
             </ModalContent>
           </Modal>
         )}

@@ -19,11 +19,7 @@ export const uploadProfileImages = upload.fields([
 
 export const uploadPostMedia = upload.fields([
   {
-    name: "postImages",
-    maxCount: 10,
-  },
-  {
-    name: "postVideos",
+    name: "postContent",
     maxCount: 10,
   },
 ]);

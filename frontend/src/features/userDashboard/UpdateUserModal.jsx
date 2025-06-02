@@ -2,6 +2,10 @@ import styled from "styled-components";
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useUpdatedUser } from "./useUpdateUser";
+import { useUser } from "./useUser";
+import { useDispatch } from "react-redux";
+import { setUser } from "../login/loginSlice";
+import { replace, useNavigate } from "react-router-dom";
 const Modal = styled.div`
   position: fixed;
   top: 0;
@@ -107,6 +111,7 @@ const FileInput = styled.input`
   cursor: pointer;
   transition: border-color 0.2s;
   margin-right: 50px;
+  margin-left: 50px;
   &:hover {
     border-color: #5c6bc0;
   }
@@ -150,6 +155,9 @@ const SubmitButton = styled.button`
 `;
 
 function UpdateUserModal({ show, onHide, userDetail }) {
+  const { refetch, isLoading: userIsLoading } = useUser();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { update, isLoading } = useUpdatedUser();
   const {
     register,
@@ -231,14 +239,28 @@ function UpdateUserModal({ show, onHide, userDetail }) {
     formData.append("username", data.username);
     formData.append("email", data.email);
     formData.append("gender", data.gender);
-    formData.append("dateOfBirth", data.dateOfBirth);
+
     formData.append("skillLevel", data.skillLevel);
     formData.append("profileImage", data.profileImage);
     formData.append("coverImage", data.coverImage);
+    if (data.dateOfBirth) {
+      formData.append("dateOfBirth", data.dateOfBirth);
+    }
 
     update(formData, {
       onSuccess: () => {
         onHide();
+        refetch()
+          .then((response) => {
+            console.log(response.data);
+            if (response.data) {
+              dispatch(setUser(response.data));
+              navigate("/user/me", { replace: true });
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       },
       onError: (error) => {
         console.error("Update failed", error);
@@ -329,7 +351,7 @@ function UpdateUserModal({ show, onHide, userDetail }) {
               <option value="">Select Skill Level</option>
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
+              <option value="advance">Advanced</option>
             </select>
             {errors.skillLevel && (
               <div className="invalid-feedback">
@@ -347,7 +369,7 @@ function UpdateUserModal({ show, onHide, userDetail }) {
                   width: 100,
                   height: 100,
                   borderRadius: "50%",
-                  marginRight: 10,
+                  marginRight: 30,
                 }}
               />
               <FileInput
@@ -376,7 +398,7 @@ function UpdateUserModal({ show, onHide, userDetail }) {
                 style={{
                   width: 150,
                   height: 100,
-                  marginRight: 10,
+                  marginRight: 30,
                   objectFit: "cover",
                 }}
               />
