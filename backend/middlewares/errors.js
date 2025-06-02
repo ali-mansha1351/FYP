@@ -54,11 +54,8 @@ export const multerFileFilter = async (req, res, next) => {
     next();
   }
   const allFiles = [];
-  if (req.files.postImages) {
-    allFiles.push(...req.files.postImages);
-  }
-  if (req.files.postVideos) {
-    allFiles.push(...req.files.postVideos);
+  if (req.files.postContent) {
+    allFiles.push(...req.files.postContent);
   }
   const invalidFiles = allFiles.filter((file) => {
     return (

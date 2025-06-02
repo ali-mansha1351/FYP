@@ -12,7 +12,7 @@ const postSchema = mongoose.Schema(
     },
     description: {
       type: String,
-      maxLength: [100, "description exceeded maximum limit"],
+      maxLength: [1000, "description exceeded maximum limit"],
       default: null,
     },
     likes: [

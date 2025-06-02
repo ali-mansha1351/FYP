@@ -19,11 +19,7 @@ const CanvasContainer = styled.div`
   background-color: var(--third-color);
   margin: ${({ $expanded }) => ($expanded ? "0px" : "10px 20px")};
   height: ${({ $expanded, $selectedMenu }) =>
-    $expanded
-      ? "100%"  
-      : $selectedMenu
-      ? "65vh"
-      : "75vh"};
+    $expanded ? "100%" : $selectedMenu ? "65vh" : "75vh"};
   border-radius: 30px;
   overflow: hidden;
   box-sizing: border-box;
@@ -73,28 +69,30 @@ const ZoomButton = styled.div`
 `;
 
 
+
 export default function Canvas3D() {
  const isEmpty =
     useSelector((state) => state.editor.pattern.nodes.length) === 0;
-  
-  const expanded = useSelector(state => state.editor.expanded)
-  const graphicalView = useSelector(state => state.editor.graphicalView)
-  const selectedMenu = useSelector(state => state.editor.selectedMenu)
+
+  const expanded = useSelector((state) => state.editor.expanded);
+  const graphicalView = useSelector((state) => state.editor.graphicalView);
+  const selectedMenu = useSelector((state) => state.editor.selectedMenu);
   const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(isEmpty);
   const [selectedNode, setSelectedNode] = useState(null);
   const containerRef = useRef();
   const graphRef = useRef();
   const patternData = useSelector((state) => state.editor.pattern);
   const dispatch = useDispatch();
+
   const hoverNodeRef = useRef();
-  
+
   const getNodeObject = (node) => {
-  if (graphicalView) {
-    return new THREE.Mesh(
-      new THREE.SphereGeometry(6, 16, 16),
-      new THREE.MeshBasicMaterial({ color: node.color || "#999" })
-    );
-  }
+    if (graphicalView) {
+      return new THREE.Mesh(
+        new THREE.SphereGeometry(6, 16, 16),
+        new THREE.MeshBasicMaterial({ color: node.color || "#999" })
+      );
+    }
 
     if (node.type === "slip") {
       let geometry = new THREE.SphereGeometry(2, 16, 16);
@@ -104,33 +102,36 @@ export default function Canvas3D() {
 
     const obj = new THREE.Mesh(
       new THREE.SphereGeometry(7),
-      new THREE.MeshBasicMaterial({ depthWrite: false, transparent: true, opacity: 0 })
+      new THREE.MeshBasicMaterial({
+        depthWrite: false,
+        transparent: true,
+        opacity: 0,
+      })
     );
 
-  const imgTexture = textures[node.type] || textures["ch"];
-  const material = new THREE.SpriteMaterial({
-    map: imgTexture,
-    depthFunc: THREE.NotEqualDepth,
-    color: node.color,
-  });
+    const imgTexture = textures[node.type] || textures["ch"];
+    const material = new THREE.SpriteMaterial({
+      map: imgTexture,
+      depthFunc: THREE.NotEqualDepth,
+      color: node.color,
+    });
 
     const sprite = new THREE.Sprite(material);
     sprite.scale.set(15, 15, 15);
     obj.add(sprite);
 
-  return obj;
-};
+    return obj;
+  };
 
-  
   useEffect(() => {
-  const container = containerRef.current;
+    const container = containerRef.current;
 
-  if (!container || (!graphicalView && !Object.keys(textures).length)) return;
-
+    if (!container || (!graphicalView && !Object.keys(textures).length)) return;
 
     const bgColor = getComputedStyle(document.documentElement)
       .getPropertyValue("--third-color")
       .trim();
+
 
   const graphInstance = ForceGraph3D()(container)
     .backgroundColor(bgColor)
@@ -153,6 +154,7 @@ export default function Canvas3D() {
         hoverNodeRef.current.__sprite.material.needsUpdate = true;
       }
 
+
         if (node?.__sprite) {
           node.__sprite.material.opacity = 0.6;
           node.__sprite.material.color.set(0x00ffff);
@@ -165,22 +167,19 @@ export default function Canvas3D() {
         if (node?.id) setSelectedNode(node.id);
       });
 
-  graphRef.current = graphInstance;
+    graphRef.current = graphInstance;
+  }, [textures, graphicalView]);
 
-}, [textures, graphicalView]);
-
-useEffect(() => {
-  if (!graphRef.current) return;
-  graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
-}, [textures]);
-
+  useEffect(() => {
+    if (!graphRef.current) return;
+    graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
+  }, [textures]);
 
   useEffect(() => {
     if (!graphRef.current) return;
 
     const graph = graphRef.current;
     graph.graphData(JSON.parse(JSON.stringify(patternData)));
-  
   }, [patternData, graphicalView]);
 
   useEffect(() => {
@@ -213,7 +212,11 @@ useEffect(() => {
       )}
       <Container>
         <StitchesBar />
-        <CanvasContainer $expanded={expanded} $selectedMenu={selectedMenu} ref={containerRef}></CanvasContainer>
+        <CanvasContainer
+          $expanded={expanded}
+          $selectedMenu={selectedMenu}
+          ref={containerRef}
+        ></CanvasContainer>
         <ZoomButtonsContainer>
           <ZoomButton onClick={() => handleZoom(true)}>
             <FaPlus size={12} />

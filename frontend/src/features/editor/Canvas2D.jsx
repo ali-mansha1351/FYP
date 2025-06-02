@@ -6,9 +6,9 @@ import ForceGraph2D from "force-graph";
 import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleExpandCanvas, insertStitch } from "./editorSlice";
-import CrochetCanvas from "./CanvasDrawingsFor2D"; 
+import CrochetCanvas from "./CanvasDrawingsFor2D";
 
-const stitchCanvas = new CrochetCanvas(); 
+const stitchCanvas = new CrochetCanvas();
 
 const Container = styled.div`
   display: flex;
@@ -69,6 +69,7 @@ const ZoomButton = styled.div`
   }
 `;
 
+
 export default function Canvas2D() {
   const isEmpty = useSelector((state) => state.editor.pattern.nodes.length) === 0;
   const expanded = useSelector((state) => state.editor.expanded);
@@ -81,24 +82,26 @@ export default function Canvas2D() {
   const graphRef = useRef();
   const dispatch = useDispatch();
   const stitchDistances = {
-  mr: 30,
-  ch: 20,
-  sc: 25,
-  hdc: 35,
-  dc: 45,
-  tr: 55,
-  dtr: 65,
-  slst: 10,
-  hole: 0
-};
-
-
+    mr: 30,
+    ch: 20,
+    sc: 25,
+    hdc: 35,
+    dc: 45,
+    tr: 55,
+    dtr: 65,
+    slst: 10,
+    hole: 0,
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
 
     const graph = ForceGraph2D()(containerRef.current)
-      .backgroundColor(getComputedStyle(document.documentElement).getPropertyValue("--third-color").trim())
+      .backgroundColor(
+        getComputedStyle(document.documentElement)
+          .getPropertyValue("--third-color")
+          .trim()
+      )
       .nodeRelSize(5)
       .nodeColor(() => "transparent")
       .linkColor(() => "#ccc")
@@ -116,19 +119,20 @@ export default function Canvas2D() {
         const xMid = (source.x + target.x) / 2;
         const yMid = (source.y + target.y) / 2;
         const color = source.color || "#000";
-          if (link.slipStitch) {
-            stitchCanvas.draw("slst", ctx, xMid, yMid, color);
-          }
+        if (link.slipStitch) {
+          stitchCanvas.draw("slst", ctx, xMid, yMid, color);
+        }
       })
       .onNodeClick((node) => {
         if (node?.id) setSelectedNode(node.id);
       });
-      graph.d3Force('link').distance(link =>
+    graph
+      .d3Force("link")
+      .distance((link) =>
         link.inserts || link.slipstitch ? stitchDistances[link.source.type] : 10
       );
 
     graphRef.current = graph;
-    
 
     return () => {
       graph._destructor?.();
@@ -149,7 +153,6 @@ export default function Canvas2D() {
       setSelectedNode(null);
     };
   }, [selectedNode, dispatch]);
-
 
   useEffect(() => {
     return () => {
@@ -175,7 +178,11 @@ export default function Canvas2D() {
       )}
       <Container>
         <StitchesBar />
-        <CanvasContainer $expanded={expanded} $selectedMenu={selectedMenu} ref={containerRef} />
+        <CanvasContainer
+          $expanded={expanded}
+          $selectedMenu={selectedMenu}
+          ref={containerRef}
+        />
         <ZoomButtonsContainer>
           <ZoomButton onClick={() => handleZoom(true)}>
             <FaPlus size={12} />

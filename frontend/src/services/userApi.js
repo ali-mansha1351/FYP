@@ -22,11 +22,13 @@ export async function register(data) {
 }
 
 export async function update(data) {
-  const form = new FormData();
-  if (data.profileImage) {
-    form.append("profileImage", data.profileImage);
-  }
+  // const form = new FormData();
+  // if (data.profileImage) {
+  //   console.log(data.profileImage);
+  //   form.append("profileImage", data.profileImage);
+  // }
   // if (data.coverImage) {
+  //   console.log(data.coverImage);
   //   form.append("coverImage", data.coverImage);
   // }
   // form.append("name", data.name);
@@ -38,7 +40,7 @@ export async function update(data) {
   const response = await fetch(`${API_BASE_URL}/user/update`, {
     method: "PUT",
     credentials: "include",
-    body: form,
+    body: data,
   });
   if (!response.ok) {
     const errData = await response.json();

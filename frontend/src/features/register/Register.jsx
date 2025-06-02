@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import Container from "../../ui/Container";
 import { useRegister } from "./useRegister.js";
+import Container from "../../ui/Container";
 import toast from "react-hot-toast";
 import Header from "../../ui/Header";
 import {
@@ -88,7 +88,13 @@ function Register() {
     }
 
     const isValid = await trigger(fieldsToValidate);
-    if (isValid && step < totalSteps - 1) {
+    if (!isValid) {
+      fieldsToValidate.forEach((field) => {
+        if (errors[field]) {
+          toast.error(errors[field].message, { id: `error-${field}` });
+        }
+      });
+    } else if (step < totalSteps - 1) {
       setStep(step + 1);
     }
   };
@@ -120,12 +126,13 @@ function Register() {
     return confirmPassword === watch("password");
   };
 
-  function onError(errors) {
-    if (errors.message) {
-      const firstTwoWords = errors.message.split(" ").slice(0, 3).join(" ");
-      toast.error(firstTwoWords, { id: "registerToast" });
-    }
-  }
+  // function onError(errors) {
+  //   Object.values(errors).forEach((error) => {
+  //     if (error && error.message) {
+  //       toast.error(error.message, { id: `error-${Date.now()}` });
+  //     }
+  //   });
+  // }
 
   function onSubmit(data) {
     if (
@@ -143,7 +150,6 @@ function Register() {
     ) {
       return;
     }
-    console.log(data);
     registerUser(data, {
       onSuccess: (response) => {
         reset();
@@ -151,7 +157,7 @@ function Register() {
         toast.success("registration successful", { id: "registerSuccess" });
       },
       onError: (error) => {
-        onError(error);
+        // onError(error);
       },
     });
   }
@@ -160,7 +166,7 @@ function Register() {
     <Container>
       <Header navItems={navItems} />
       <Cont>
-        <FieldsContainer onSubmit={handleSubmit(onSubmit, onError)}>
+        <FieldsContainer onSubmit={handleSubmit(onSubmit)}>
           <Title>Sign Up</Title>
 
           {/* Step 0: Basic Info */}
