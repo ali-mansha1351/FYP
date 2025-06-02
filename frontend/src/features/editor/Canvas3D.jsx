@@ -68,8 +68,10 @@ const ZoomButton = styled.div`
   }
 `;
 
-export default function Canvas2D() {
-  const isEmpty =
+
+
+export default function Canvas3D() {
+ const isEmpty =
     useSelector((state) => state.editor.pattern.nodes.length) === 0;
 
   const expanded = useSelector((state) => state.editor.expanded);
@@ -81,6 +83,8 @@ export default function Canvas2D() {
   const graphRef = useRef();
   const patternData = useSelector((state) => state.editor.pattern);
   const dispatch = useDispatch();
+
+  const hoverNodeRef = useRef();
 
   const getNodeObject = (node) => {
     if (graphicalView) {
@@ -128,25 +132,28 @@ export default function Canvas2D() {
       .getPropertyValue("--third-color")
       .trim();
 
-    const graphInstance = ForceGraph3D()(container)
-      .backgroundColor(bgColor)
-      .nodeAutoColorBy("id")
-      .linkColor(() => "black")
-      .nodeColor(() => "transparent")
-      .linkWidth(1)
-      .linkOpacity(1)
-      .linkDirectionalArrowLength(0)
-      .linkDirectionalArrowRelPos(1)
-      .linkDirectionalArrowColor(() => "black")
-      .showNavInfo(false)
-      .nodeThreeObjectExtend(true)
-      .nodeThreeObject((node) => getNodeObject(node))
-      .onNodeHover((node) => {
-        if (hoverNodeRef.current?.__sprite) {
-          hoverNodeRef.current.__sprite.material.opacity = 1;
-          hoverNodeRef.current.__sprite.material.color.set(0x000000);
-          hoverNodeRef.current.__sprite.material.needsUpdate = true;
-        }
+
+  const graphInstance = ForceGraph3D()(container)
+    .backgroundColor(bgColor)
+    .nodeAutoColorBy("id")
+    .linkColor(() => "black")
+    .nodeColor(() => "transparent")
+    .linkWidth(1)
+    .linkOpacity(1)
+    .linkDirectionalArrowLength(0)
+    .linkDirectionalArrowRelPos(1)
+    .linkDirectionalArrowColor(() => "black")
+    .showNavInfo(false)
+    .nodeThreeObjectExtend(true)
+    .nodeThreeObject((node) => getNodeObject(node))
+    .enableNodeDrag(true)
+    .onNodeHover((node) => {
+      if (hoverNodeRef.current?.__sprite) {
+        hoverNodeRef.current.__sprite.material.opacity = 1;
+        hoverNodeRef.current.__sprite.material.color.set(0x000000);
+        hoverNodeRef.current.__sprite.material.needsUpdate = true;
+      }
+
 
         if (node?.__sprite) {
           node.__sprite.material.opacity = 0.6;

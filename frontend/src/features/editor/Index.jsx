@@ -1,5 +1,5 @@
-import Canvas2D from "./Canvas3D";
-import Canvas3D from "./Canvas2D";
+import Canvas3D from "./Canvas3D";
+import Canvas2D from "./Canvas2D";
 import MenuBar from "./MenuBar";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
@@ -29,20 +29,24 @@ export default function Index() {
     { label: "Login", path: "/login" },
   ];
 
-  return (
-    <Container>
-      {!expanded && (
-        <>
-          {user.isLoggedIn ? (
-            <Header navItems={navItemsForLggedIn} />
-          ) : (
-            <Header navItems={navItems} />
-          )}
-          <MenuBar />
-          <SubMenuBar />
-        </>
-      )}
-      {view3D ? <Canvas2D /> : <Canvas3D />}
+
+  return (<Container>
+    {!expanded && <>
+      {user.isLoggedIn ?
+            <Header navItems={navItemsForLggedIn}/>
+           :
+           <Header navItems={navItems}/>
+      }
+    <MenuBar />
+    <SubMenuBar />
+    </>
+    }
+    {view3D?
+    <Canvas3D />
+    :
+    <Canvas2D />
+    }
+
     </Container>
   );
 }

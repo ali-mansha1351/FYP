@@ -69,9 +69,9 @@ const ZoomButton = styled.div`
   }
 `;
 
-export default function Canvas3D() {
-  const isEmpty =
-    useSelector((state) => state.editor.pattern.nodes.length) === 0;
+
+export default function Canvas2D() {
+  const isEmpty = useSelector((state) => state.editor.pattern.nodes.length) === 0;
   const expanded = useSelector((state) => state.editor.expanded);
   const graphicalView = useSelector((state) => state.editor.graphicalView);
   const selectedMenu = useSelector((state) => state.editor.selectedMenu);
