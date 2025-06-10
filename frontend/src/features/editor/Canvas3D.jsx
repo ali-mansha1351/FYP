@@ -6,9 +6,11 @@ import ForceGraph3D from "3d-force-graph";
 import * as THREE from "three";
 import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleExpandCanvas, insertStitch, selectNode } from "./editorSlice";
+import { toggleExpandCanvas, insertStitch, selectNode, updateNodePosition } from "./editorSlice";
 import { FaExpand, FaCompress } from "react-icons/fa";
 import textures from "./TexturesFor3D";
+import stitchDistances from '../utils/stitchDistances';
+import CrochetStitchDrawings3d from './CanvasDrawingsFor3D'
 const Container = styled.div`
   display: flex;
   position: relative;
@@ -83,10 +85,11 @@ export default function Canvas3D() {
   const graphRef = useRef();
   const patternData = useSelector((state) => state.editor.pattern);
   const dispatch = useDispatch();
-
+  const stitchPaths = new CrochetStitchDrawings3d(0xff0000);
   const hoverNodeRef = useRef();
 
   const getNodeObject = (node) => {
+
     if (graphicalView) {
       return new THREE.Mesh(
         new THREE.SphereGeometry(6, 16, 16),
@@ -119,9 +122,11 @@ export default function Canvas3D() {
     const sprite = new THREE.Sprite(material);
     sprite.scale.set(15, 15, 15);
     obj.add(sprite);
-
+    
     return obj;
   };
+  const getLinkObject = (link) => {
+  }
 
   useEffect(() => {
     const container = containerRef.current;
@@ -136,16 +141,20 @@ export default function Canvas3D() {
   const graphInstance = ForceGraph3D()(container)
     .backgroundColor(bgColor)
     .nodeAutoColorBy("id")
-    .linkColor(() => "black")
+    .nodeRelSize(5)
     .nodeColor(() => "transparent")
-    .linkWidth(1)
+    .nodeOpacity(0.5)
+    .nodeThreeObjectExtend(true)
+    .nodeThreeObject((node) => getNodeObject(node))
+    .linkWidth(0)
     .linkOpacity(1)
+    .linkColor(() => "#ccc")
     .linkDirectionalArrowLength(0)
     .linkDirectionalArrowRelPos(1)
     .linkDirectionalArrowColor(() => "black")
+    .linkThreeObjectExtend(true)
+    .linkThreeObject((link)=>getLinkObject(link))
     .showNavInfo(false)
-    .nodeThreeObjectExtend(true)
-    .nodeThreeObject((node) => getNodeObject(node))
     .enableNodeDrag(true)
     .onNodeHover((node) => {
       if (hoverNodeRef.current?.__sprite) {
@@ -165,7 +174,15 @@ export default function Canvas3D() {
       })
       .onNodeClick((node) => {
         if (node?.id) setSelectedNode(node.id);
-      });
+      }).numDimensions(3);
+
+    graphInstance.cooldownTime(Infinity).d3Force('charge')
+          .strength(-100)
+
+    graphInstance.cooldownTime(Infinity)
+        .d3Force('link')
+        .distance(link => link.inserts || link.slipstitch ? stitchDistances[link.source.type] : 0);
+
 
     graphRef.current = graphInstance;
   }, [textures, graphicalView]);
@@ -183,13 +200,24 @@ export default function Canvas3D() {
   }, [patternData, graphicalView]);
 
   useEffect(() => {
-    if (selectedNode) {
-      dispatch(insertStitch({ node: selectedNode }));
+    if (selectedNode && graphRef.current) {
+      const graphNodes = graphRef.current.graphData().nodes;
+      const currentPositions = {};
+
+      graphNodes.forEach((node) => {
+        currentPositions[node.id] = {
+          x: node.x,
+          y: node.y,
+          z: node.z || 0,
+        };
+      });
+
+      dispatch(insertStitch({ node: selectedNode, positions: currentPositions }));
     }
-    return () => {
-      setSelectedNode(null);
-    };
+
+    return () => setSelectedNode(null);
   }, [selectedNode, dispatch]);
+
 
   const handleZoom = (zoomIn = true) => {
     if (!graphRef.current) return;

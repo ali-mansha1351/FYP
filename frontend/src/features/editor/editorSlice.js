@@ -11,7 +11,7 @@ const initialState = {
   expanded: false,
   graphicalView: false,
   primaryColor:'#0D0C0D',
-  view3D: false,
+  view3D: true,
 };
 
 const editorSlice = createSlice({
@@ -36,68 +36,79 @@ const editorSlice = createSlice({
       state.pattern.nodes.push(newNode);
       console.log(JSON.parse(JSON.stringify(state.pattern)));
     },
-    insertStitch: (state, action) => {
-      const { node: nodeId  } = action.payload;
-      if(state.selectedStitch === null){
-        const n = state.pattern.nodes.find(node=>node.id === nodeId)
-        state.selectedNode = n?n:null
-        console.log(JSON.parse(JSON.stringify(state)));
-        return;
-      }
-      
-      const lastNode = state.pattern.nodes[state.pattern.nodes.length - 1];
-      
+   insertStitch: (state, action) => {
+  const { node: nodeId, positions } = action.payload;
 
-      if(state.selectedStitch === 'slip'){
-        const slipStitchLink = {
-          source: lastNode.id,
-          target: nodeId,
-          inserts: true,
-          slipStitch: true,
-        };
-        
-        state.pattern.links.push(slipStitchLink)
+  if (positions) {
+    state.pattern.nodes.forEach((n) => {
+      if (positions[n.id]) {
+        const pos = positions[n.id];
+        n.x = pos.x;
+        n.y = pos.y;
+        n.z = pos.z || 0;
       }
-      else{
-        const newNodeId = uuidv4();
+    });
+  }
 
-        const newNode = {
-          type: state.selectedStitch,
-          layer: state.currentLayerNumber,
-          start: false,
-          previous: lastNode ? lastNode.id : null,
-          inserts: nodeId,
-          isIncrease: null,
-          surroundingNodes: null,
-          id: newNodeId,
-          index: state.currentIndex +1,
-          color: state.primaryColor
-        };
+  if (state.selectedStitch === null) {
+    const n = state.pattern.nodes.find((node) => node.id === nodeId);
+    state.selectedNode = n || null;
+    return;
+  }
 
-        const prevLink = {
-          source: lastNode.id,
-          target: newNodeId,
-          inserts: false,
-          slipStitch: false,
-        };
-        if(state.selectedStitch !=='ch'){
-          const insertLink = {
-            source: nodeId,
-            target: newNodeId,
-            inserts: true,
-            slipStitch: false,
-          };
-          state.pattern.links.push(insertLink)
-        }
-        state.selectedNode = newNode
-        state.pattern.nodes.push(newNode)
-        state.pattern.links.push(prevLink)
-        state.currentIndex++
-      }
-      
-      console.log(JSON.parse(JSON.stringify(state.pattern)));
-      
-    },
+  const lastNode = state.pattern.nodes[state.pattern.nodes.length - 1];
+
+  if (state.selectedStitch === "slip") {
+    const slipStitchLink = {
+      source: lastNode.id,
+      target: nodeId,
+      inserts: false,
+      slipStitch: true,
+    };
+
+    state.pattern.links.push(slipStitchLink);
+  } else {
+    const newNodeId = uuidv4();
+
+    const newNode = {
+      type: state.selectedStitch,
+      layer: state.currentLayerNumber,
+      start: false,
+      previous: lastNode ? lastNode.id : null,
+      inserts: state.selectedStitch !== "ch" ? nodeId : null,
+      isIncrease: null,
+      surroundingNodes: null,
+      id: newNodeId,
+      index: state.currentIndex + 1,
+      color: state.primaryColor,
+    };
+
+    const prevLink = {
+      source: lastNode.id,
+      target: newNodeId,
+      inserts: false,
+      slipStitch: false,
+    };
+
+    if (state.selectedStitch !== "ch") {
+      const insertLink = {
+        target: nodeId,
+        source: newNodeId,
+        inserts: true,
+        slipStitch: false,
+      };
+      state.pattern.links.push(insertLink);
+    }
+
+    state.selectedNode = newNode;
+    state.pattern.nodes.push(newNode);
+    state.pattern.links.push(prevLink);
+    state.currentIndex++;
+  }
+
+  console.log(JSON.parse(JSON.stringify(state.pattern)));
+  },
+
     selectStitch: (state, action) => {
       const { stitch } = action.payload;
       state.selectedStitch = stitch?stitch:null;
@@ -142,7 +153,7 @@ const editorSlice = createSlice({
     updateNodePosition(state, action) {
       const { id, x, y } = action.payload;
       const node = state.pattern.nodes.find(n => n.id === id);
-      if (node) {
+      if (node ) {
         node.x = x;
         node.y = y;
       }
