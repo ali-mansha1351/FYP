@@ -138,13 +138,21 @@ const editorSlice = createSlice({
     },
     toggle3D:(state)=>{
       state.view3D= !state.view3D
-    }
+    },
+    updateNodePosition(state, action) {
+      const { id, x, y } = action.payload;
+      const node = state.pattern.nodes.find(n => n.id === id);
+      if (node) {
+        node.x = x;
+        node.y = y;
+      }
+    },
     
     
   },
 });
 
 export const { startPattern, addStitch, insertStitch, selectStitch, selectNode, updateSelectedNodeColor
-  , setSelectedMenu, toggleExpandCanvas, setGraphicalView, toggle3D
+  , setSelectedMenu, toggleExpandCanvas, setGraphicalView, toggle3D, updateNodePosition
  } = editorSlice.actions;
 export default editorSlice.reducer;

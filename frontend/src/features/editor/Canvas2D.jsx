@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import ForceGraph2D from "force-graph";
 import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleExpandCanvas, insertStitch } from "./editorSlice";
+import { toggleExpandCanvas, insertStitch, updateNodePosition } from "./editorSlice";
 import CrochetCanvas from "./CanvasDrawingsFor2D";
 
 const stitchCanvas = new CrochetCanvas();
@@ -111,6 +111,7 @@ export default function Canvas2D() {
         const color = node.color || "#333";
         const type = node.type || "ch";
         stitchCanvas.draw(type, ctx, node.x, node.y, color);
+        dispatch(updateNodePosition({ id: node.id, x: node.x, y: node.y, z: node.z || 0 }));
       })
       .linkCanvasObjectMode(() => "before")
       .linkCanvasObject((link, ctx) => {
@@ -125,7 +126,8 @@ export default function Canvas2D() {
       })
       .onNodeClick((node) => {
         if (node?.id) setSelectedNode(node.id);
-      });
+      })
+      
     graph
       .d3Force("link")
       .distance((link) =>
