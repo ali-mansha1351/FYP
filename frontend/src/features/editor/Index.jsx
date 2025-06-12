@@ -21,7 +21,7 @@ export default function Index() {
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
     { label: "Community", path: "/user/newsfeed" },
-    { label: `${user.userDetail.name}`, path: "/user/me" },
+    { label: `${user.userDetail.name.split(" ")[0]}`, path: "/user/me" },
   ];
   const navItems = [
     { label: "Home", path: "/" },

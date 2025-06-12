@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useState, useEffect, useRef } from "react";
 import { ChromePicker } from 'react-color';
 import { useSelector, useDispatch } from "react-redux";
-import { updateSelectedNodeColor, setGraphicalView, toggle3D } from "./editorSlice";
+import { updateSelectedNodeColor, setGraphicalView, toggle3D, undo, redo } from "./editorSlice";
 import { FaUndo, FaRedo, FaProjectDiagram, FaThLarge } from "react-icons/fa";
 
 const Menubar = styled.div`
@@ -51,10 +51,14 @@ const ViewButton = styled.div`
 `;
 
 const EditButton = styled(ViewButton)`
+  opacity: ${({ $disabled }) => ($disabled ? 0.4 : 1)};
+  pointer-events: ${({ $disabled }) => ($disabled ? "none" : "auto")};
   &:hover {
-    background-color: rgba(0, 128, 0, 0.1); /* Light green hover */
+    background-color: ${({ $disabled }) =>
+      $disabled ? "transparent" : "rgba(0, 128, 0, 0.1)"};
   }
 `;
+
 
 const ColorInput = styled.div`
   display: flex;
@@ -102,6 +106,9 @@ export default function SubMenuBar() {
   const selectedNode = useSelector((state) => state.editor.selectedNode);
   const selectedMenu = useSelector((state) => state.editor.selectedMenu);
   const graphicalView = useSelector((state) => state.editor.graphicalView);
+  const canUndo = useSelector((state) => state.editor.history.length > 0);
+  const canRedo = useSelector((state) => state.editor.future.length > 0);
+
   const view3D = useSelector((state) => state.editor.view3D);
   const dispatch = useDispatch();
 
@@ -186,14 +193,15 @@ export default function SubMenuBar() {
 
         {selectedMenu === 'Edit' && (
           <>
-            <EditButton>
-              <FaUndo />
-              Undo
-            </EditButton>
-            <EditButton>
-              <FaRedo />
-              Redo
-            </EditButton>
+            <EditButton $disabled={!canUndo} onClick={() => dispatch(undo())}>
+            <FaUndo />
+            Undo
+          </EditButton>
+          <EditButton $disabled={!canRedo} onClick={() => dispatch(redo())}>
+            <FaRedo />
+            Redo
+          </EditButton>
+
           </>
         )}
       </MenuItemsContainer>
