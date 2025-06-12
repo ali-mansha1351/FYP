@@ -76,7 +76,7 @@ function Login() {
           .then((response) => {
             console.log(response);
             if (response.data) {
-              dispatch(setUser(response.data)); // Dispatch the user data to Redux
+              // dispatch(setUser(response.data)); // Dispatch the user data to Redux
             } else {
               dispatch(logoutUser());
             }

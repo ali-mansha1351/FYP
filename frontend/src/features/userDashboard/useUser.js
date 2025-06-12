@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getLoggedInUser } from "../../services/userApi";
-export function useUser(enabled = false) {
+export function useUser() {
   const {
     isLoading,
     data: user,
@@ -9,8 +9,8 @@ export function useUser(enabled = false) {
   } = useQuery({
     queryKey: ["user"],
     queryFn: getLoggedInUser,
-    retry: false,
-    enabled, //prevent automatic fetching on component mounts
+
+    //prevent automatic fetching on component mounts
   });
 
   return { isLoading, user, error, refetch };

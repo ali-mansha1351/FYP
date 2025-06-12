@@ -81,33 +81,33 @@ export const currentUser = async (req, res, next) => {
 
     //const getCommand = new GetObjectCommand(getObjectParams);
 
-    // if (user.profileImage && user.profileImage.name) {
-    //   const getProfileImageParams = {
-    //     Bucket: process.env.AWS_S3_BUCKET_NAME,
-    //     Key: user.profileImage.name,
-    //   };
-    //   const p_url = await getImage(getProfileImageParams);
-    //   user.profileImage.url = p_url;
-    // } else {
-    //   user.profileImage.name = "";
-    //   user.profileImage.mimetype = "";
-    //   user.profileImage.url = "";
-    // }
+    if (!user.profileImage.url) {
+      const getProfileImageParams = {
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: user.profileImage.name,
+      };
+      const p_url = await getImage(getProfileImageParams);
+      user.profileImage.url = p_url;
+    } else {
+      user.profileImage.name;
+      user.profileImage.mimetype;
+      user.profileImage.url;
+    }
 
-    // if (user.coverImage && user.coverImage.name) {
-    //   const getCoverImageParams = {
-    //     Bucket: process.env.AWS_S3_BUCKET_NAME,
-    //     Key: user.coverImage.name,
-    //   };
-    //   const c_url = await getImage(getCoverImageParams);
-    //   user.coverImage.url = c_url;
-    // } else {
-    //   user.coverImage.name = "";
-    //   user.coverImage.mimetype = "";
-    //   user.coverImage.url = "";
-    // }
+    if (!user.coverImage.url) {
+      const getCoverImageParams = {
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: user.coverImage.name,
+      };
+      const c_url = await getImage(getCoverImageParams);
+      user.coverImage.url = c_url;
+    } else {
+      user.coverImage.name;
+      user.coverImage.mimetype;
+      user.coverImage.url;
+    }
 
-    // await user.save();
+    await user.save();
     res.status(200).json({
       success: true,
       user,

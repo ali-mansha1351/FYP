@@ -1,6 +1,7 @@
 import { Post } from "../modules/post.js";
 import { ErrorHandler } from "../utils/errorhandler.js";
 import { StatusCodes } from "http-status-codes";
+import { getUserInteractedPosts } from "../utils/userInteractedPosts.js";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import {
@@ -9,6 +10,7 @@ import {
   getMultipleImages,
   getImage,
 } from "../utils/s3BucketCommands.js";
+import { User } from "../modules/user.js";
 dotenv.config({ path: "backend/config/config.env" });
 
 export const createPost = async (req, res, next) => {
@@ -158,7 +160,7 @@ export const getPost = async (req, res, next) => {
     const allFiles = post.content;
     const { urls } = await getMultipleImages(allFiles);
     urls.forEach((url, index) => {
-      console.log(url);
+      // console.log(url);
       if (post.content[index]) {
         post.content[index].url = url;
       }
@@ -193,11 +195,10 @@ export const getAllPost = async (req, res, next) => {
     }
     const posts = await Post.find({ createdBy: user });
     if (posts.length === 0) {
-      throw new Error("post not found");
+      throw new Error("no posts yet by user");
     }
     var allFiles = [];
     posts.forEach((post) => allFiles.push(...post.content));
-    console.log(allFiles);
     const { urls } = await getMultipleImages(allFiles);
     let index = 0;
     posts.forEach((post) => {
@@ -218,8 +219,207 @@ export const getAllPost = async (req, res, next) => {
     if (error.message === "unauthrized access") {
       return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
     }
+    if (error.message === "no posts yet by user") {
+      return next(new ErrorHandler(error.message, StatusCodes.OK));
+    }
+    return next(
+      new ErrorHandler(
+        error.message || "internal server error",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
+  }
+};
+
+export const getNewsFeed = async (req, res, next) => {
+  const userId = req.user.id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const interactedPosts = await getUserInteractedPosts(userId);
+  const newsFeed = await Post.find({
+    _id: { $nin: interactedPosts },
+  })
+    .populate("createdBy", "name profileImage")
+    .populate("comments.user", "name profileImage")
+    .populate("likes.userId", "name")
+    .populate("shares.userId", "name profileImage")
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  // Get total count for pagination
+  const totalPosts = await Post.countDocuments({
+    _id: { $nin: interactedPosts },
+  });
+
+  const hasMore = skip + newsFeed.length < totalPosts;
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: {
+      posts: newsFeed,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalPosts / limit),
+        totalPosts,
+        hasMore,
+        postsPerPage: limit,
+      },
+    },
+    message: "Newsfeed posts fetched successfully",
+  });
+  try {
+  } catch (error) {
+    return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
+  }
+};
+
+export const likePost = async (req, res, next) => {
+  const userId = req.user.id;
+  const postId = req.params.id;
+  try {
+    if (!userId) {
+      throw new Error("unauthorized access and user not found");
+    }
+    if (!postId) {
+      throw new Error("post id not found");
+    }
+    const postToLike = await Post.findOne({ _id: postId });
+    if (!postToLike) {
+      throw new Error("post not found");
+    }
+    const hasLiked = postToLike.likes.includes(userId);
+    if (hasLiked) {
+      await Post.findByIdAndUpdate(
+        postId,
+        { $pull: { likes: userId } },
+        { new: true }
+      );
+      res.status(StatusCodes.OK).json({
+        success: true,
+        message: "post unliked",
+      });
+    } else {
+      await Post.findByIdAndUpdate(
+        postId,
+        { $addToSet: { likes: userId } },
+        { new: true }
+      );
+      res.status(StatusCodes.OK).json({
+        success: true,
+        message: "post liked",
+      });
+    }
+  } catch (error) {
+    if (error.message === "unauthorized access and user not found") {
+      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
+    }
+    if (error.message === "post id not found") {
+      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
+    }
     if (error.message === "post not found") {
       return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
+    }
+    return next(
+      new ErrorHandler(
+        error.message || "Internal server error",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
+  }
+};
+
+export const savePost = async (req, res, next) => {
+  const userId = req.user.id;
+  const post = req.params.id;
+  try {
+    if (!userId) {
+      throw new Error("unauthorized");
+    }
+    if (!post) {
+      throw new Error("no post id found to save it");
+    }
+    const userSavePostCheck = await User.findById(userId);
+    const alreadySaved = userSavePostCheck.savedPosts.includes(post);
+    if (alreadySaved) {
+      await User.findByIdAndUpdate(
+        userId,
+        { $pull: { savedPosts: post } },
+        { new: true }
+      );
+      res.status(StatusCodes.OK).json({
+        success: true,
+        message: "post unsaved",
+      });
+    } else {
+      await User.findByIdAndUpdate(
+        userId,
+        { $addToSet: { savedPosts: post } },
+        { new: true }
+      );
+      res.status(StatusCodes.OK).json({
+        success: true,
+        message: "post saved",
+      });
+    }
+
+    if (!userId || !userSavePostCheck) {
+      throw new Error("user not found to save post");
+    }
+  } catch (error) {
+    if (error.message === "unauthorized") {
+      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
+    }
+    if (error.message === "no post id found to save it") {
+      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
+    }
+    if (error.message === "user not found to save post") {
+      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
+    }
+    return next(
+      new ErrorHandler(
+        error.message || "internal server error",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
+  }
+};
+
+export const getSavedPosts = async (req, res, next) => {
+  const userId = req.user.id;
+  try {
+    if (!userId) {
+      throw new Error("unauthorized");
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("user not found");
+    }
+    const savedPostsIds = user.savedPosts;
+    if (savedPostsIds.length > 0) {
+      const savedPosts = await Post.find({ _id: { $in: savedPostsIds } })
+        .populate()
+        .exec();
+      res.status(StatusCodes.OK).json({
+        success: true,
+        message: "all saved posts",
+        savedPosts,
+      });
+    } else {
+      res.status(StatusCodes.OK).json({
+        success: true,
+        message: "no saved posts",
+        savedPosts: [],
+      });
+    }
+  } catch (error) {
+    if (error.message === "unauthorized") {
+      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
+    }
+    if (error.message === "user not found") {
+      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
     }
     return next(
       new ErrorHandler(
@@ -234,8 +434,12 @@ export const deletePost = async (req, res, next) => {
   const user = req.user.id;
   try {
     const post = await Post.findById(req.params.id);
-    const allFiles = post.content;
-    await deleteMultipleImages(allFiles);
+
+    // console.log(post.content);
+    if (post.content) {
+      const allFiles = post.content;
+      await deleteMultipleImages(allFiles);
+    }
     if (user != post.createdBy) {
       throw new Error("can not delete this post, unauhtorized access");
     }

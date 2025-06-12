@@ -60,7 +60,9 @@ export const deleteMultipleImages = async (files) => {
 
 export const getImage = async (params) => {
   const getCommand = new GetObjectCommand(params);
-  const url = await getSignedUrl(s3, getCommand, { expiresIn: 3600 });
+  const url = await getSignedUrl(s3, getCommand, {
+    expiresIn: process.env.AWS_S3_PRE_SIGNED_URL_EXPIRE_TIME,
+  });
   return url;
 };
 

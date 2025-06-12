@@ -11,6 +11,10 @@ import {
   updatePost,
   getAllPost,
   deletePost,
+  likePost,
+  getNewsFeed,
+  savePost,
+  getSavedPosts,
 } from "../controller/postController.js";
 
 const router = express.Router();
@@ -24,7 +28,11 @@ router
     multerFileFilter,
     createPost
   );
+router.route("/user/post/saved").get(isAuthenticatedUser, getSavedPosts);
 router.route("/user/post/all").get(isAuthenticatedUser, getAllPost);
+router.route("/user/post/newsfeed").get(isAuthenticatedUser, getNewsFeed);
+router.route("/user/post/like/:id").patch(isAuthenticatedUser, likePost);
+router.route("/user/post/save/:id").patch(isAuthenticatedUser, savePost);
 router
   .route("/user/post/:id")
   .post(

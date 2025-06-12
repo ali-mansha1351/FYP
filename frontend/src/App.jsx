@@ -2,6 +2,8 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import AppLayout from "./ui/AppLayout";
 import Login from "./features/login/Login";
 import Register from "./features/register/Register";
@@ -14,12 +16,24 @@ import PublicRoute from "./ui/PublicRoute";
 import Learn from "./features/learn/Index";
 import NewsFeed from "./features/community/NewsFeed";
 
+const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+  key: "react-query-cache",
+});
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,
+      staleTime: 1000 * 60 * 3,
+      retry: 1,
+      gcTime: 1000 * 60 * 30,
     },
   },
+});
+
+persistQueryClient({
+  queryClient,
+  persister,
 });
 const router = createBrowserRouter([
   {
