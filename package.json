@@ -15,8 +15,6 @@
     "@aws-sdk/client-s3": "^3.787.0",
     "@aws-sdk/s3-request-presigner": "^3.796.0",
     "@reduxjs/toolkit": "^2.5.0",
-    "@tanstack/react-query": "^5.62.10",
-    "@tanstack/react-query-devtools": "^5.62.10",
     "3d-force-graph": "^1.77.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",

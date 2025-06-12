@@ -18,7 +18,6 @@ const sendToken = (user, statusCode, res) => {
     success: true,
     token,
     expiresAt,
-    user,
   });
 };
 
