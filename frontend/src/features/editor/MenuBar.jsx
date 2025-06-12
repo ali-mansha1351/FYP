@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedMenu } from "./editorSlice";
 
@@ -40,10 +39,7 @@ export default function MenuBar() {
           </MenuItem>
         ))}
       </MenuItemsContainer>
-      <MenuItem
-        selected={selected === "Export"}
-        onClick={() => dispatch(setSelectedMenu("Export"))}
-      >
+      <MenuItem>
         Export
       </MenuItem>
     </Menubar>

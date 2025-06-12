@@ -118,6 +118,9 @@ const getLinkObject = (link) =>
     });
 
     patternData.links.forEach((link) => {
+      if(graphicalView){
+        return;
+      }
       const source = patternData.nodes.find((n) => n.id === link.source);
       if (!source) return;
       const colorInt = parseInt((source.color || "#000000").replace("#", ""), 16);
