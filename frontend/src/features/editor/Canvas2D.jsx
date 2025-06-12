@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import ForceGraph2D from "force-graph";
 import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleExpandCanvas, insertStitch, updateNodePosition } from "./editorSlice";
+import { toggleExpandCanvas, insertStitch } from "./editorSlice";
 import CrochetCanvas from "./CanvasDrawingsFor2D";
 import Vector from "../utils/vector";
 import stitchDistances from '../utils/stitchDistances';

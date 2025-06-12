@@ -45,7 +45,9 @@ const editorSlice = createSlice({
         const pos = positions[n.id];
         n.x = pos.x;
         n.y = pos.y;
-        n.z = pos.z || 0;
+        if(pos.z){
+          n.z = pos.z;
+        }
       }
     });
   }
@@ -157,22 +159,12 @@ const editorSlice = createSlice({
       }
       state.view3D= !state.view3D
     },
-
-    updateNodePosition(state, action) {
-      const { id, x, y } = action.payload;
-      const node = state.pattern.nodes.find(n => n.id === id);
-      if (node ) {
-        node.x = x;
-        node.y = y;
-      }
-    },
-
     
     
   },
 });
 
 export const { startPattern, addStitch, insertStitch, selectStitch, selectNode, updateSelectedNodeColor
-  , setSelectedMenu, toggleExpandCanvas, setGraphicalView, toggle3D, updateNodePosition
+  , setSelectedMenu, toggleExpandCanvas, setGraphicalView, toggle3D
  } = editorSlice.actions;
 export default editorSlice.reducer;

@@ -6,7 +6,7 @@ import ForceGraph3D from "3d-force-graph";
 import * as THREE from "three";
 import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleExpandCanvas, insertStitch, selectNode, updateNodePosition } from "./editorSlice";
+import { toggleExpandCanvas, insertStitch, selectNode } from "./editorSlice";
 import { FaExpand, FaCompress } from "react-icons/fa";
 import stitchDistances from '../utils/stitchDistances';
 import CrochetStitchDrawings3d from './CanvasDrawingsFor3D'
