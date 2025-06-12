@@ -38,8 +38,8 @@ const ViewButton = styled.div`
   padding: 6px 12px;
   font-size: 15px;
   font-weight: 500; 
-  background-color: ${({ $graphicalView }) =>
-    $graphicalView ? 'rgba(0, 0, 255, 0.1)' : 'transparent'};
+  background-color: ${({ $active }) =>
+    $active ? 'rgba(0, 0, 255, 0.1)' : 'transparent'};
   border-radius: 6px;
   color: #333;
   cursor: pointer;

@@ -8,7 +8,9 @@ import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleExpandCanvas, insertStitch, selectNode } from "./editorSlice";
 import { FaExpand, FaCompress } from "react-icons/fa";
-import textures from "./TexturesFor3D";
+import stitchDistances from '../utils/stitchDistances';
+import CrochetStitchDrawings3d from './CanvasDrawingsFor3D'
+import Vector from "../utils/vector";
 const Container = styled.div`
   display: flex;
   position: relative;
@@ -83,50 +85,61 @@ export default function Canvas3D() {
   const graphRef = useRef();
   const patternData = useSelector((state) => state.editor.pattern);
   const dispatch = useDispatch();
-
+  const stitchPaths = new CrochetStitchDrawings3d(0xff0000);
   const hoverNodeRef = useRef();
+  const preloadedNodeObjects = useRef({});
+  const preloadedLinkObjects = useRef({});
 
-  const getNodeObject = (node) => {
-    if (graphicalView) {
-      return new THREE.Mesh(
-        new THREE.SphereGeometry(6, 16, 16),
-        new THREE.MeshBasicMaterial({ color: node.color || "#999" })
-      );
-    }
+  const getNodeObject = (node) => preloadedNodeObjects.current[node.id] || null;
 
-    if (node.type === "slip") {
-      let geometry = new THREE.SphereGeometry(2, 16, 16);
-      let material = new THREE.MeshBasicMaterial({ color: node.color });
-      return new THREE.Mesh(geometry, material);
-    }
+const getLinkObject = (link) =>
+  preloadedLinkObjects.current[`${link.source}-${link.target}`] || false;
 
-    const obj = new THREE.Mesh(
-      new THREE.SphereGeometry(7),
-      new THREE.MeshBasicMaterial({
-        depthWrite: false,
-        transparent: true,
-        opacity: 0,
-      })
-    );
+  const getNodeById = (id) => {
+    return patternData.nodes.find((node) => node.id === id);
+  };
+  useEffect(() => {
+  const preloadObjects = () => {
+    const nodeCache = {};
+    const linkCache = {};
 
-    const imgTexture = textures[node.type] || textures["ch"];
-    const material = new THREE.SpriteMaterial({
-      map: imgTexture,
-      depthFunc: THREE.NotEqualDepth,
-      color: node.color,
+    patternData.nodes.forEach((node) => {
+      const colorInt = parseInt((node.color || "#999999").replace("#", ""), 16);
+      if (graphicalView) {
+        nodeCache[node.id] = new THREE.Mesh(
+          new THREE.SphereGeometry(6, 16, 16),
+          new THREE.MeshBasicMaterial({ color: node.color || "#999" })
+        );
+      } else {
+        if (["mr", "ch", "hole"].includes(node.type)) {
+          nodeCache[node.id] = stitchPaths.draw(node.type, colorInt);
+        }
+      }
     });
 
-    const sprite = new THREE.Sprite(material);
-    sprite.scale.set(15, 15, 15);
-    obj.add(sprite);
+    patternData.links.forEach((link) => {
+      const source = patternData.nodes.find((n) => n.id === link.source);
+      if (!source) return;
+      const colorInt = parseInt((source.color || "#000000").replace("#", ""), 16);
+      if (link.inserts && source?.type) {
+        linkCache[`${link.source}-${link.target}`] = stitchPaths.draw(source.type, colorInt);
+      } else if (link.slipStitch) {
+        linkCache[`${link.source}-${link.target}`] = stitchPaths.draw("slst", colorInt);
+      }
+    });
 
-    return obj;
+    preloadedNodeObjects.current = nodeCache;
+    preloadedLinkObjects.current = linkCache;
   };
+
+  preloadObjects();
+}, [patternData, graphicalView]);
+
 
   useEffect(() => {
     const container = containerRef.current;
 
-    if (!container || (!graphicalView && !Object.keys(textures).length)) return;
+    if (!container) return;
 
     const bgColor = getComputedStyle(document.documentElement)
       .getPropertyValue("--third-color")
@@ -136,44 +149,112 @@ export default function Canvas3D() {
   const graphInstance = ForceGraph3D()(container)
     .backgroundColor(bgColor)
     .nodeAutoColorBy("id")
-    .linkColor(() => "black")
+    .nodeRelSize(5)
     .nodeColor(() => "transparent")
-    .linkWidth(1)
+    .nodeOpacity(0.5)
+    .nodeThreeObjectExtend(true)
+    .nodeThreeObject((node) => getNodeObject(node))
+    .linkWidth(0)
     .linkOpacity(1)
+    .linkColor(() => "#ccc")
     .linkDirectionalArrowLength(0)
     .linkDirectionalArrowRelPos(1)
     .linkDirectionalArrowColor(() => "black")
+    .linkThreeObjectExtend(true)
+    .linkThreeObject((link)=>getLinkObject(link))
+    .linkPositionUpdate((linkObject, { start, end }, link) => {
+                    if(!linkObject){
+                        if(link.source.type === 'hole'){
+                        let newX = 0;
+                        let newY = 0;
+                        let newZ = 0;
+                        link.source.surroundingNodes.forEach(id => {
+                            let node = getNodeById(id)
+                            newX += node.x;
+                            newY += node.y;
+                            newZ += node.z;
+                        })
+                        newX /= node.surroundingNodes.length;
+                        newY /= node.surroundingNodes.length;
+                        newZ /= node.surroundingNodes.length;
+                        node.x = newX;
+                        node.y = newY;
+                        node.z = newZ;
+                    }
+                        return true;
+                    }
+
+                    let position;
+                    let centerPoint = Object.assign(...['x', 'y', 'z'].map(c => ({
+                        [c]: start[c] + (end[c] - start[c]) / 2 // calc middle point
+                    })));
+                    let startPoint = {
+                        "x": start.x,
+                        "y": start.y,
+                        "z": start.z,
+                    };
+                    let startCenterMiddlePoint = {
+                        "x": (startPoint.x +  centerPoint.x) / 2,
+                        "y": (startPoint.y +  centerPoint.y) / 2,
+                        "z": (startPoint.z +  centerPoint.z) / 2 ,
+                    };
+                    let secondMiddlePoint = {
+                        "x": (startPoint.x +  startCenterMiddlePoint.x) / 2,
+                        "y": (startPoint.y +  startCenterMiddlePoint.y) / 2,
+                        "z": (startPoint.z +  startCenterMiddlePoint.z) / 2 ,
+                    };
+                    if(link.slipstitch){
+                        position = centerPoint;
+                    }else{
+                        position = secondMiddlePoint;
+
+                        let screenCoordSource = graphInstance.graph2ScreenCoords(link.source.x, link.source.y, link.source.z);
+                        let screenCoordTarget = graphInstance.graph2ScreenCoords(link.target.x, link.target.y, link.target.z);
+
+                        let spriteUpVec = new Vector(0, 1, 0);
+                        let linkVec = new Vector(
+                            Math.abs(screenCoordSource.x - screenCoordTarget.x),
+                            Math.abs(screenCoordSource.y - screenCoordTarget.y),
+                            Math.abs(screenCoordSource.z - screenCoordTarget.z)
+                        );
+                        let radians = spriteUpVec.angleTo(linkVec);
+                        let stitchAbove = screenCoordSource.y >= screenCoordTarget.y;
+                        let stitchRight = screenCoordSource.x >= screenCoordTarget.x;
+
+                        if(stitchAbove){
+                            radians += Math.PI;
+                            if(!stitchRight){
+                                radians *= -1;
+                            }
+                        }else{
+                            if(stitchRight){
+                                radians *= -1;
+                            }
+                        }
+                        linkObject?.children[0]?.material.setValues({
+                            rotation: radians
+                        })
+                    }
+
+                    Object.assign(linkObject.position, position);
+                })
     .showNavInfo(false)
-    .nodeThreeObjectExtend(true)
-    .nodeThreeObject((node) => getNodeObject(node))
     .enableNodeDrag(true)
-    .onNodeHover((node) => {
-      if (hoverNodeRef.current?.__sprite) {
-        hoverNodeRef.current.__sprite.material.opacity = 1;
-        hoverNodeRef.current.__sprite.material.color.set(0x000000);
-        hoverNodeRef.current.__sprite.material.needsUpdate = true;
-      }
-
-
-        if (node?.__sprite) {
-          node.__sprite.material.opacity = 0.6;
-          node.__sprite.material.color.set(0x00ffff);
-          node.__sprite.material.needsUpdate = true;
-        }
-
-        hoverNodeRef.current = node;
-      })
       .onNodeClick((node) => {
         if (node?.id) setSelectedNode(node.id);
-      });
+      }).numDimensions(3);
+
+    graphInstance.cooldownTime(Infinity).d3Force('charge')
+          .strength(-100)
+
+    graphInstance.cooldownTime(Infinity)
+        .d3Force('link')
+        .distance(link => link.inserts || link.slipstitch ? stitchDistances[link.source.type] : 0);
+
 
     graphRef.current = graphInstance;
-  }, [textures, graphicalView]);
+  }, [graphicalView]);
 
-  useEffect(() => {
-    if (!graphRef.current) return;
-    graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
-  }, [textures]);
 
   useEffect(() => {
     if (!graphRef.current) return;
@@ -183,13 +264,24 @@ export default function Canvas3D() {
   }, [patternData, graphicalView]);
 
   useEffect(() => {
-    if (selectedNode) {
-      dispatch(insertStitch({ node: selectedNode }));
+    if (selectedNode && graphRef.current) {
+      const graphNodes = graphRef.current.graphData().nodes;
+      const currentPositions = {};
+
+      graphNodes.forEach((node) => {
+        currentPositions[node.id] = {
+          x: node.x,
+          y: node.y,
+          z: node.z || 0,
+        };
+      });
+
+      dispatch(insertStitch({ node: selectedNode, positions: currentPositions }));
     }
-    return () => {
-      setSelectedNode(null);
-    };
+
+    return () => setSelectedNode(null);
   }, [selectedNode, dispatch]);
+
 
   const handleZoom = (zoomIn = true) => {
     if (!graphRef.current) return;
@@ -201,6 +293,7 @@ export default function Canvas3D() {
     const zoomFactor = zoomIn ? 0.8 : 1.4;
     graphRef.current.camera().translateZ(distance * (zoomFactor - 1));
   };
+  
 
   return (
     <>

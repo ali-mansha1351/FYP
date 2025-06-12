@@ -59,7 +59,7 @@ export default class CrochetCanvas {
     }
 
     drawChainStitch(ctx, x, y) {
-        ctx.save(); 
+        ctx.save(); ctx.scale(1.3, 1); // save() saves settings before scaling
         ctx.arc(x/1.3, y, 5, 0, 2 * Math.PI, false); ctx.stroke(); // drawing circle, normalizing scaled x coordinate
         ctx.closePath(); ctx.restore(); // restores settings from last save (next drawings are unaffected by scaling)
     }

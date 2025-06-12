@@ -7,7 +7,8 @@ import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleExpandCanvas, insertStitch } from "./editorSlice";
 import CrochetCanvas from "./CanvasDrawingsFor2D";
-
+import Vector from "../utils/vector";
+import stitchDistances from '../utils/stitchDistances';
 const stitchCanvas = new CrochetCanvas();
 
 const Container = styled.div`
@@ -78,20 +79,20 @@ export default function Canvas2D() {
   const patternData = useSelector((state) => state.editor.pattern);
   const [isBeginningModalOpen, setIsBeginningModalOpen] = useState(isEmpty);
   const [selectedNode, setSelectedNode] = useState(null);
+  const hoveredNodeRef = useRef(null);
+
   const containerRef = useRef();
+  const positionsRef = useRef({});
+
   const graphRef = useRef();
   const dispatch = useDispatch();
-  const stitchDistances = {
-    mr: 30,
-    ch: 20,
-    sc: 25,
-    hdc: 35,
-    dc: 45,
-    tr: 55,
-    dtr: 65,
-    slst: 10,
-    hole: 0,
-  };
+useEffect(() => {
+  if (graphRef.current) {
+    // Re-apply the same data to trigger a redraw
+    graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
+  }
+}, [hoveredNodeRef]);
+
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -108,29 +109,97 @@ export default function Canvas2D() {
       .linkWidth(0)
       .nodeCanvasObjectMode(() => "before")
       .nodeCanvasObject((node, ctx) => {
-        const color = node.color || "#333";
-        const type = node.type || "ch";
-        stitchCanvas.draw(type, ctx, node.x, node.y, color);
-      })
-      .linkCanvasObjectMode(() => "before")
-      .linkCanvasObject((link, ctx) => {
-        const source = link.source;
-        const target = link.target;
-        const xMid = (source.x + target.x) / 2;
-        const yMid = (source.y + target.y) / 2;
-        const color = source.color || "#000";
-        if (link.slipStitch) {
-          stitchCanvas.draw("slst", ctx, xMid, yMid, color);
+        const isHovered = node.id === hoveredNodeRef.current;
+
+        
+        if(node.type === 'ch' || node.type === 'mr' ){
+          stitchCanvas.draw(node.type, ctx, node.x, node.y, node.color);
         }
+         if (isHovered) {
+            const radius = 8;
+            const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius);
+            gradient.addColorStop(0, "rgba(234, 142, 75, 0.8)");
+            gradient.addColorStop(1, "rgba(234, 142, 75, 0)");
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+
+         positionsRef.current[node.id] = { x: node.x, y: node.y, z: node.z || 0 };
+
       })
+      .linkCanvasObjectMode((link) => {
+        if (link.inserts) return "replace"; 
+        return "before"; 
+      })
+
+      .linkCanvasObject((link, ctx) =>{
+                    if(link.source.type === "hole"){
+                        // set its position in the middle of its surrounding nodes
+                        let newX = 0;
+                        let newY = 0;
+                        link.source.surroundingNodes.forEach(uuid => {
+                            let node = this.getNode(uuid);
+                            newX += node.x;
+                            newY += node.y;
+                        })
+                        newX /= link.source.surroundingNodes.length;
+                        newY /= link.source.surroundingNodes.length;
+                        link.source.x = newX;
+                        link.source.y = newY;
+                    }
+                    // Calculate Angle and Center point for placement
+                    let n1Vec = new Vector(link.source.x, link.source.y, 0);
+                    let n2Vec = new Vector(link.target.x, link.target.y, 0);
+                    let linkVec = n1Vec.subtract(n2Vec).unit();
+                    let perpendicularVec = new Vector(0, 1, 0);
+
+                    let angle = perpendicularVec.unitAngleTo(linkVec);
+                    let sourceX = link.source.x;
+                    let sourceY = link.source.y;
+                    let middleX = (sourceX + link.target.x)/2;
+                    let middleY = (sourceY + link.target.y)/2;
+                    let x = (sourceX + middleX) / 2;
+                    let y = (sourceY + middleY) / 2;
+
+                    let color = link.source.color;
+
+                    // Draw on html5 canvas if the edge is of type insert
+                    if(link.inserts){
+                        ctx.save();
+                        ctx.translate(x, y); //translate to center of shape
+                        if(linkVec.x < 0){
+                            ctx.rotate(Math.PI + angle);
+                        }else{
+                            ctx.rotate(Math.PI -angle);
+                        }
+                        
+                        ctx.translate(-x, -y);
+
+                        stitchCanvas.draw(link.source.type, ctx, x, y, link.source.color);
+                        ctx.restore();
+                    }else if(link.slipStitch){
+                        stitchCanvas.draw("slst", ctx, middleX, middleY, color);
+                    }
+                })
       .onNodeClick((node) => {
         if (node?.id) setSelectedNode(node.id);
-      });
+      })
+      .onNodeHover((node) => {
+        hoveredNodeRef.current = node?.id
+      })
+
+      
     graph
       .d3Force("link")
       .distance((link) =>
-        link.inserts || link.slipstitch ? stitchDistances[link.source.type] : 10
+        link.inserts || link.slipstitch ? stitchDistances[link.source.type] : 0
       );
+    graph.cooldownTime(Infinity)
+                .d3Force('charge')
+                .strength(-100)
+                
 
     graphRef.current = graph;
 
@@ -146,13 +215,12 @@ export default function Canvas2D() {
   }, [patternData]);
 
   useEffect(() => {
-    if (selectedNode) {
-      dispatch(insertStitch({ node: selectedNode }));
-    }
-    return () => {
-      setSelectedNode(null);
-    };
-  }, [selectedNode, dispatch]);
+  if (selectedNode) {
+    const currentPositions = positionsRef.current;
+    dispatch(insertStitch({ node: selectedNode, positions: currentPositions }));
+  }
+  return () => setSelectedNode(null);
+}, [selectedNode, dispatch]);
 
   useEffect(() => {
     return () => {

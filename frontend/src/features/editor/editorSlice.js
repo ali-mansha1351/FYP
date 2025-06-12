@@ -36,68 +36,81 @@ const editorSlice = createSlice({
       state.pattern.nodes.push(newNode);
       console.log(JSON.parse(JSON.stringify(state.pattern)));
     },
-    insertStitch: (state, action) => {
-      const { node: nodeId  } = action.payload;
-      if(state.selectedStitch === null){
-        const n = state.pattern.nodes.find(node=>node.id === nodeId)
-        state.selectedNode = n?n:null
-        console.log(JSON.parse(JSON.stringify(state)));
-        return;
-      }
-      
-      const lastNode = state.pattern.nodes[state.pattern.nodes.length - 1];
-      
+   insertStitch: (state, action) => {
+  const { node: nodeId, positions } = action.payload;
 
-      if(state.selectedStitch === 'slip'){
-        const slipStitchLink = {
-          source: lastNode.id,
-          target: nodeId,
-          inserts: true,
-          slipStitch: true,
-        };
-        
-        state.pattern.links.push(slipStitchLink)
-      }
-      else{
-        const newNodeId = uuidv4();
-
-        const newNode = {
-          type: state.selectedStitch,
-          layer: state.currentLayerNumber,
-          start: false,
-          previous: lastNode ? lastNode.id : null,
-          inserts: nodeId,
-          isIncrease: null,
-          surroundingNodes: null,
-          id: newNodeId,
-          index: state.currentIndex +1,
-          color: state.primaryColor
-        };
-
-        const prevLink = {
-          source: lastNode.id,
-          target: newNodeId,
-          inserts: false,
-          slipStitch: false,
-        };
-        if(state.selectedStitch !=='ch'){
-          const insertLink = {
-            source: nodeId,
-            target: newNodeId,
-            inserts: true,
-            slipStitch: false,
-          };
-          state.pattern.links.push(insertLink)
+  if (positions) {
+    state.pattern.nodes.forEach((n) => {
+      if (positions[n.id]) {
+        const pos = positions[n.id];
+        n.x = pos.x;
+        n.y = pos.y;
+        if(pos.z){
+          n.z = pos.z;
         }
-        state.selectedNode = newNode
-        state.pattern.nodes.push(newNode)
-        state.pattern.links.push(prevLink)
-        state.currentIndex++
       }
-      
-      console.log(JSON.parse(JSON.stringify(state.pattern)));
-      
-    },
+    });
+  }
+
+  if (state.selectedStitch === null) {
+    const n = state.pattern.nodes.find((node) => node.id === nodeId);
+    state.selectedNode = n || null;
+    return;
+  }
+
+  const lastNode = state.pattern.nodes[state.pattern.nodes.length - 1];
+
+  if (state.selectedStitch === "slip") {
+    const slipStitchLink = {
+      source: lastNode.id,
+      target: nodeId,
+      inserts: false,
+      slipStitch: true,
+    };
+
+    state.pattern.links.push(slipStitchLink);
+  } else {
+    const newNodeId = uuidv4();
+
+    const newNode = {
+      type: state.selectedStitch,
+      layer: state.currentLayerNumber,
+      start: false,
+      previous: lastNode ? lastNode.id : null,
+      inserts: state.selectedStitch !== "ch" ? nodeId : null,
+      isIncrease: null,
+      surroundingNodes: null,
+      id: newNodeId,
+      index: state.currentIndex + 1,
+      color: state.primaryColor,
+    };
+
+    const prevLink = {
+      source: lastNode.id,
+      target: newNodeId,
+      inserts: false,
+      slipStitch: false,
+    };
+
+    if (state.selectedStitch !== "ch") {
+      const insertLink = {
+        target: nodeId,
+        source: newNodeId,
+        inserts: true,
+        slipStitch: false,
+      };
+      state.pattern.links.push(insertLink);
+    }
+
+    state.selectedNode = newNode;
+    state.pattern.nodes.push(newNode);
+    state.pattern.links.push(prevLink);
+    state.currentIndex++;
+  }
+
+  console.log(JSON.parse(JSON.stringify(state.pattern)));
+  },
+
     selectStitch: (state, action) => {
       const { stitch } = action.payload;
       state.selectedStitch = stitch?stitch:null;
@@ -133,12 +146,19 @@ const editorSlice = createSlice({
       state.expanded = !state.expanded
     },
     setGraphicalView: (state)=>{
+      if(!state.graphicalView){
+        state.view3D = true
+      }
       state.graphicalView= !state.graphicalView
+      
       console.log(JSON.parse(JSON.stringify(state)));
     },
     toggle3D:(state)=>{
+      if(state.view3D){
+        state.graphicalView = false
+      }
       state.view3D= !state.view3D
-    }
+    },
     
     
   },
