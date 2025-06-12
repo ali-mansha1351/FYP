@@ -11,7 +11,7 @@ const initialState = {
   expanded: false,
   graphicalView: false,
   primaryColor:'#0D0C0D',
-  view3D: true,
+  view3D: false,
 };
 
 const editorSlice = createSlice({
@@ -144,12 +144,20 @@ const editorSlice = createSlice({
       state.expanded = !state.expanded
     },
     setGraphicalView: (state)=>{
+      if(!state.graphicalView){
+        state.view3D = true
+      }
       state.graphicalView= !state.graphicalView
+      
       console.log(JSON.parse(JSON.stringify(state)));
     },
     toggle3D:(state)=>{
+      if(state.view3D){
+        state.graphicalView = false
+      }
       state.view3D= !state.view3D
     },
+
     updateNodePosition(state, action) {
       const { id, x, y } = action.payload;
       const node = state.pattern.nodes.find(n => n.id === id);
@@ -158,6 +166,7 @@ const editorSlice = createSlice({
         node.y = y;
       }
     },
+
     
     
   },
