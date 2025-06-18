@@ -81,7 +81,7 @@ export const currentUser = async (req, res, next) => {
 
     //const getCommand = new GetObjectCommand(getObjectParams);
 
-    if (!user.profileImage.url) {
+    if (!user.profileImage.url && user.profileImage.name) {
       const getProfileImageParams = {
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: user.profileImage.name,
@@ -94,7 +94,7 @@ export const currentUser = async (req, res, next) => {
       user.profileImage.url;
     }
 
-    if (!user.coverImage.url) {
+    if (!user.coverImage.url && user.coverImage.name) {
       const getCoverImageParams = {
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: user.coverImage.name,
