@@ -553,7 +553,7 @@ function UserProfile() {
                   {countFollowers} Followers | {countFollowing} Following
                 </FollowersContainer>
                 <PostsNumContainer>
-                  {userPosts.posts?.length || 0} Posts
+                  {userPosts?.posts?.length || 0} Posts
                 </PostsNumContainer>
               </RightContainer>
             </ProfileHeader>
@@ -582,13 +582,13 @@ function UserProfile() {
                   $active={activeTab === "saved"}
                   onClick={() => handleTabClick("saved")}
                 >
-                  Saved Posts ({getCachedSavedPosts.savedPosts?.length || 0})
+                  Saved Posts ({getCachedSavedPosts?.savedPosts?.length || 0})
                 </PostsTab>
                 <PostsTab
                   $active={activeTab === "created"}
                   onClick={() => handleTabClick("created")}
                 >
-                  My Posts ({userPosts.posts?.length || 0})
+                  My Posts ({userPosts?.posts?.length || 0})
                 </PostsTab>
               </PostsTabContainer>
             </PostsHeader>
