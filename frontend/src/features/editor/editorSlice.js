@@ -123,8 +123,23 @@ const editorSlice = createSlice({
         state.pattern.links.push(prevLink);
         state.currentIndex++;
       }
+      console.log(JSON.parse(JSON.stringify(state.pattern)))
     },
-
+    resetEditor: (state) => {
+        state.pattern.nodes = [];
+        state.pattern.links = [];
+        state.currentLayerNumber = 0;
+        state.selectedStitch = null;
+        state.currentIndex = 0;
+        state.selectedNode = null;
+        state.selectedMenu = null;
+        state.expanded = false;
+        state.graphicalView = false;
+        state.view3D = false;
+        state.history = [];
+        state.future = [];
+      }
+      ,
     updateSelectedNodeColor: (state, action) => {
       state.history.push(cloneRelevantState(state));
       if (state.history.length > MAX_HISTORY_LENGTH) state.history.shift();
@@ -216,6 +231,7 @@ export const {
   toggle3D,
   undo,
   redo,
+  resetEditor
 } = editorSlice.actions;
 
 export default editorSlice.reducer;

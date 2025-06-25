@@ -86,12 +86,17 @@ export default function Canvas2D() {
 
   const graphRef = useRef();
   const dispatch = useDispatch();
-useEffect(() => {
-  if (graphRef.current) {
-    // Re-apply the same data to trigger a redraw
-    graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
+  useEffect(() => {
+    if (graphRef.current) {
+      // Re-apply the same data to trigger a redraw
+      graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
+    }
+  }, [hoveredNodeRef]);
+  useEffect(() => {
+  if (isEmpty) {
+    setIsBeginningModalOpen(true);
   }
-}, [hoveredNodeRef]);
+}, [isEmpty]);
 
 
   useEffect(() => {
