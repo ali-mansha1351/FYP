@@ -2,8 +2,21 @@ import styled from "styled-components";
 import { useState, useEffect, useRef } from "react";
 import { ChromePicker } from 'react-color';
 import { useSelector, useDispatch } from "react-redux";
-import { updateSelectedNodeColor, setGraphicalView, toggle3D, undo, redo } from "./editorSlice";
-import { FaUndo, FaRedo, FaProjectDiagram, FaThLarge } from "react-icons/fa";
+import { updateSelectedNodeColor, setGraphicalView, toggle3D, undo, redo, resetEditor } from "./editorSlice";
+import NewPatternModal from "./NewPatternmodal"; 
+import {
+  FaUndo,
+  FaRedo,
+  FaProjectDiagram,
+  FaThLarge,
+  FaFileAlt,
+  FaSave,
+  FaTrashAlt,
+  FaFileExport,
+  FaFileImport
+} from "react-icons/fa";
+
+
 
 const Menubar = styled.div`
   display: flex;
@@ -108,6 +121,7 @@ export default function SubMenuBar() {
   const graphicalView = useSelector((state) => state.editor.graphicalView);
   const canUndo = useSelector((state) => state.editor.history.length > 0);
   const canRedo = useSelector((state) => state.editor.future.length > 0);
+  const [showNewModal, setShowNewModal] = useState(false);
 
   const view3D = useSelector((state) => state.editor.view3D);
   const dispatch = useDispatch();
@@ -121,6 +135,15 @@ export default function SubMenuBar() {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [tempColor, setTempColor] = useState(stitchColor);
   const pickerRef = useRef(null);
+
+  
+  const handleNewClick = () => setShowNewModal(true);
+  const handleCancelNew = () => setShowNewModal(false);
+  const handleConfirmNewPattern = () => {
+    setShowNewModal(false);
+    dispatch(resetEditor());
+
+  };
 
   useEffect(() => {
     setTempColor(stitchColor);
@@ -160,6 +183,12 @@ export default function SubMenuBar() {
   if (selectedMenu === null) return;
 
   return (
+    <>
+    <NewPatternModal
+      isOpen={showNewModal}
+      onConfirm={handleConfirmNewPattern}
+      onCancel={handleCancelNew}
+    />
     <Menubar>
       <MenuItemsContainer>
         {selectedMenu === 'Stitch' && (
@@ -204,7 +233,36 @@ export default function SubMenuBar() {
 
           </>
         )}
+        {selectedMenu === 'File' && (
+        <>
+          <EditButton onClick={handleNewClick}>
+            <FaFileAlt />
+            New Pattern
+          </EditButton>
+
+          <EditButton onClick={() => console.log("Import Pattern")}>
+            <FaFileImport />
+            Import Pattern
+          </EditButton>
+          <EditButton onClick={() => console.log("Save")}>
+            <FaSave />
+            Save
+          </EditButton>
+          <EditButton onClick={() => console.log("Discard Changes")}>
+            <FaTrashAlt />
+            Discard
+          </EditButton>
+          <EditButton onClick={() => console.log("Generate Instructions")}>
+            <FaFileExport />
+            Generate Instructions
+          </EditButton>
+        </>
+      )}
+
+
+
       </MenuItemsContainer>
     </Menubar>
+    </>
   );
 }
