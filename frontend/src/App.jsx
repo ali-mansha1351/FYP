@@ -62,7 +62,7 @@ const router = createBrowserRouter([
         element: <Editor />,
       },
       {
-        path: "/user/me",
+        path: "/user/:id",
 
         element: (
           <ProtectedRoute>
@@ -80,7 +80,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/user/newsfeed",
+        path: "/user/:id/newsfeed",
         element: (
           <ProtectedRoute>
             <NewsFeed />

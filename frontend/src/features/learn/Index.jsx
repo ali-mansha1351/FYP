@@ -19,12 +19,12 @@ const BodyContainer = styled.div`
 `;
 export default function Index() {
   const userDetails = useSelector((store) => store.user);
-  const { name } = userDetails.userDetail;
+  const { name, _id } = userDetails.userDetail;
   const navigate = useNavigate();
   const navItemsForLggedIn = [
     { label: "Editor", path: "/editor" },
     { label: "Community", path: "/user/newsfeed" },
-    { label: `${name}`, path: "/user/me" },
+    { label: `${name}`, path: `/user/${_id}` },
   ];
   const navItems = [
     { label: "Editor", path: "/editor" },

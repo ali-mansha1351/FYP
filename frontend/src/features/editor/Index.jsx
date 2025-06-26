@@ -17,11 +17,11 @@ export default function Index() {
   const expanded = useSelector((state) => state.editor.expanded);
   const view3D = useSelector((state) => state.editor.view3D);
   const user = useSelector((store) => store.user);
-
+  const { name, _id } = user.userDetail;
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
     { label: "Community", path: "/user/newsfeed" },
-    { label: `${user?.userDetail?.name?.split(" ")[0]}`, path: "/user/me" },
+    { label: `${name?.split(" ")[0]}`, path: `/user/${_id}` },
   ];
   const navItems = [
     { label: "Home", path: "/" },

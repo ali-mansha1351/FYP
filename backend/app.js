@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import userRoute from "./routes/userRoute.js";
 import patternRoute from "./routes/patternRoute.js";
-import stitchRoute from "./routes/stitchRoute.js";
+// import stitchRoute from "./routes/stitchRoute.js";
 import postRoute from "./routes/postRoute.js";
 import cookieParser from "cookie-parser";
 import chatRoute from "./routes/chatRoute.js";
@@ -42,7 +42,7 @@ app.use("/api/v1", chatRoute);
 app.use("/api/v1", messageRoute);
 app.use("/api/v1", userRoute);
 app.use("/api/v1", patternRoute);
-app.use("/api/v1", stitchRoute);
+// app.use("/api/v1", stitchRoute);
 app.use("/api/v1", postRoute);
 
 app.use(errorMiddleware);

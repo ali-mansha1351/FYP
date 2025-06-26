@@ -270,12 +270,12 @@ const ViewAllButton = styled.button`
 
 function NewsFeed() {
   const user = useSelector((store) => store.user);
-  const { name } = user.userDetail;
+  const { name, _id } = user.userDetail;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
     { label: "Community", path: "/user/newsfeed" },
-    { label: `${name}`, path: "/user/me" },
+    { label: `${name}`, path: `/user/${_id}` },
   ];
   const navItems = [
     { label: "Home", path: "/" },

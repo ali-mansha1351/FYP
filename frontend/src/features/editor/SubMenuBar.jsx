@@ -4,6 +4,8 @@ import { ChromePicker } from 'react-color';
 import { useSelector, useDispatch } from "react-redux";
 import { updateSelectedNodeColor, setGraphicalView, toggle3D, undo, redo, resetEditor } from "./editorSlice";
 import NewPatternModal from "./NewPatternmodal"; 
+import SavePatternModal from "./SavePatternModal"; // import the modal
+import {useCreatePattern} from '../../hooks/usePattern'
 import {
   FaUndo,
   FaRedo,
@@ -15,6 +17,8 @@ import {
   FaFileExport,
   FaFileImport
 } from "react-icons/fa";
+import toast from "react-hot-toast";
+import Spinner from "../../ui/Spinner";
 
 
 
@@ -122,6 +126,12 @@ export default function SubMenuBar() {
   const canUndo = useSelector((state) => state.editor.history.length > 0);
   const canRedo = useSelector((state) => state.editor.future.length > 0);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false); 
+  const pattern = useSelector((state) => state.editor.pattern);
+  const create = useCreatePattern();
+  console.log("hook content", create);
+  const { mutate: savePattern, isPending: isSaving } = create;
+
 
   const view3D = useSelector((state) => state.editor.view3D);
   const dispatch = useDispatch();
@@ -144,6 +154,28 @@ export default function SubMenuBar() {
     dispatch(resetEditor());
 
   };
+  const handleSaveClick = () => {
+  if (pattern.nodes.length === 0) {
+    alert("Pattern must have at least one stitch.");
+    return;
+  }
+  setShowSaveModal(true);
+};
+
+  const handleConfirmSave = (name) => {
+    const data = { name, stitches: pattern.nodes, links: pattern.links };
+    savePattern(data, {
+      onSuccess: () => {
+        toast.success("Pattern saved!");
+        dispatch(resetEditor());
+      },
+      onError: () => {
+        toast.error("Failed to save pattern.");
+      },
+    });
+  };
+
+
 
   useEffect(() => {
     setTempColor(stitchColor);
@@ -184,11 +216,22 @@ export default function SubMenuBar() {
 
   return (
     <>
+    {console.log("saving?", isSaving)}
+    {isSaving && <Spinner overlay />}
+
     <NewPatternModal
       isOpen={showNewModal}
       onConfirm={handleConfirmNewPattern}
       onCancel={handleCancelNew}
     />
+    <SavePatternModal
+      isOpen={showSaveModal}
+      onClose={() => setShowSaveModal(false)}
+      onSave={handleConfirmSave}
+      isLoading={isSaving}
+    />
+
+
     <Menubar>
       <MenuItemsContainer>
         {selectedMenu === 'Stitch' && (
@@ -244,10 +287,11 @@ export default function SubMenuBar() {
             <FaFileImport />
             Import Pattern
           </EditButton>
-          <EditButton onClick={() => console.log("Save")}>
+          <EditButton onClick={handleSaveClick}>
             <FaSave />
             Save
           </EditButton>
+
           <EditButton onClick={() => console.log("Discard Changes")}>
             <FaTrashAlt />
             Discard

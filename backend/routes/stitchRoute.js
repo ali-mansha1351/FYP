@@ -1,14 +1,14 @@
-import express from "express";
-import {
-  isAuthenticatedUser,
-  authorizeRoles,
-} from "../middlewares/authentication.js";
-import { createStitch } from "../controller/stitchController.js";
+// import express from "express";
+// import {
+//   isAuthenticatedUser,
+//   authorizeRoles,
+// } from "../middlewares/authentication.js";
+// import { createStitch } from "../controller/stitchController.js";
 
-const router = express.Router();
+// const router = express.Router();
 
-router
-  .route("/configure/stitch")
-  .post(isAuthenticatedUser, authorizeRoles("admin"), createStitch);
+// router
+//   .route("/configure/stitch")
+//   .post(isAuthenticatedUser, authorizeRoles("admin"), createStitch);
 
-export default router;
+// export default router;

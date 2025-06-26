@@ -19,7 +19,7 @@ function HomePage() {
   const navItemsForLoggedIn = [
     { label: "Learn", path: "/learn" },
     { label: "Community", path: "/user/newsfeed" },
-    { label: `${user.userDetail.name}`, path: "/user/me" },
+    { label: `${user.userDetail.name}`, path: `/user/${user.userDetail._id}` },
   ];
 
   const navigate = useNavigate();
