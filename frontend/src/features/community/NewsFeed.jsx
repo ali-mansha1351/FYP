@@ -274,8 +274,8 @@ function NewsFeed() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
-    { label: "Community", path: "/user/newsfeed" },
-    { label: `${name}`, path: `/user/${_id}` },
+    { label: "Community", path: `/user/${_id}/newsfeed/` },
+    { label: "Profile", path: `/user/${_id}` },
   ];
   const navItems = [
     { label: "Home", path: "/" },

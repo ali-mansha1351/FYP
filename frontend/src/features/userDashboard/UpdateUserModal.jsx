@@ -161,6 +161,7 @@ function UpdateUserModal({ show, onHide, userDetail }) {
   const { update, isLoading } = useUpdatedUser();
   
   const user = useSelector((store) => store.user);
+  console.log(user)
   const {_id } = user.userDetail;
   const {
     register,

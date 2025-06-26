@@ -19,6 +19,7 @@ import {
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 import Spinner from "../../ui/Spinner";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -125,11 +126,12 @@ export default function SubMenuBar() {
   const graphicalView = useSelector((state) => state.editor.graphicalView);
   const canUndo = useSelector((state) => state.editor.history.length > 0);
   const canRedo = useSelector((state) => state.editor.future.length > 0);
+  const canvas = useSelector((state) => state.editor.canvasRef);
   const [showNewModal, setShowNewModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false); 
   const pattern = useSelector((state) => state.editor.pattern);
+  const {_id} = useSelector(state => state.user.userDetail)
   const create = useCreatePattern();
-  console.log("hook content", create);
   const { mutate: savePattern, isPending: isSaving } = create;
 
 
@@ -145,7 +147,7 @@ export default function SubMenuBar() {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [tempColor, setTempColor] = useState(stitchColor);
   const pickerRef = useRef(null);
-
+  const navigate = useNavigate()
   
   const handleNewClick = () => setShowNewModal(true);
   const handleCancelNew = () => setShowNewModal(false);
@@ -163,11 +165,18 @@ export default function SubMenuBar() {
 };
 
   const handleConfirmSave = (name) => {
-    const data = { name, stitches: pattern.nodes, links: pattern.links };
+    if (!canvas) {
+      console.warn('Canvas not ready yet.');
+      return;
+    }
+    const imageData = canvas.toDataURL('image/jpg');
+    const data = { name, stitches: pattern.nodes, links: pattern.links, image: imageData };
+    console.log('data to save', data)
     savePattern(data, {
       onSuccess: () => {
         toast.success("Pattern saved!");
         dispatch(resetEditor());
+        navigate(`/user/${_id}`)
       },
       onError: () => {
         toast.error("Failed to save pattern.");
@@ -216,7 +225,6 @@ export default function SubMenuBar() {
 
   return (
     <>
-    {console.log("saving?", isSaving)}
     {isSaving && <Spinner overlay />}
 
     <NewPatternModal

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import ForceGraph2D from "force-graph";
 import BeginningModal from "./BeginningModal";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleExpandCanvas, insertStitch } from "./editorSlice";
+import { toggleExpandCanvas, insertStitch, setCanvasRef } from "./editorSlice";
 import CrochetCanvas from "./CanvasDrawingsFor2D";
 import Vector from "../utils/vector";
 import stitchDistances from '../utils/stitchDistances';
@@ -72,7 +72,7 @@ const ZoomButton = styled.div`
 
 
 export default function Canvas2D() {
-  const isEmpty = useSelector((state) => state.editor.pattern.nodes.length) === 0;
+  const isEmpty = useSelector((state) => state.editor.pattern.nodes?.length) === 0;
   const expanded = useSelector((state) => state.editor.expanded);
   const graphicalView = useSelector((state) => state.editor.graphicalView);
   const selectedMenu = useSelector((state) => state.editor.selectedMenu);
@@ -86,6 +86,12 @@ export default function Canvas2D() {
 
   const graphRef = useRef();
   const dispatch = useDispatch();
+  useEffect(() => {
+    if (containerRef.current) {
+    const canvas = containerRef.current.querySelector("canvas");
+    if (canvas) dispatch(setCanvasRef(canvas));
+  }
+  }, [dispatch]);
   useEffect(() => {
     if (graphRef.current) {
       // Re-apply the same data to trigger a redraw

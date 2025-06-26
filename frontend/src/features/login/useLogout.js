@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 export function useLogout() {
   const navigate = useNavigate();
-  const { mutate: logout, isLoading } = useMutation({
+  const { mutate: logout, isPending } = useMutation({
     mutationFn: () => logoutApi(),
     onSuccess: () => {
       navigate("/", { replace: true });
@@ -16,5 +16,5 @@ export function useLogout() {
     },
   });
 
-  return { logout, isLoading };
+  return { logout, isPending };
 }

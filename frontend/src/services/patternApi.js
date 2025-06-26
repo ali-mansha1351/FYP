@@ -18,3 +18,44 @@ export async function createPattern(patternData) {
 
   return res.json();
 }
+export async function getPatterns() {
+  const res = await fetch(`${BASE_URL}/patterns`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Failed to fetch patterns");
+  }
+
+  const data = await res.json();
+  return data.patterns;
+}
+export async function getPatternById(id) {
+  const res = await fetch(`${BASE_URL}/patterns/${id}`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Failed to fetch pattern");
+  }
+
+  const data = await res.json();
+  return data.pattern;
+}
+export async function deletePatternById(id) {
+  const res = await fetch(`${BASE_URL}/patterns/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Failed to delete pattern");
+  }
+
+  return true; 
+}

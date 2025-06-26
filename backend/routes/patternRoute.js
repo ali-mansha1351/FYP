@@ -2,6 +2,7 @@ import express from "express";
 import { isAuthenticatedUser } from "../middlewares/authentication.js";
 import {
   createPattern,
+  deletePatternById,
   getPatternById,
   getPatterns,
   // updatePattern,
@@ -20,13 +21,7 @@ router.get("/patterns", isAuthenticatedUser, getPatterns);
 // GET /api/v1/patterns/:id → Get a single pattern by ID
 router.get("/patterns/:id", isAuthenticatedUser, getPatternById);
 
-// GET /api/v1/patterns/:id → Get pattern by ID
-// PUT /api/v1/patterns/:id → Update pattern
-// DELETE /api/v1/patterns/:id → Delete pattern
-// router
-//   .route("/patterns/:id")
-//   .get(isAuthenticatedUser, getPattern)
-//   .put(isAuthenticatedUser, updatePattern)
-//   .delete(isAuthenticatedUser, deletePattern);
+// DELETE /api/v1/patterns/:id → Delete a pattern by ID
+router.delete("/patterns/:id", isAuthenticatedUser, deletePatternById);
 
 export default router;
