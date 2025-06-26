@@ -148,17 +148,15 @@ const calculateUserInteractionsFromCache = async (userId) => {
       const postId = post._id.toString();
 
       //check likes
-      if (
-        post.likes &&
-        post.likes.some((like) => like.userId.toString() === userId)
-      ) {
+      if (post.likes && post.likes.some((like) => like.toString() === userId)) {
+        console.log(post.likes);
         interactions.liked.push(postId);
       }
 
       //check commnets
       if (
         post.comments &&
-        post.comments.some((comment) => comment.userId.toString() === userId)
+        post.comments.some((comment) => comment.user.toString() === userId)
       ) {
         interactions.commented.push(postId);
       }
@@ -166,7 +164,7 @@ const calculateUserInteractionsFromCache = async (userId) => {
       //check shares
       if (
         post.shares &&
-        post.shares.some((share) => share.userId.toString() === userId)
+        post.shares.some((share) => share.toString() === userId)
       ) {
         interactions.shared.push(postId);
       }
@@ -218,10 +216,97 @@ export const getUserInteractions = async (userId) => {
       ...interactions.shared,
       ...interactions.commented,
     ];
-    console.log(allInteractedPosts);
+    // console.log(allInteractedPosts);
     return [...new Set(allInteractedPosts)];
   } catch (error) {
     throw new Error("error fetching user interacted posts: " + error.message);
+  }
+};
+
+export const addPostToCache = async (post) => {
+  try {
+    const allPosts = await getPostFromCache();
+    allPosts.unshift(post);
+    cache.set(getCacheKey.allPosts(), allPosts, cache_TTL.ALL_POSTS);
+    const userId = post.createdBy._id.toString();
+    const userOwnPosts = await getUserOwnPostsFromCache(userId);
+    userOwnPosts.unshift(post._id.toString());
+    cache.set(
+      getCacheKey.userOwnPosts(),
+      userOwnPosts,
+      cache_TTL.USER_OWN_POSTS
+    );
+  } catch (error) {
+    console.error("❌ Error adding post to cache:", error);
+  }
+};
+
+export const invalidatePostCache = async () => {
+  try {
+    const cacheKey = getCacheKey.allPosts();
+    const deleted = cache.del(cacheKey);
+    console.log(`Posts cache invalidated: ${deleted}`);
+  } catch (error) {
+    console.error("Error invalidating posts cache:", error);
+  }
+};
+
+export const invalidateUserInteractionsCache = async (userId) => {
+  try {
+    if (userId) {
+      const userInteractionKey = getCacheKey.userInteractions(userId);
+      cache.del(getCacheKey.userInteractions(userId));
+      console.log("invalidated interactions from cache");
+
+      const freshInteractions = await calculateUserInteractionsFromCache(
+        userId
+      );
+      console.log(
+        "recalculated the interactions for user id:",
+        freshInteractions
+      );
+    } else {
+      const keys = cache.keys();
+      const interactionKeys = keys.filter((key) =>
+        key.includes(":interactions")
+      );
+      cache.del(interactionKeys);
+    }
+  } catch (error) {
+    console.error("error in invalidating interactions from cache:", error);
+  }
+};
+
+export const updatePostCache = async (updatedPost) => {
+  try {
+    const allPosts = await getPostFromCache();
+    const postIndex = allPosts.findIndex(
+      (post) => post._id.toString() === updatedPost._id.toString()
+    );
+    if (postIndex !== -1) {
+      allPosts[postIndex] = updatedPost;
+      cache.set(getCacheKey.allPosts(), allPosts, cache_TTL.ALL_POSTS);
+
+      invalidateUserInteractionsCache();
+    }
+  } catch (error) {
+    console.error("❌ Error updating post in cache:", error);
+  }
+};
+
+export const removePostFromCache = async (postId) => {
+  try {
+    const allPosts = await getAllPostsFromCache();
+    const filteredPosts = allPosts.filter(
+      (post) => post._id.toString() !== postId
+    );
+
+    cache.set(getCacheKey.allPosts(), filteredPosts, cache_TTL.ALL_POSTS);
+    invalidateUserInteractionsCache();
+
+    console.log("✅ Post removed from cache");
+  } catch (error) {
+    console.error("❌ Error removing post from cache:", error);
   }
 };
 
