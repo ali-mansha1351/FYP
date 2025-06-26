@@ -9,6 +9,7 @@ import cookieParser from "cookie-parser";
 import chatRoute from "./routes/chatRoute.js";
 import messageRoute from "./routes/messageRoute.js";
 import { configureSocket } from "./config/socket.js";
+import { initializePostCache } from "./utils/userInteractedPosts.js";
 import http from "http";
 const app = express();
 
@@ -35,6 +36,8 @@ app.use((req, res, next) => {
   req.io = io;
   next();
 });
+
+//initlaizing cache
 
 //importing all the routes
 
