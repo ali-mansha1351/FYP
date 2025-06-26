@@ -3,7 +3,10 @@ import Header from "../../ui/Header";
 import styled from "styled-components";
 import React, { useState } from "react";
 import PostModal from "./PostModal";
-
+import { useGetNewsFeed } from "./useGetNewsFeed";
+import { useQueryClient } from "@tanstack/react-query";
+import { dateConverter } from "../../utils/dateConverter";
+import ImageCarousel from "../../ui/ImageCrousel";
 const Container = styled.div`
   min-height: 100vh;
   background-color: #f5f5f5;
@@ -118,11 +121,10 @@ const PostUserInfo = styled.div`
   gap: 1rem;
 `;
 
-const PostAvatar = styled.div`
+const PostAvatar = styled.img`
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><circle cx="25" cy="25" r="25" fill="%23ddd"/><circle cx="25" cy="20" r="8" fill="%23999"/><path d="M7 40c0-10 8-18 18-18s18 8 18 18" fill="%23999"/></svg>');
   background-size: cover;
 `;
 
@@ -267,11 +269,42 @@ const ViewAllButton = styled.button`
     text-decoration: underline;
   }
 `;
+const LoadingSpinner = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  color: #666;
+`;
+const ErrorMessage = styled.div`
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  text-align: center;
+`;
 
+const LoadMoreTrigger = styled.div`
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+`;
 function NewsFeed() {
   const user = useSelector((store) => store.user);
   const { name } = user.userDetail;
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const {
+    data,
+    hasNextPage,
+    fetchNextPage,
+    isError,
+    isLoading,
+    isFetchingNextPage,
+    ref,
+  } = useGetNewsFeed();
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
     { label: "Community", path: "/user/newsfeed" },
@@ -292,19 +325,49 @@ function NewsFeed() {
     { name: "Ilsa Nadeem", role: "Beginner with 2 week experience" },
   ];
 
-  const patternText = `                ∩    ∩∩ x x↪    ∇    ∩∩ x x↪    ∇∩∩ x x↪oo    ∇ x x∇oo 
-                |  oo x x x x xooo∇∞∞x x x x xooo∇∞∞x x x x xoo ∇
-                | ooox|||||||ooo∞∞∞|||||||ooo∞∞∞|||||||oo∞∞∞ x
-                |oo∞∞∞ooooooooo∞∞∞ooooooooo∞∞∞ooooooooo∞∞∞|
- xδoooooooooooooooooooooooooooooooooooooooooooooooooooo 
-                                    ★ 10  9  8  7  6  5  4  3  2  1  ★`;
-
+  const feed = queryClient.getQueryData(["newsfeed"]);
+  const allPosts = feed?.pages?.flatMap((pages) => pages?.data?.posts);
   const handleOpen = () => {
     setIsModalOpen(true);
   };
 
   const handlePostModalCancel = () => {
     setIsModalOpen(false);
+  };
+
+  //const allPosts = data.pages?.flatMap((page) => page.data.posts);
+  //console.log(allPosts);
+  const renderPost = (post, index) => {
+    return (
+      <Post>
+        <PostHeader>
+          <PostUserInfo>
+            <PostAvatar src={post.createdBy.profileImage.url} />
+            <PostUserDetails>
+              <PostUserName>
+                {post.createdBy.name || "Sarah Wells"}
+              </PostUserName>
+              <PostUserRole>
+                {post.createdBy.skillLevel || "Intermediate Designer"}
+              </PostUserRole>
+            </PostUserDetails>
+          </PostUserInfo>
+          <div>
+            <PostTime>{dateConverter(post.createdAt)}</PostTime>
+            <AddButton>+ Add</AddButton>
+          </div>
+        </PostHeader>
+
+        <PostContent>{post.description}</PostContent>
+
+        <ImageCarousel images={post.content} />
+
+        <PostStats>
+          <span>{post.likes}</span>
+          <span>{post.comments}</span>
+        </PostStats>
+      </Post>
+    );
   };
 
   return (
@@ -323,73 +386,34 @@ function NewsFeed() {
               <NewPostButton onClick={handleOpen}>
                 Start a new post
               </NewPostButton>
+              {/* Handle loading state */}
+              {isLoading && (
+                <LoadingSpinner>Loading your feed...</LoadingSpinner>
+              )}
 
-              <Post>
-                <PostHeader>
-                  <PostUserInfo>
-                    <PostAvatar />
-                    <PostUserDetails>
-                      <PostUserName>Sarah Wells</PostUserName>
-                      <PostUserRole>Intermediate Designer</PostUserRole>
-                    </PostUserDetails>
-                  </PostUserInfo>
-                  <div>
-                    <PostTime>1d ago</PostTime>
-                    <AddButton>+ Add</AddButton>
-                  </div>
-                </PostHeader>
+              {/* Handle error state */}
+              {isError && (
+                <ErrorMessage>
+                  Error loading feed:{" "}
+                  {isError?.message || "Something went wrong"}
+                </ErrorMessage>
+              )}
 
-                <PostContent>
-                  Hello everyone!. This is me Sarah I just found out about this
-                  beautiful craft by my friend and decided to give it a try.
-                  just created a simple pattern. Hope I did it well :)
-                </PostContent>
+              {/* Render posts from API */}
 
-                <PatternImage>{patternText}</PatternImage>
+              {allPosts?.map((post, postIndex) => {
+                console.log(post);
+                return renderPost(post, `${postIndex}`);
+              })}
 
-                <CrochetImage
-                  src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200'><defs><pattern id='purple-texture' x='0' y='0' width='40' height='40' patternUnits='userSpaceOnUse'><rect width='40' height='40' fill='%23663399'/><circle cx='20' cy='20' r='15' fill='%23bb88cc' opacity='0.7'/></pattern></defs><rect width='400' height='200' fill='url(%23purple-texture)'/></svg>"
-                  alt="Purple crochet pattern"
-                />
-
-                <PostStats>
-                  <span>500 Likes</span>
-                  <span>9 Comments</span>
-                </PostStats>
-              </Post>
-              <Post>
-                <PostHeader>
-                  <PostUserInfo>
-                    <PostAvatar />
-                    <PostUserDetails>
-                      <PostUserName>Sarah Wells</PostUserName>
-                      <PostUserRole>Intermediate Designer</PostUserRole>
-                    </PostUserDetails>
-                  </PostUserInfo>
-                  <div>
-                    <PostTime>1d ago</PostTime>
-                    <AddButton>+ Add</AddButton>
-                  </div>
-                </PostHeader>
-
-                <PostContent>
-                  Hello everyone!. This is me Sarah I just found out about this
-                  beautiful craft by my friend and decided to give it a try.
-                  just created a simple pattern. Hope I did it well :)
-                </PostContent>
-
-                <PatternImage>{patternText}</PatternImage>
-
-                <CrochetImage
-                  src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200'><defs><pattern id='purple-texture' x='0' y='0' width='40' height='40' patternUnits='userSpaceOnUse'><rect width='40' height='40' fill='%23663399'/><circle cx='20' cy='20' r='15' fill='%23bb88cc' opacity='0.7'/></pattern></defs><rect width='400' height='200' fill='url(%23purple-texture)'/></svg>"
-                  alt="Purple crochet pattern"
-                />
-
-                <PostStats>
-                  <span>500 Likes</span>
-                  <span>9 Comments</span>
-                </PostStats>
-              </Post>
+              <LoadMoreTrigger ref={ref}>
+                {isFetchingNextPage && (
+                  <LoadingSpinner>Loading more posts...</LoadingSpinner>
+                )}
+                {!hasNextPage && data?.pages.length > 0 && (
+                  <div>You have reached the end of your feed!</div>
+                )}
+              </LoadMoreTrigger>
             </FeedContent>
           </FeedSection>
 

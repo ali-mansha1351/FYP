@@ -81,3 +81,21 @@ export async function savePost(id) {
   const result = await res.json();
   return result;
 }
+
+export async function getRecommendation({ page }) {
+  const res = await fetch(
+    `${API_BASE_URL}/post/newsfeed/?page=${page}&limit=$10`,
+    {
+      method: "GET",
+      credentials: "include",
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json();
+    console.log(err.error);
+    throw new Error(err.error);
+  }
+  const result = await res.json();
+  console.log("these are recommneded posts", result);
+  return result;
+}

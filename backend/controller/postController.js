@@ -1,7 +1,10 @@
 import { Post } from "../modules/post.js";
 import { ErrorHandler } from "../utils/errorhandler.js";
 import { StatusCodes } from "http-status-codes";
-import { getUserInteractedPosts } from "../utils/userInteractedPosts.js";
+import {
+  getUserInteractions,
+  getPostFromCache,
+} from "../utils/userInteractedPosts.js";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import {
@@ -237,29 +240,39 @@ export const getNewsFeed = async (req, res, next) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const interactedPosts = await getUserInteractedPosts(userId);
-  const newsFeed = await Post.find({
-    _id: { $nin: interactedPosts },
-  })
-    .populate("createdBy", "name profileImage")
-    .populate("comments.user", "name profileImage")
-    .populate("likes.userId", "name")
-    .populate("shares.userId", "name profileImage")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  console.log("generating post for user");
+  const [interactedPostIds, allPosts] = await Promise.all([
+    getUserInteractions(userId),
+    getPostFromCache(),
+  ]);
 
-  // Get total count for pagination
-  const totalPosts = await Post.countDocuments({
-    _id: { $nin: interactedPosts },
+  const allAvailablePosts = allPosts.filter((post) => {
+    return !interactedPostIds.includes(post._id.toString());
   });
 
-  const hasMore = skip + newsFeed.length < totalPosts;
+  console.log("ainteractedPostIds", interactedPostIds);
+  console.log("allPosts", allPosts);
+  // const interactedPosts = await getUserInteractedPosts(userId);
+  // const newsFeed = await Post.find({
+  //   _id: { $nin: interactedPosts },
+  // })
+  //   .populate("createdBy", "name profileImage skillLevel")
+  //   .populate("comments.user", "name profileImage")
+  //   .populate("likes.userId", "name")
+  //   .populate("shares.userId", "name profileImage")
+  //   .sort({ createdAt: -1 })
+  //   .skip(skip)
+  //   .limit(limit);
+
+  // Get total count for pagination
+  const paginatedPosts = allAvailablePosts.slice(skip, skip + limit);
+  const totalPosts = allAvailablePosts.length;
+  const hasMore = skip + paginatedPosts.length < totalPosts;
 
   res.status(StatusCodes.OK).json({
     success: true,
     data: {
-      posts: newsFeed,
+      posts: allAvailablePosts,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(totalPosts / limit),
