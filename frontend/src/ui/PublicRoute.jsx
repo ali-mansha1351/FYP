@@ -3,12 +3,13 @@ import { useSelector } from "react-redux";
 import PropTypes from "prop-types";
 
 function PublicRoute({ children }) {
-  const { isLoggedIn } = useSelector((store) => store.user);
+  const { isLoggedIn, _id } = useSelector((store) => store.user);
   console.log("user status from public route", isLoggedIn);
 
-  if (isLoggedIn) {
-    return <Navigate to="/user/me" replace />;
+   if (isLoggedIn && _id) {
+    return <Navigate to={`/user/${_id}`} replace />;
   }
+
 
   return children;
 }

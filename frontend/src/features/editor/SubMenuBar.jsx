@@ -2,8 +2,25 @@ import styled from "styled-components";
 import { useState, useEffect, useRef } from "react";
 import { ChromePicker } from 'react-color';
 import { useSelector, useDispatch } from "react-redux";
-import { updateSelectedNodeColor, setGraphicalView, toggle3D, undo, redo } from "./editorSlice";
-import { FaUndo, FaRedo, FaProjectDiagram, FaThLarge } from "react-icons/fa";
+import { updateSelectedNodeColor, setGraphicalView, toggle3D, undo, redo, resetEditor } from "./editorSlice";
+import NewPatternModal from "./NewPatternmodal"; 
+import SavePatternModal from "./SavePatternModal"; // import the modal
+import {useCreatePattern} from '../../hooks/usePattern'
+import {
+  FaUndo,
+  FaRedo,
+  FaProjectDiagram,
+  FaThLarge,
+  FaFileAlt,
+  FaSave,
+  FaTrashAlt,
+  FaFileExport,
+  FaFileImport
+} from "react-icons/fa";
+import toast from "react-hot-toast";
+import Spinner from "../../ui/Spinner";
+
+
 
 const Menubar = styled.div`
   display: flex;
@@ -108,6 +125,13 @@ export default function SubMenuBar() {
   const graphicalView = useSelector((state) => state.editor.graphicalView);
   const canUndo = useSelector((state) => state.editor.history.length > 0);
   const canRedo = useSelector((state) => state.editor.future.length > 0);
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false); 
+  const pattern = useSelector((state) => state.editor.pattern);
+  const create = useCreatePattern();
+  console.log("hook content", create);
+  const { mutate: savePattern, isPending: isSaving } = create;
+
 
   const view3D = useSelector((state) => state.editor.view3D);
   const dispatch = useDispatch();
@@ -121,6 +145,37 @@ export default function SubMenuBar() {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [tempColor, setTempColor] = useState(stitchColor);
   const pickerRef = useRef(null);
+
+  
+  const handleNewClick = () => setShowNewModal(true);
+  const handleCancelNew = () => setShowNewModal(false);
+  const handleConfirmNewPattern = () => {
+    setShowNewModal(false);
+    dispatch(resetEditor());
+
+  };
+  const handleSaveClick = () => {
+  if (pattern.nodes.length === 0) {
+    alert("Pattern must have at least one stitch.");
+    return;
+  }
+  setShowSaveModal(true);
+};
+
+  const handleConfirmSave = (name) => {
+    const data = { name, stitches: pattern.nodes, links: pattern.links };
+    savePattern(data, {
+      onSuccess: () => {
+        toast.success("Pattern saved!");
+        dispatch(resetEditor());
+      },
+      onError: () => {
+        toast.error("Failed to save pattern.");
+      },
+    });
+  };
+
+
 
   useEffect(() => {
     setTempColor(stitchColor);
@@ -160,6 +215,23 @@ export default function SubMenuBar() {
   if (selectedMenu === null) return;
 
   return (
+    <>
+    {console.log("saving?", isSaving)}
+    {isSaving && <Spinner overlay />}
+
+    <NewPatternModal
+      isOpen={showNewModal}
+      onConfirm={handleConfirmNewPattern}
+      onCancel={handleCancelNew}
+    />
+    <SavePatternModal
+      isOpen={showSaveModal}
+      onClose={() => setShowSaveModal(false)}
+      onSave={handleConfirmSave}
+      isLoading={isSaving}
+    />
+
+
     <Menubar>
       <MenuItemsContainer>
         {selectedMenu === 'Stitch' && (
@@ -204,7 +276,37 @@ export default function SubMenuBar() {
 
           </>
         )}
+        {selectedMenu === 'File' && (
+        <>
+          <EditButton onClick={handleNewClick}>
+            <FaFileAlt />
+            New Pattern
+          </EditButton>
+
+          <EditButton onClick={() => console.log("Import Pattern")}>
+            <FaFileImport />
+            Import Pattern
+          </EditButton>
+          <EditButton onClick={handleSaveClick}>
+            <FaSave />
+            Save
+          </EditButton>
+
+          <EditButton onClick={() => console.log("Discard Changes")}>
+            <FaTrashAlt />
+            Discard
+          </EditButton>
+          <EditButton onClick={() => console.log("Generate Instructions")}>
+            <FaFileExport />
+            Generate Instructions
+          </EditButton>
+        </>
+      )}
+
+
+
       </MenuItemsContainer>
     </Menubar>
+    </>
   );
 }

@@ -1,21 +1,19 @@
 import mongoose from "mongoose";
-import { stitch } from "./stitch.js";
 import { User } from "./user.js";
+import linkSchema from "./link.js";
+import stitchSchema from "./stitch.js";
 const patternSchema = mongoose.Schema({
   name: {
     type: String,
     required: [true, "pattern should have a name"],
     default: "untitled",
   },
-  stitches: [
-    {
-      type: mongoose.Types.ObjectId,
-      ref: stitch,
-    },
-  ],
+  stitches: { type: [stitchSchema], required: true },
+  links: { type: [linkSchema], required: true },
   user: {
     type: mongoose.Types.ObjectId,
     ref: User,
+     required: true,
   },
   createdAt: {
     type: Date,
@@ -23,5 +21,5 @@ const patternSchema = mongoose.Schema({
   },
 });
 
-const pattern = mongoose.model("pattern", patternSchema);
-export { pattern };
+const Pattern = mongoose.model("pattern", patternSchema);
+export { Pattern };

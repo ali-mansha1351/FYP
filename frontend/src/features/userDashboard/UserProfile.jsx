@@ -25,24 +25,21 @@ import { savePost } from "../../services/postApi";
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
   overflow: hidden;
 `;
 
 const MainContent = styled.div`
   display: flex;
-  flex: 1;
+  flex-direction: column;
   overflow: hidden;
+  margin: 10px 40px;
 `;
 
 const Profile = styled.div`
   display: flex;
   flex-direction: column;
-  margin-left: 10px;
-  margin-right: 5px;
   border-radius: 10px;
   background-color: var(--primary-color);
-  width: 55vw;
   min-width: 400px;
   padding-bottom: 10px;
   margin-top: 15px;
@@ -145,11 +142,7 @@ const PostStats = styled.div`
 const PostsSidebar = styled.div`
   display: flex;
   flex-direction: column;
-  width: 45vw;
   min-width: 600px;
-  margin-right: 10px;
-  margin-left: 5px;
-  margin-top: 15px;
   background-color: var(--primary-color);
   border-radius: 10px;
   overflow: hidden;
@@ -252,6 +245,7 @@ const CoverImg = styled.img`
   border-radius: 10px 10px 0px 0px;
   width: 100%;
   height: 100%;
+  padding: 10px 40px;
   object-fit: contain;
 `;
 const ProfileHeader = styled.div`
@@ -480,11 +474,10 @@ function UserProfile() {
         <MainContent>
           <Profile>
             <CoverImageContainer>
-              {coverImage ? (
+              {coverImage.name ? (
                 <CoverImg
                   src={coverImage.url}
                   alt="cover"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               ) : (
                 <>
@@ -530,7 +523,7 @@ function UserProfile() {
             <ProfileHeader>
               <LeftContainer>
                 <ProfileImageContainer>
-                  {profileImage ? (
+                  {profileImage.name ? (
                     <img
                       src={profileImage.url}
                       alt="profile"

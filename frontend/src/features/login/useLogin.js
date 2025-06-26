@@ -9,10 +9,12 @@ export function useLogin() {
   const { mutate: login, isLoading } = useMutation({
     mutationFn: ({ email, password }) => loginApi({ email, password }),
     onSuccess: (response) => {
-      queryClient.setQueryData(["token"], response.token);
-      queryClient.invalidateQueries(["user"]);
-      navigate("/user/me", { replace: true });
-    },
+    queryClient.setQueryData(["token"], response.token);
+    queryClient.invalidateQueries(["user"]);
+    const userId = response.user._id;
+    navigate(`/user/${userId}`, { replace: true });
+  }
+
   });
 
   return { login, isLoading };

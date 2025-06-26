@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useUpdatedUser } from "./useUpdateUser";
 import { useUser } from "./useUser";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../login/loginSlice";
 import { replace, useNavigate } from "react-router-dom";
 const Modal = styled.div`
@@ -159,6 +159,9 @@ function UpdateUserModal({ show, onHide, userDetail }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { update, isLoading } = useUpdatedUser();
+  
+  const user = useSelector((store) => store.user);
+  const {_id } = user.userDetail;
   const {
     register,
     handleSubmit,
@@ -237,7 +240,7 @@ function UpdateUserModal({ show, onHide, userDetail }) {
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("username", data.username);
-    formData.append("email", data.email);
+    // formData.append("email", data.email);
     formData.append("gender", data.gender);
 
     formData.append("skillLevel", data.skillLevel);
@@ -255,7 +258,7 @@ function UpdateUserModal({ show, onHide, userDetail }) {
             console.log(response.data);
             if (response.data) {
               dispatch(setUser(response.data));
-              navigate("/user/me", { replace: true });
+              navigate("/user/_id", { replace: true });
             }
           })
           .catch((error) => {
@@ -298,7 +301,7 @@ function UpdateUserModal({ show, onHide, userDetail }) {
               <small className="text-danger">{errors.username.message}</small>
             )}
           </FormGroup>
-          <FormGroup>
+          {/* <FormGroup>
             <Label htmlFor="email">Email</Label>
             <Input
               {...register("email", {
@@ -313,7 +316,7 @@ function UpdateUserModal({ show, onHide, userDetail }) {
             {errors.email && (
               <small className="text-danger">{errors.email.message}</small>
             )}
-          </FormGroup>
+          </FormGroup> */}
           <FormGroup>
             <Label htmlFor="gender">Gender</Label>
             <select
