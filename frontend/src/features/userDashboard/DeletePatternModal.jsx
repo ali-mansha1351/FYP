@@ -1,7 +1,6 @@
-import { useState } from "react";
 import styled from "styled-components";
 import { Button } from "../../ui/LoginSignupStyles";
-import { useSelector } from "react-redux";
+
 const Overlay = styled.div`
   position: fixed;
   top: 0;
@@ -35,38 +34,26 @@ const Title = styled.div`
   align-self: flex-start;
 `;
 
-const Input = styled.input`
-  padding: 0.6rem 1rem;
+const ButtonRow = styled.div`
+  display: flex;
+  gap: 1rem;
   width: 100%;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 16px;
+  justify-content: center;
 `;
 
-export default function SavePatternModal({ isOpen, onClose, onSave, isLoading }) {
-  const name = useSelector(state=> state.editor.name)
-  const [patternName, setPatternName] = useState(name);
-
-  const handleSave = () => {
-    if (patternName.trim()) {
-      onSave(patternName.trim());
-      onClose();
-      setPatternName("");
-    }
-  };
-
+export default function DeletePatternModal({ isOpen, onClose, onDelete, isDeleting }) {
   return (
     <Overlay $isOpen={isOpen}>
       <ModalContent>
-        <Title>Enter Pattern Name</Title>
-        <Input
-          type="text"
-          value={patternName}
-          onChange={(e) => setPatternName(e.target.value)}
-          placeholder="My Pattern"
-          disabled={isLoading}
-        />
-          <Button onClick={handleSave}>Save</Button>
+        <Title>Are you sure you want to delete this pattern?</Title>
+        <ButtonRow>
+          <Button onClick={onDelete} disabled={isDeleting}>
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+          <Button onClick={onClose} disabled={isDeleting} style={{ backgroundColor: "#ccc", color: "#000" }}>
+            Cancel
+          </Button>
+        </ButtonRow>
       </ModalContent>
     </Overlay>
   );

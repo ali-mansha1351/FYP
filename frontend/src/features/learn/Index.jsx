@@ -23,8 +23,8 @@ export default function Index() {
   const navigate = useNavigate();
   const navItemsForLggedIn = [
     { label: "Editor", path: "/editor" },
-    { label: "Community", path: "/user/newsfeed" },
-    { label: `${name}`, path: `/user/${_id}` },
+    { label: "Community", path: `/user/${_id}/newsfeed` },
+    { label: "Profile", path: `/user/${_id}` },
   ];
   const navItems = [
     { label: "Editor", path: "/editor" },

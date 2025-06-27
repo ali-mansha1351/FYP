@@ -52,10 +52,9 @@ import { StatusCodes } from "http-status-codes";
 // };
 export const createPattern = async (req, res, next) => {
   try {
-    const { name, stitches, links } = req.body;
-
-    if (!name || !stitches || stitches.length === 0) {
-      return res.status(400).json({ error: "Name and stitches are required." });
+    const { name, stitches, links, image } = req.body;
+    if (!name || !stitches || stitches.length === 0 ) {
+      return res.status(400).json({ error: "Name, stitches and pattern picture are required." });
     }
 
     const userId = req.user._id; // ✅ from isAuthenticatedUser middleware
@@ -146,6 +145,56 @@ export const getPatternById = async (req, res, next) => {
     );
   }
 };
+
+
+export const deletePatternById = async (req, res, next) => {
+  const user = req.user?.id;
+
+  try {
+    if (!user) {
+      throw new Error("login first to delete patterns");
+    }
+
+    const patternToDelete = await Pattern.findById(req.params.id);
+
+    if (!patternToDelete) {
+      throw new Error("pattern not found");
+    }
+
+    if (patternToDelete.user.toString() !== user.toString()) {
+      throw new Error("unauthorized access to delete this pattern");
+    }
+
+    await patternToDelete.deleteOne();
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Pattern deleted successfully",
+    });
+
+  } catch (error) {
+    // ✅ Log full error with stack trace
+    console.error("Error in deletePatternById:", error);
+
+    if (error.message === "login first to delete patterns") {
+      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
+    }
+    if (error.message === "pattern not found") {
+      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
+    }
+    if (error.message === "unauthorized access to delete this pattern") {
+      return next(new ErrorHandler(error.message, StatusCodes.FORBIDDEN));
+    }
+
+    return next(
+      new ErrorHandler(
+        error.message || "error in deleting pattern",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
+  }
+};
+
 
 // export const getPattern = async (req, res, next) => {
 //   const user = req.user.id;
