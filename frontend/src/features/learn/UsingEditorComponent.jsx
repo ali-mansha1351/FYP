@@ -4,6 +4,8 @@ const Container = styled.div`
   padding: 2rem;
   background-color: #f9fafb;
   min-height: 100vh;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
 `;
 
 const Heading = styled.h1`

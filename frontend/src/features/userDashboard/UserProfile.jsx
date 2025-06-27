@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useUser } from "./useUser";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import { FaTrash, FaPencilAlt } from "react-icons/fa";
+import { FaTrash, FaPencilAlt, FaEllipsisV, FaHeart, FaRegHeart, FaBookmark, FaRegBookmark  } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { logoutUser, setUser } from "../login/loginSlice";
 import FullPageSpinner from "../../ui/FullPageSpinner";
@@ -30,6 +30,8 @@ import DeletePatternModal from "./DeletePatternModal";
 import DeletePostModal from "./DeletePostModal";
 import { resetEditor } from "../editor/editorSlice";
 import { useGetSuggestions } from "./useGetSuggestions";
+import { useLikePost } from "../../hooks/useLikePost";
+import { useSavePost } from "../../hooks/useSavePost";
 
 const Container = styled.div`
   display: flex;
@@ -166,6 +168,32 @@ const PostStats = styled.div`
   font-size: 0.9rem;
 `;
 
+const HeartIcon = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  color: ${({ liked }) => (liked ? "crimson" : "#555")};
+  cursor: pointer;
+
+  svg {
+    transition: color 0.3s ease;
+  }
+`;
+const SaveIcon = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: ${({ saved }) => (saved ? "#6366f1" : "#4b5563")}; // Indigo for saved
+
+  svg {
+    transition: 0.2s ease;
+    font-size: 18px;
+  }
+`;
+
+
 const PostsSidebar = styled.div`
   display: flex;
   flex-direction: column;
@@ -174,7 +202,6 @@ const PostsSidebar = styled.div`
   border-radius: 10px;
   overflow: hidden;
 `;
-
 const PostsHeader = styled.div`
   padding: 20px;
   border-bottom: 1px solid var(--secondary-color);
@@ -348,6 +375,18 @@ const ProfileHeader = styled.div`
   border: 0.5px solid var(--secondary-color);
   padding: 100px 20px 10px;
 `;
+const StyledSettingsIcon = styled(FaEllipsisV)`
+  position: absolute;
+  top: 8%;
+  right: 1%;
+  font-size: 1.25rem;
+  color: #333;
+  cursor: pointer;
+
+  &:hover {
+    color: #6c5ce7;
+  }
+`;
 const ProfileImageContainer = styled.div`
   position: absolute;
   border: 1.5px solid black;
@@ -447,12 +486,18 @@ function UserProfile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isDropDownOpen, setIsDropDownOpen] = useState();
+  const [likingPostId, setLikingPostId] = useState(null);
+  const [activeSaveId, setActiveSaveId] = useState(null);
   const [activeTab, setActiveTab] = useState("patterns"); // 'saved' or 'created' or 'patterns'
   const [savedPost, setSavedPosts] = useState([]);
   const [createdPosts, setCreatedPosts] = useState([]);
   const { mutate: deletePattern, isPending } = useDeletePattern();
   const { mutate: deletePost, isPending: isPendingPostDeletion } =
     useDeletePost();
+  const { mutate: toggleLike, isPending : isPendingLike} = useLikePost();
+  const { savePost, isPendingSaving } = useSavePost();
+
+
   const {
     userSuggestions,
     isLoading: isLoadingSuggestions,
@@ -518,7 +563,22 @@ function UserProfile() {
     console.log(1);
     setIsPostModalOpen(true);
   };
+  const handleLike = (e, postId) => {
+  e.stopPropagation();
+  setLikingPostId(postId);
 
+  toggleLike(postId, {
+    onSettled: () => setLikingPostId(null),
+  });
+};
+
+const handleSave = (e, postId) => {
+  e.stopPropagation();
+  setActiveSaveId(postId);
+  savePost(postId, {
+    onSettled: () => setActiveSaveId(null),
+  });
+};
   const handlePostModalCancel = () => {
     setIsPostModalOpen(false);
   };
@@ -542,7 +602,7 @@ function UserProfile() {
     });
   };
 
-  const handleSave = async (id) => {
+  const handleSavePost = async (id) => {
     const res = await savePost(id);
     if (res.success) {
       queryClient.invalidateQueries({ queryKey: ["savedPosts"] });
@@ -632,21 +692,28 @@ function UserProfile() {
                   <div>Edit Profile to add a cover photo</div>
                 </>
               )}
-              <Icon
-                src={threeDots}
-                width={20}
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsDropDownOpen(!isDropDownOpen);
-                }}
-              />
+              <StyledSettingsIcon
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDropDownOpen(!isDropDownOpen);
+                  }}
+                />
+
               {isDropDownOpen && (
                 <DropdownMenuWrapper
                   $isOpen={isDropDownOpen}
                   $top={"20%"}
                   $right={"2%"}
                 >
+                  <DropdownItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePostModalOpen()
+                      setIsDropDownOpen(false);
+                    }}
+                  >
+                    Create Post
+                  </DropdownItem>
                   <DropdownItem
                     onClick={(e) => {
                       e.stopPropagation();
@@ -665,6 +732,8 @@ function UserProfile() {
                   >
                     Log out
                   </DropdownItem>
+                  
+                  
                 </DropdownMenuWrapper>
               )}
             </CoverImageContainer>
@@ -720,10 +789,10 @@ function UserProfile() {
             <PostsHeader>
               <PostsTabContainer>
                 <PostsTab
-                  $active={activeTab === "saved"}
-                  onClick={() => handleTabClick("saved")}
+                  $active={activeTab === "patterns"}
+                  onClick={() => handleTabClick("patterns")}
                 >
-                  Saved Posts ({getCachedSavedPosts?.savedPosts?.length || 0})
+                  My Patterns ({patterns?.length})
                 </PostsTab>
                 <PostsTab
                   $active={activeTab === "created"}
@@ -731,147 +800,184 @@ function UserProfile() {
                 >
                   My Posts ({userPosts?.posts?.length || 0})
                 </PostsTab>
+                
                 <PostsTab
-                  $active={activeTab === "patterns"}
-                  onClick={() => handleTabClick("patterns")}
+                  $active={activeTab === "saved"}
+                  onClick={() => handleTabClick("saved")}
                 >
-                  My Patterns ({patterns?.length})
+                  Saved Posts ({getCachedSavedPosts?.savedPosts?.length || 0})
                 </PostsTab>
+                
               </PostsTabContainer>
             </PostsHeader>
             {activeTab === "created" ? (
               <PostsContent>
-                {getCachedPosts?.posts && getCachedPosts?.posts.length > 0 ? (
-                  getCachedPosts?.posts.map((post) => (
-                    <Post key={post._id}>
-                      <PostHeader>
-                        <PostUserInfo>
-                          <PostAvatar>
-                            <img
-                              src={getCachedUser.profileImage.url}
-                              style={{
-                                borderRadius: "50%",
-                                width: "50px",
-                                height: "50pxA",
-                                objectFit: "cover", // This prevents cropping and fits the image
-                                objectPosition: "center",
-                              }}
-                            />
-                          </PostAvatar>
+    {getCachedPosts?.posts?.length > 0 ? (
+      getCachedPosts.posts.map((post) => {
+        const hasLiked = post.likes.includes(_id);
+        const isSaved = post.saves.includes(_id)
+        return (
+          <Post key={post._id}>
+            <PostHeader>
+              <PostUserInfo>
+                <PostAvatar>
+                  <img
+                    src={getCachedUser.profileImage.url}
+                    alt="User avatar"
+                    style={{
+                      borderRadius: "50%",
+                      width: "50px",
+                      height: "50px",
+                      objectFit: "cover",
+                      objectPosition: "center",
+                    }}
+                  />
+                </PostAvatar>
 
-                          <PostUserDetails>
-                            <PostUserName>{name}</PostUserName>
-                            <PostUserRole>{skillLevel}</PostUserRole>
-                          </PostUserDetails>
-                        </PostUserInfo>
-                        <Div>
-                          <PostTime>{dateConverter(post.createdAt)}</PostTime>
-                          <IconButton
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              confirmDeletePost(post._id);
-                            }}
-                            title="Delete"
-                          >
-                            <FaTrash />
-                          </IconButton>
-                          <IconButton title="Edit">
-                            <FaPencilAlt />
-                          </IconButton>
-                        </Div>
-                      </PostHeader>
-                      {deletePostId && (
-                        <DeletePostModal
-                          isOpen={!!deletePostId}
-                          onClose={() => setDeletePostId(null)}
-                          onDelete={() => handleDeletePostConfirm()}
-                          isDeleting={isPendingPostDeletion}
-                        />
-                      )}
+                <PostUserDetails>
+                  <PostUserName>{name}</PostUserName>
+                  <PostUserRole>{skillLevel}</PostUserRole>
+                </PostUserDetails>
+              </PostUserInfo>
 
-                      <PostContent>{post.title}</PostContent>
+              <Div>
+                <PostTime>{dateConverter(post.createdAt)}</PostTime>
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    confirmDeletePost(post._id);
+                  }}
+                  title="Delete"
+                >
+                  <FaTrash />
+                </IconButton>
+                <IconButton title="Edit">
+                  <FaPencilAlt />
+                </IconButton>
+              </Div>
+            </PostHeader>
 
-                      <PostDesc>{post.description}</PostDesc>
-                      {/* {post.content
-                      ? post.content.map((img) => (
-                          <CrochetImage
-                            src={img.url}
-                            alt="Purple crochet pattern"
-                            key={img._id}
-                          />
-                        ))
-                      : ""} */}
-                      <ImageCarousel images={post.content} />
+            {deletePostId && (
+              <DeletePostModal
+                isOpen={!!deletePostId}
+                onClose={() => setDeletePostId(null)}
+                onDelete={handleDeletePostConfirm}
+                isDeleting={isPendingPostDeletion}
+              />
+            )}
 
-                      <PostStats>
-                        <span>{post.likes.length} likes</span>
-                        <span>{post.comments.length} comments</span>
-                      </PostStats>
-                    </Post>
-                  ))
+            <PostContent>{post.title}</PostContent>
+            <PostDesc>{post.description}</PostDesc>
+
+            <ImageCarousel images={post.content} />
+
+            <PostStats>
+              <HeartIcon liked={hasLiked} onClick={(e) => handleLike(e, post._id)}>
+                <span>{post.likes.length}</span>
+                {isPendingLike && likingPostId === post._id ? (
+                  <Spinner width="20px" border="2px" />
+                ) : hasLiked ? (
+                  <FaHeart />
                 ) : (
-                  <EmptyState>
-                    No posts created yet. Create your first post to get started!
-                  </EmptyState>
+                  <FaRegHeart />
                 )}
-              </PostsContent>
+              </HeartIcon>
+              <SaveIcon saved={isSaved} onClick={(e) => handleSave(e, post._id)}>
+                <span>{post.saves.length}</span>
+                {isPendingSaving  && activeSaveId === post._id? (
+                  <Spinner width="20px" border="2px" />
+                ) : isSaved ? (
+                  <FaBookmark />
+                ) : (
+                  <FaRegBookmark />
+                )}
+              </SaveIcon>
+            </PostStats>
+
+          </Post>
+        );
+      })
+    ) : (
+      <EmptyState>
+        No posts created yet. Create your first post to get started!
+      </EmptyState>
+    )}
+  </PostsContent>
             ) : activeTab === "saved" ? (
               <PostsContent>
-                {console.log(getCachedSavedPosts)}
-                {getCachedSavedPosts.savedPosts &&
-                getCachedSavedPosts.savedPosts?.length > 0 ? (
-                  getCachedSavedPosts.savedPosts?.map((post) => (
-                    <Post key={post._id}>
-                      <PostHeader>
-                        <PostUserInfo>
-                          {/* <PostAvatar>
-                            <img
-                              src={savedPost.createdBy.profileImage.url}
-                              style={{
-                                borderRadius: "50%",
-                                width: "50px",
-                                height: "50pxA",
-                                objectFit: "cover", // This prevents cropping and fits the image
-                                objectPosition: "center",
-                              }}
-                            />
-                          </PostAvatar> */}
+                {console.log('hi', getCachedSavedPosts.savedPosts)}
+  {getCachedSavedPosts.savedPosts && getCachedSavedPosts.savedPosts.length > 0 ? (
+    getCachedSavedPosts.savedPosts.map((post) => {
+      const hasLiked = post.likes.includes(_id);
+      const isSaved = post.saves.includes(_id);
 
-                          <PostUserDetails>
-                            <PostUserName>{name}</PostUserName>
-                            <PostUserRole>{skillLevel}</PostUserRole>
-                          </PostUserDetails>
-                        </PostUserInfo>
-                        <div>
-                          <PostTime>
-                            Created At {dateConverter(post.createdAt)}
-                          </PostTime>
+      return (
+        <Post key={post._id}>
+          <PostHeader>
+            <PostUserInfo>
+              <PostAvatar>
+                <img
+                  src={post.createdBy.profileImage?.url}
+                  alt="User avatar"
+                  style={{
+                    borderRadius: "50%",
+                    width: "50px",
+                    height: "50px",
+                    objectFit: "cover",
+                    objectPosition: "center",
+                  }}
+                />
+              </PostAvatar>
 
-                          <AddButton onClick={() => handleSave(post._id)}>
-                            Save
-                          </AddButton>
-                        </div>
-                      </PostHeader>
+              <PostUserDetails>
+                <PostUserName>{post.createdBy.name}</PostUserName>
+                <PostUserRole>{post.createdBy.skillLevel}</PostUserRole>
+              </PostUserDetails>
+            </PostUserInfo>
 
-                      <PostContent>{post.title}</PostContent>
+            <div>
+              <PostTime>{dateConverter(post.createdAt)}</PostTime>
+            </div>
+          </PostHeader>
 
-                      <PatternImage>{post.description}</PatternImage>
+          <PostContent>{post.title}</PostContent>
+          <PostDesc>{post.description}</PostDesc>
 
-                      <ImageCarousel images={post.content} />
+          <ImageCarousel images={post.content} />
 
-                      <PostStats>
-                        <span>{post.likes.length} likes</span>
-                        <span>{post.comments.length} comments</span>
-                      </PostStats>
-                    </Post>
-                  ))
-                ) : (
-                  <EmptyState>
-                    No saved posts yet. Start exploring and save interesting
-                    posts!
-                  </EmptyState>
-                )}
-              </PostsContent>
+          <PostStats>
+            <HeartIcon liked={hasLiked} onClick={(e) => handleLike(e, post._id)}>
+              <span>{post.likes.length}</span>
+              {isPendingLike && likingPostId === post._id ? (
+                <Spinner width="20px" border="2px" />
+              ) : hasLiked ? (
+                <FaHeart />
+              ) : (
+                <FaRegHeart />
+              )}
+            </HeartIcon>
+
+            <SaveIcon saved={isSaved} onClick={(e) => handleSave(e, post._id)}>
+              <span>{post.saves.length}</span>
+              {isPendingSaving  && activeSaveId === post._id ? (
+                <Spinner width="20px" border="2px" />
+              ) : isSaved ? (
+                <FaBookmark />
+              ) : (
+                <FaRegBookmark />
+              )}
+            </SaveIcon>
+          </PostStats>
+        </Post>
+      );
+    })
+  ) : (
+    <EmptyState>
+      No saved posts yet. Start exploring and save interesting posts!
+    </EmptyState>
+  )}
+</PostsContent>
+
             ) : isLoadingPatterns ? (
               <Spinner />
             ) : patterns?.length > 0 ? (

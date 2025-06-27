@@ -68,6 +68,8 @@ const Container = styled.div`
   background-color: #f9fafb;
   min-height: 100vh;
   overflow-y: auto;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 `;
 
 const Heading = styled.h1`
