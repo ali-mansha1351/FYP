@@ -99,3 +99,20 @@ export async function getRecommendation({ page }) {
   console.log("these are recommneded posts", result);
   return result;
 }
+
+export async function getSuggestedUsers() {
+  const res = await fetch(`${API_BASE_URL}/me/suggestedusers`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    console.log(err.error);
+    throw new Error(err.error);
+  }
+
+  const result = await res.json();
+  console.log("these are suggested users with order", result);
+  return result;
+}

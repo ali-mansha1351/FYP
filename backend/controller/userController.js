@@ -514,3 +514,54 @@ export const unFollowUser = async (req, res, next) => {
     }
   }
 };
+
+export const getSuggestedUsers = async (req, res, next) => {
+  const userId = req.user.id;
+  try {
+    if (!userId) {
+      throw new Error("unauthorized to access this resource");
+    }
+
+    const loggedInUser = await User.findById(userId);
+    const loggedInUserSkillLevel = loggedInUser.skillLevel;
+    console.log(loggedInUserSkillLevel);
+    const suggestedUsers = await User.find({ _id: { $ne: userId } }).select(
+      "name skillLevel profileImage"
+    );
+
+    suggestedUsers.sort((a, b) => {
+      const aKey =
+        a.skillLevel === loggedInUserSkillLevel
+          ? 0
+          : a.skillLevel > loggedInUserSkillLevel
+          ? 1
+          : -1;
+      const bKey =
+        b.skillLevel === loggedInUserSkillLevel
+          ? 0
+          : b.skillLevel > loggedInUserSkillLevel
+          ? 1
+          : -1;
+
+      if (aKey !== bKey) return bKey - aKey;
+      return (
+        Math.abs(a.skillLevel - loggedInUserSkillLevel) -
+        Math.abs(b.skillLevel - loggedInUserSkillLevel)
+      );
+    });
+
+    res.status(StatusCodes.ACCEPTED).json({
+      success: true,
+      message: "here are suggested users",
+      suggestedUsers,
+    });
+  } catch (error) {
+    if (error.message === "unauthorized") {
+      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
+    }
+
+    return next(
+      new ErrorHandler(error.message, StatusCodes.INTERNAL_SERVER_ERROR)
+    );
+  }
+};
