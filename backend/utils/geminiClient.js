@@ -29,18 +29,43 @@ export const getConciseGeminiResponse = async (promptText) => {
   }
 };
 
+
 export const getGeminiChatResponse = async (chatHistory, newMessage) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Or 'gemini-2.5-pro' for more complex chats
-    const chat = model.startChat({
-      history: chatHistory.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model', // Ensure roles are 'user' or 'model'
-        parts: [{ text: msg.text }]
-      }))
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    // Static system prompt for context awareness
+    const systemPrompt = {
+      role: 'user',
+      parts: [
+        {
+          text: `
+You are an AI assistant integrated into an app called Crochet Pattern Pro.
+
+This app allows users to:
+- Create and edit crochet patterns visually
+- See graphical visualizations
+- Export patterns as images
+- Share posts and engage with the community
+- Learn new skills and improve crochet techniques
+
+If the user asks anything outside this scope, such as internal app data or settings you don’t know about, politely respond with:
+"I'm not sure about that — please contact support for more help regarding this feature."
+        `.trim()
+        }
+      ]
+    };
+
+    const fullHistory = [systemPrompt, ...chatHistory.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.text }]
+    }))];
+
+    const chat = model.startChat({ history: fullHistory });
 
     const result = await chat.sendMessage(newMessage);
     const response = await result.response;
+
     return response.text();
   } catch (error) {
     console.error("Error in Gemini chat:", error);

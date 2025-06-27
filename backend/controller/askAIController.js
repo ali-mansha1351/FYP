@@ -16,7 +16,6 @@ export const generateConciseText = async (req, res) => {
     res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 };
-
 export const handleChat = async (req, res) => {
   const { history, message } = req.body;
 
