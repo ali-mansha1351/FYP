@@ -7,7 +7,6 @@ import { StatusCodes } from "http-status-codes";
 // import { session } from "neo4j-driver";
 import { connectGraphDB } from "../config/database.js";
 
-
 import mongoose from "mongoose";
 // export const createPattern = async (req, res, next) => {
 //   const { name, stitches } = req.body;
@@ -56,7 +55,6 @@ import mongoose from "mongoose";
 //   }
 // };
 
-
 //as primitive values are not supported in neo4j hence we clean the properties of each object of stitch and link
 const cleanObject = (obj) => {
   const cleaned = {};
@@ -79,7 +77,6 @@ const cleanObject = (obj) => {
   return cleaned;
 };
 
-
 export const createPattern = async (req, res, next) => {
   const driver = await connectGraphDB();
   const session = driver.session();
@@ -87,7 +84,9 @@ export const createPattern = async (req, res, next) => {
     const { id, name, stitches, links, image } = req.body;
 
     if (!name || !stitches || stitches.length === 0) {
-      return res.status(400).json({ error: "Name, stitches, and pattern picture are required." });
+      return res
+        .status(400)
+        .json({ error: "Name, stitches, and pattern picture are required." });
     }
 
     const userId = req.user._id;
@@ -116,7 +115,9 @@ export const createPattern = async (req, res, next) => {
     }
 
     // Create a new ObjectId if none is provided or not found
-    const newId = id ? new mongoose.Types.ObjectId(id) : new mongoose.Types.ObjectId();
+    const newId = id
+      ? new mongoose.Types.ObjectId(id)
+      : new mongoose.Types.ObjectId();
 
     pattern = await Pattern.create({
       _id: newId,
@@ -127,7 +128,6 @@ export const createPattern = async (req, res, next) => {
       image,
       lastModified: new Date(),
     });
-
 
     const cleanedStitches = stitches.map(cleanObject);
     const cleanedLinks = links.map(cleanObject);
@@ -151,7 +151,13 @@ export const createPattern = async (req, res, next) => {
         `,
       { stitches: cleanedStitches, links: cleanedLinks }
     );
-    res.status(201).json({ success: true, pattern });
+    res
+      .status(StatusCodes.CREATED)
+      .json({
+        success: true,
+        pattern,
+        message: "Pattern created successfully",
+      });
   } catch (error) {
     console.error("Message:", error.message);
     return next(
@@ -159,16 +165,6 @@ export const createPattern = async (req, res, next) => {
     );
   } finally {
     await session.close();
-
-    res.status(201).json({
-      success: true,
-      pattern,
-      message: "Pattern created successfully",
-    });
-  } catch (error) {
-    console.error("❌ Error creating/updating pattern:", error.message);
-    res.status(500).json({ error: "Internal Server Error" });
-
   }
 };
 
@@ -242,7 +238,6 @@ export const getPatternById = async (req, res, next) => {
   }
 };
 
-
 export const deletePatternById = async (req, res, next) => {
   const user = req.user?.id;
 
@@ -267,7 +262,6 @@ export const deletePatternById = async (req, res, next) => {
       success: true,
       message: "Pattern deleted successfully",
     });
-
   } catch (error) {
     // ✅ Log full error with stack trace
     console.error("Error in deletePatternById:", error);
@@ -290,7 +284,6 @@ export const deletePatternById = async (req, res, next) => {
     );
   }
 };
-
 
 // export const getPattern = async (req, res, next) => {
 //   const user = req.user.id;

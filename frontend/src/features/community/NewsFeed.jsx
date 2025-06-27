@@ -220,11 +220,10 @@ const SuggestionUserInfo = styled.div`
   gap: 1rem;
 `;
 
-const SuggestionAvatar = styled.div`
+const SuggestionAvatar = styled.img`
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><circle cx="22.5" cy="22.5" r="22.5" fill="%23ddd"/><circle cx="22.5" cy="18" r="7" fill="%23999"/><path d="M6 36c0-9 7-16 16.5-16s16.5 7 16.5 16" fill="%23999"/></svg>');
   background-size: cover;
 `;
 
@@ -326,6 +325,8 @@ function NewsFeed() {
   ];
 
   const feed = queryClient.getQueryData(["newsfeed"]);
+  const suggestedUsers = queryClient.getQueryData(["userSuggestions"]);
+  console.log(suggestedUsers.suggestedUsers);
   const allPosts = feed?.pages?.flatMap((pages) => pages?.data?.posts);
   const handleOpen = () => {
     setIsModalOpen(true);
@@ -402,7 +403,7 @@ function NewsFeed() {
               {/* Render posts from API */}
 
               {allPosts?.map((post, postIndex) => {
-                console.log(post);
+                // console.log(post);
                 return renderPost(post, `${postIndex}`);
               })}
 
@@ -420,19 +421,21 @@ function NewsFeed() {
           <Sidebar>
             <SuggestionsCard>
               <SuggestionsTitle>Suggestions</SuggestionsTitle>
-              {suggestions.map((suggestion, index) => (
+              {suggestedUsers.suggestedUsers?.map((suggestion, index) => (
                 <SuggestionItem key={index}>
                   <SuggestionUserInfo>
-                    <SuggestionAvatar />
+                    <SuggestionAvatar src={suggestion.profileImage?.url} />
                     <SuggestionUserDetails>
                       <SuggestionUserName>{suggestion.name}</SuggestionUserName>
-                      <SuggestionUserRole>{suggestion.role}</SuggestionUserRole>
+                      <SuggestionUserRole>
+                        {suggestion.skillLevel}
+                      </SuggestionUserRole>
                     </SuggestionUserDetails>
                   </SuggestionUserInfo>
                   <SuggestionAddButton>+ Add</SuggestionAddButton>
                 </SuggestionItem>
               ))}
-              <ViewAllButton>View all suggestion →</ViewAllButton>
+              {/* <ViewAllButton>View all suggestion →</ViewAllButton> */}
             </SuggestionsCard>
           </Sidebar>
         </MainContent>
