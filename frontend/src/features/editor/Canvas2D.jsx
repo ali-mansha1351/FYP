@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import StitchesBar from "./StitchesBar";
-import { FaPlus, FaMinus, FaExpand, FaCompress } from "react-icons/fa";
+import { FaPlus, FaMinus, FaExpand, FaCompress,FaDownload } from "react-icons/fa";
 import { useEffect, useRef, useState } from "react";
 import ForceGraph2D from "force-graph";
 import BeginningModal from "./BeginningModal";
@@ -14,6 +14,24 @@ const stitchCanvas = new CrochetCanvas();
 const Container = styled.div`
   display: flex;
   position: relative;
+`;
+
+const ExportButton = styled.div`
+  cursor: pointer;
+  position: absolute;
+  border-radius: 30px;
+  background-color: var(--secondary-color);
+  bottom: 85px;
+  right: 40px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 99;
+  &:hover {
+    background-color: var(--primary-color);
+  }
 `;
 
 const CanvasContainer = styled.div`
@@ -86,24 +104,91 @@ export default function Canvas2D() {
 
   const graphRef = useRef();
   const dispatch = useDispatch();
+  
   useEffect(() => {
     if (containerRef.current) {
-    const canvas = containerRef.current.querySelector("canvas");
-    if (canvas) dispatch(setCanvasRef(canvas));
-  }
+      const canvas = containerRef.current.querySelector("canvas");
+      if (canvas) dispatch(setCanvasRef(canvas));
+    }
   }, [dispatch]);
+  
   useEffect(() => {
     if (graphRef.current) {
       // Re-apply the same data to trigger a redraw
       graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
     }
   }, [hoveredNodeRef]);
+  
   useEffect(() => {
-  if (isEmpty) {
-    setIsBeginningModalOpen(true);
-  }
-}, [isEmpty]);
+    if (isEmpty) {
+      setIsBeginningModalOpen(true);
+    }
+  }, [isEmpty]);
 
+  // Function to export canvas as PNG
+  const exportCanvasAsPNG = async () => {
+    try {
+      const canvas = containerRef.current?.querySelector("canvas");
+      if (!canvas) {
+        console.error("Canvas not found");
+        return;
+      }
+
+      // Wait for any pending animations to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Force a redraw to ensure everything is rendered
+      if (graphRef.current) {
+        graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));
+        // Wait for the redraw to complete
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      // Get the canvas data
+      const dataURL = canvas.toDataURL('image/png', 1.0);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.download = `crochet-pattern-${new Date().getTime()}.png`;
+      link.href = dataURL;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      console.log("PNG export successful");
+    } catch (error) {
+      console.error("Error exporting PNG:", error);
+      
+      // Alternative method using html2canvas if the direct method fails
+      try {
+        // You'll need to install html2canvas: npm install html2canvas
+        const html2canvas = (await import('html2canvas')).default;
+        
+        const canvas = await html2canvas(containerRef.current, {
+          backgroundColor: getComputedStyle(document.documentElement)
+            .getPropertyValue("--third-color")
+            .trim(),
+          scale: 2, // Higher quality
+          useCORS: true,
+          allowTaint: true
+        });
+        
+        const dataURL = canvas.toDataURL('image/png', 1.0);
+        const link = document.createElement('a');
+        link.download = `crochet-pattern-${new Date().getTime()}.png`;
+        link.href = dataURL;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log("PNG export successful using html2canvas");
+      } catch (html2canvasError) {
+        console.error("html2canvas export also failed:", html2canvasError);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -122,7 +207,6 @@ export default function Canvas2D() {
       .nodeCanvasObject((node, ctx) => {
         const isHovered = node.id === hoveredNodeRef.current;
 
-        
         if(node.type === 'ch' || node.type === 'mr' ){
           stitchCanvas.draw(node.type, ctx, node.x, node.y, node.color);
         }
@@ -270,6 +354,9 @@ export default function Canvas2D() {
             <FaMinus size={12} />
           </ZoomButton>
         </ZoomButtonsContainer>
+        <ExportButton onClick={exportCanvasAsPNG}>
+          <FaDownload size={16} />
+        </ExportButton>
         <ExpandButton onClick={() => dispatch(toggleExpandCanvas())}>
           {expanded ? <FaCompress size={16} /> : <FaExpand size={16} />}
         </ExpandButton>
