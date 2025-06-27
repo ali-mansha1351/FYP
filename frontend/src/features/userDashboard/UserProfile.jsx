@@ -2,12 +2,15 @@ import styled from "styled-components";
 import { useUser } from "./useUser";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
+import { FaTrash , FaPencilAlt  } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { logoutUser, setUser } from "../login/loginSlice";
+import FullPageSpinner from '../../ui/FullPageSpinner'
 import { useLogout } from "../login/useLogout";
 import { useQueryClient } from "@tanstack/react-query";
 import { FaUserCircle } from "react-icons/fa";
 import { DropdownMenuWrapper, DropdownItem } from "../../ui/DropDownStyles";
+import {useDeletePattern, useGetPatterns} from '../../hooks/usePattern'
 import { useNavigate } from "react-router-dom";
 import { useGetPost } from "./useGetPost";
 import { dateConverter } from "../../utils/dateConverter";
@@ -21,6 +24,11 @@ import addImg from "../../assets/add-image.png";
 import threeDots from "../../assets/three-dots.png";
 import { useGetSavedPost } from "./useGetSavedPosts";
 import { savePost } from "../../services/postApi";
+import Spinner from "../../ui/Spinner";
+import { getPatterns } from "../../services/patternApi";
+import DeletePatternModal from "./DeletePatternModal";
+import DeletePostModal from "./DeletePostModal";
+import { resetEditor } from "../editor/editorSlice";
 
 const Container = styled.div`
   display: flex;
@@ -31,8 +39,14 @@ const Container = styled.div`
 const MainContent = styled.div`
   display: flex;
   flex-direction: column;
+  gap: 10px;
   overflow: hidden;
-  margin: 10px 40px;
+  margin: 10px 10%;
+
+  @media (max-width: 786px) {
+    margin: 10px;
+  }
+
 `;
 
 const Profile = styled.div`
@@ -86,11 +100,13 @@ const PostUserName = styled.span`
   font-weight: 600;
   font-size: 1.1rem;
   color: #333;
+  text-transform: capitalize;
 `;
 
 const PostUserRole = styled.span`
   color: #666;
   font-size: 0.9rem;
+  text-transform: capitalize;
 `;
 
 const PostTime = styled.span`
@@ -123,6 +139,17 @@ const PatternImage = styled.div`
   text-align: center;
   white-space: pre-line;
 `;
+const PostDesc = styled.div`
+  background-color: #f0f0f0;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  white-space: pre-line; 
+  word-wrap: break-word; 
+  overflow-wrap: break-word;
+`;
 
 const CrochetImage = styled.img`
   width: 100%;
@@ -142,7 +169,7 @@ const PostStats = styled.div`
 const PostsSidebar = styled.div`
   display: flex;
   flex-direction: column;
-  min-width: 600px;
+  min-width: 300px;
   background-color: var(--primary-color);
   border-radius: 10px;
   overflow: hidden;
@@ -160,8 +187,77 @@ const PostsHeader = styled.div`
 const PostsTabContainer = styled.div`
   display: flex;
   gap: 10px;
-  margin-bottom: 15px;
 `;
+
+const PatternGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0.5rem;
+
+  @media (max-width: 650px) {
+    grid-template-columns: 1fr; // Force 1 item per row 
+  }
+`;
+
+const PatternCard = styled.div`
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  }
+`;
+const DeleteIcon = styled.div`
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  cursor: pointer;
+  color: black;
+  font-size: 1rem;
+  z-index: 2;
+  &:hover{
+    color: #6c7c6b
+  }
+`;
+const IconButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 8px;
+  font-size: 16px;
+  color: black;
+
+  &:hover {
+  color: #6c7c6b;
+  }
+`;
+const Div= styled.div`
+  display: flex;
+  align-items: center;
+`
+const PatternName = styled.h3`
+  font-size: 1.2rem;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+`;
+
+const PatternDate = styled.span`
+  font-size: 0.9rem;
+  color: #888;
+`;
+
+
 
 const PostsTab = styled.button`
   padding: 10px 20px;
@@ -171,11 +267,11 @@ const PostsTab = styled.button`
   color: ${(props) => (props.$active ? "white" : "inherit")};
   cursor: pointer;
   font-size: 16px;
-  font-weight: ${(props) => (props.$active ? "600" : "400")};
   transition: all 0.2s ease;
 
   &:hover {
     background-color: var(--secondary-color);
+    border: 1px solid var(--secondary-color);
     color: black;
   }
 `;
@@ -231,7 +327,6 @@ const CoverImageContainer = styled.div`
   width: 100%;
   height: 150px;
   color: grey;
-  cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -257,14 +352,13 @@ const ProfileHeader = styled.div`
 `;
 const ProfileImageContainer = styled.div`
   position: absolute;
-  border: 1px solid var(--secondary-color);
+  border: 1.5px solid black;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   bottom: 50%;
   background: antiquewhite;
-  cursor: pointer;
 `;
 const LeftContainer = styled.div`
   display: flex;
@@ -355,10 +449,14 @@ function UserProfile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isDropDownOpen, setIsDropDownOpen] = useState();
-  const [activeTab, setActiveTab] = useState("created"); // 'saved' or 'created'
+  const [activeTab, setActiveTab] = useState("patterns"); // 'saved' or 'created' or 'patterns'
   const [savedPost, setSavedPosts] = useState([]);
   const [createdPosts, setCreatedPosts] = useState([]);
-  const { deletePost, isDeleting } = useDeletePost();
+  const { mutate: deletePattern, isPending } = useDeletePattern();
+  const { mutate: deletePost, isPending: isPendingPostDeletion } = useDeletePost();
+  
+  const [deleteId, setDeleteId] = useState(null);
+  const [deletePostId, setDeletePostId] = useState(null);
   const { isLoading, refetch } = useUser();
   const { savedPosts } = useGetSavedPost();
   const {
@@ -366,15 +464,27 @@ function UserProfile() {
     refetch: userPostRefetch,
     userPosts,
   } = useGetPost(true);
-  const { logout } = useLogout();
+  const { logout, isPending: isLoggingOut } = useLogout();
+
   const isEffectRun = useRef(false);
   const userDetails = useSelector((store) => store.user);
+  const {data: patterns, isPending: isLoadingPatterns} = useGetPatterns();
+  const { _id,name, skillLevel, profileImage, coverImage, followers, following } =
+    userDetails.userDetail;
+  function formatDate(isoDate) {
+  return new Date(isoDate).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const navItems = [
     { label: "Learn", path: "/learn" },
-    { label: "Community", path: "/user/newsfeed" },
+    { label: "Community", path: `/user/${_id}/newsfeed/` },
     { label: "Editor", path: "/editor" },
   ];
 
@@ -411,14 +521,12 @@ function UserProfile() {
   };
 
   const handlePostDelete = (id) => {
-    console.log(id);
     deletePost(id, {
       onSuccess: (res) => {
         // userPostRefetch();
         toast.success("post successfully delete");
       },
       onError: (error) => {
-        console.log(error);
         toast.error("couldn't delete post");
       },
     });
@@ -457,15 +565,48 @@ function UserProfile() {
       },
     });
   }
+  function confirmDelete(id) {
+    setDeleteId(id);
+  }
+  function confirmDeletePost(id) {
+    setDeletePostId(id);
+  }
+  function handleDeleteConfirm() {
+    deletePattern(deleteId, {
+      onSuccess: () => {
+        toast.success("Pattern deleted successfully");
+        setDeleteId(null);
+        dispatch(resetEditor());
+      },
+      onError: (err) => {
+        toast.error(err.message);
+        setDeleteId(null);
+      },
+    });
+  }
+  function handleDeletePostConfirm() {
+  deletePost(deletePostId, {
+    onSuccess: () => {
+      toast.success("Post deleted successfully");
+      setDeletePostId(null);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+      setDeletePostId(null);
+    },
+  });
+}
 
-  if (isLoading) return <p>Loading user data...</p>;
-  const { name, skillLevel, profileImage, coverImage, followers, following } =
-    userDetails.userDetail;
+ 
+  if (isLoading || isLoggingOut) return <FullPageSpinner />
+  
   const countFollowing = following?.length;
   const countFollowers = followers?.length;
 
   const currentPosts = activeTab === "saved" ? savedPost : createdPosts;
-
+  const handlePatternClick = (id) => {
+    navigate(`/editor/${id}`)
+  }
   return (
     <>
       <Container>
@@ -474,7 +615,7 @@ function UserProfile() {
         <MainContent>
           <Profile>
             <CoverImageContainer>
-              {coverImage.name ? (
+              {coverImage?.name ? (
                 <CoverImg
                   src={coverImage.url}
                   alt="cover"
@@ -482,12 +623,13 @@ function UserProfile() {
               ) : (
                 <>
                   <img src={addImg} width={45} />
-                  <div>Click to add a cover photo</div>
+                  <div>Edit Profile to add a cover photo</div>
                 </>
               )}
               <Icon
                 src={threeDots}
                 width={20}
+                style={{cursor: 'pointer'}}
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsDropDownOpen(!isDropDownOpen);
@@ -502,20 +644,20 @@ function UserProfile() {
                   <DropdownItem
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleLogout();
-                      setIsDropDownOpen(false);
-                    }}
-                  >
-                    Log out
-                  </DropdownItem>
-                  <DropdownItem
-                    onClick={(e) => {
-                      e.stopPropagation();
                       handleModalOpen();
                       setIsDropDownOpen(false);
                     }}
                   >
                     Edit Profile
+                  </DropdownItem>
+                  <DropdownItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLogout();
+                      setIsDropDownOpen(false);
+                    }}
+                  >
+                    Log out
                   </DropdownItem>
                 </DropdownMenuWrapper>
               )}
@@ -523,7 +665,7 @@ function UserProfile() {
             <ProfileHeader>
               <LeftContainer>
                 <ProfileImageContainer>
-                  {profileImage.name ? (
+                  {profileImage?.name ? (
                     <img
                       src={profileImage.url}
                       alt="profile"
@@ -550,7 +692,7 @@ function UserProfile() {
                 </PostsNumContainer>
               </RightContainer>
             </ProfileHeader>
-            <SubContainer>
+            {/*<SubContainer>
               <Label>Quick Actions</Label>
               <ItemsContainer>
                 <GridItem onClick={() => handleTabClick("saved")}>
@@ -565,7 +707,7 @@ function UserProfile() {
                 </GridItem>
                 <GridItem>View My Patterns</GridItem>
               </ItemsContainer>
-            </SubContainer>
+            </SubContainer>*/}
           </Profile>
 
           <PostsSidebar>
@@ -582,6 +724,12 @@ function UserProfile() {
                   onClick={() => handleTabClick("created")}
                 >
                   My Posts ({userPosts?.posts?.length || 0})
+                </PostsTab>
+                <PostsTab
+                  $active={activeTab === "patterns"}
+                  onClick={() => handleTabClick("patterns")}
+                >
+                  My Patterns ({patterns?.length})
                 </PostsTab>
               </PostsTabContainer>
             </PostsHeader>
@@ -610,20 +758,33 @@ function UserProfile() {
                             <PostUserRole>{skillLevel}</PostUserRole>
                           </PostUserDetails>
                         </PostUserInfo>
-                        <div>
+                        <Div>
                           <PostTime>
-                            Created At {dateConverter(post.createdAt)}
+                          {dateConverter(post.createdAt)}
                           </PostTime>
-                          <AddButton onClick={() => handlePostDelete(post._id)}>
-                            Delete
-                          </AddButton>
-                          <AddButton>Edit</AddButton>
-                        </div>
+                          <IconButton onClick={(e) => {
+                              e.stopPropagation(); 
+                              confirmDeletePost(post._id);
+                            }} title="Delete">
+                            <FaTrash />
+                          </IconButton>
+                          <IconButton title="Edit">
+                            <FaPencilAlt  />
+                          </IconButton>
+                        </Div>
                       </PostHeader>
+                      {
+                        deletePostId && <DeletePostModal
+                          isOpen={!!deletePostId}
+                          onClose={() => setDeletePostId(null)}
+                          onDelete={() => handleDeletePostConfirm()}
+                          isDeleting={isPendingPostDeletion}
+                        />
+                      }
 
                       <PostContent>{post.title}</PostContent>
 
-                      <PatternImage>{post.description}</PatternImage>
+                      <PostDesc>{post.description}</PostDesc>
                       {/* {post.content
                       ? post.content.map((img) => (
                           <CrochetImage
@@ -643,13 +804,11 @@ function UserProfile() {
                   ))
                 ) : (
                   <EmptyState>
-                    {activeTab === "saved"
-                      ? "No saved posts yet!"
-                      : "No posts created yet. Create your first post to get started!"}
+                      No posts created yet. Create your first post to get started!
                   </EmptyState>
                 )}
               </PostsContent>
-            ) : (
+            ) : activeTab === "saved" ? (
               <PostsContent>
                 {console.log(getCachedSavedPosts)}
                 {getCachedSavedPosts.savedPosts &&
@@ -701,13 +860,49 @@ function UserProfile() {
                   ))
                 ) : (
                   <EmptyState>
-                    {activeTab === "saved"
-                      ? "No saved posts yet. Start exploring and save interesting posts!"
-                      : "No posts created yet. Create your first post to get started!"}
+                      No saved posts yet. Start exploring and save interesting posts!
                   </EmptyState>
                 )}
               </PostsContent>
-            )}
+            ): isLoadingPatterns ? (
+                  <Spinner />
+                ) : patterns?.length > 0 ? (
+                  <>
+                  <PatternGrid>
+                    {patterns.map((pattern) => (
+                      <PatternCard key={pattern._id} onClick={()=>handlePatternClick(pattern._id)}>
+                        <DeleteIcon onClick={(e) => {
+                          e.stopPropagation(); 
+                          confirmDelete(pattern._id);
+                        }}>
+                          <FaTrash />
+                        </DeleteIcon>
+                        {pattern.image && (
+                          <PatternImage src={pattern.image} alt={pattern.name} />
+                        )}
+                        <div>
+                          <PatternName>{pattern.name}</PatternName>
+                          <PatternDate>{formatDate(pattern.createdAt)}</PatternDate>
+                        </div>
+                      </PatternCard>
+                    ))}
+                  </PatternGrid>
+                  {
+                    deleteId && <DeletePatternModal
+                      isOpen={!!deleteId}
+                      onClose={() => setDeleteId(null)}
+                      onDelete={() => handleDeleteConfirm()}
+                      isDeleting={isPending}
+                    />
+                  }
+                  </>
+                ) : (
+                  <EmptyState>
+                    No patterns created yet. Create your first patterns to get started!
+                  </EmptyState>
+                )}
+
+            
           </PostsSidebar>
         </MainContent>
       </Container>

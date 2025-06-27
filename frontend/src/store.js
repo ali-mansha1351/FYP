@@ -5,10 +5,12 @@ import storage from "redux-persist/lib/storage";
 import userReducer from "./features/login/loginSlice";
 import editorReducer from "./features/editor/editorSlice";
 import postReducer from "./features/community/postSlice.js";
+import learnReducer from './features/learn/learnSlice.jsx'
 const rootReducer = combineReducers({
   user: userReducer,
   editor: editorReducer,
   post: postReducer,
+  learn: learnReducer
 
   // Add other reducers here
 });

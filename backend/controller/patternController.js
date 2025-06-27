@@ -3,9 +3,12 @@ import { Pattern } from "../modules/pattern.js";
 import { ErrorHandler } from "../utils/errorhandler.js";
 import { User } from "../modules/user.js";
 import { StatusCodes } from "http-status-codes";
+
 // import { session } from "neo4j-driver";
 import { connectGraphDB } from "../config/database.js";
 
+
+import mongoose from "mongoose";
 // export const createPattern = async (req, res, next) => {
 //   const { name, stitches } = req.body;
 //   const user = req.user.id;
@@ -53,6 +56,7 @@ import { connectGraphDB } from "../config/database.js";
 //   }
 // };
 
+
 //as primitive values are not supported in neo4j hence we clean the properties of each object of stitch and link
 const cleanObject = (obj) => {
   const cleaned = {};
@@ -75,24 +79,55 @@ const cleanObject = (obj) => {
   return cleaned;
 };
 
+
 export const createPattern = async (req, res, next) => {
   const driver = await connectGraphDB();
   const session = driver.session();
   try {
-    const { name, stitches, links } = req.body;
+    const { id, name, stitches, links, image } = req.body;
 
     if (!name || !stitches || stitches.length === 0) {
-      return res.status(400).json({ error: "Name and stitches are required." });
+      return res.status(400).json({ error: "Name, stitches, and pattern picture are required." });
     }
 
-    const userId = req.user._id; // ✅ from isAuthenticatedUser middleware
+    const userId = req.user._id;
 
-    const pattern = await Pattern.create({
+    let pattern;
+
+    if (id) {
+      // Try to find pattern with same ID and user
+      pattern = await Pattern.findOne({ _id: id, user: userId });
+
+      if (pattern) {
+        // Overwrite existing pattern
+        pattern.name = name;
+        pattern.stitches = stitches;
+        pattern.links = links;
+        if (image) pattern.image = image;
+        pattern.lastModified = new Date();
+        await pattern.save();
+
+        return res.status(200).json({
+          success: true,
+          pattern,
+          message: "Pattern updated successfully",
+        });
+      }
+    }
+
+    // Create a new ObjectId if none is provided or not found
+    const newId = id ? new mongoose.Types.ObjectId(id) : new mongoose.Types.ObjectId();
+
+    pattern = await Pattern.create({
+      _id: newId,
       name,
-      user: userId, // ✅ use 'user' not 'userId' if schema defines it that way
+      user: userId,
       stitches,
       links,
+      image,
+      lastModified: new Date(),
     });
+
 
     const cleanedStitches = stitches.map(cleanObject);
     const cleanedLinks = links.map(cleanObject);
@@ -124,6 +159,16 @@ export const createPattern = async (req, res, next) => {
     );
   } finally {
     await session.close();
+
+    res.status(201).json({
+      success: true,
+      pattern,
+      message: "Pattern created successfully",
+    });
+  } catch (error) {
+    console.error("❌ Error creating/updating pattern:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+
   }
 };
 
@@ -196,6 +241,56 @@ export const getPatternById = async (req, res, next) => {
     );
   }
 };
+
+
+export const deletePatternById = async (req, res, next) => {
+  const user = req.user?.id;
+
+  try {
+    if (!user) {
+      throw new Error("login first to delete patterns");
+    }
+
+    const patternToDelete = await Pattern.findById(req.params.id);
+
+    if (!patternToDelete) {
+      throw new Error("pattern not found");
+    }
+
+    if (patternToDelete.user.toString() !== user.toString()) {
+      throw new Error("unauthorized access to delete this pattern");
+    }
+
+    await patternToDelete.deleteOne();
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Pattern deleted successfully",
+    });
+
+  } catch (error) {
+    // ✅ Log full error with stack trace
+    console.error("Error in deletePatternById:", error);
+
+    if (error.message === "login first to delete patterns") {
+      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
+    }
+    if (error.message === "pattern not found") {
+      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
+    }
+    if (error.message === "unauthorized access to delete this pattern") {
+      return next(new ErrorHandler(error.message, StatusCodes.FORBIDDEN));
+    }
+
+    return next(
+      new ErrorHandler(
+        error.message || "error in deleting pattern",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
+  }
+};
+
 
 // export const getPattern = async (req, res, next) => {
 //   const user = req.user.id;

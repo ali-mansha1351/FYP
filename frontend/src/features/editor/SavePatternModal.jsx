@@ -1,6 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { Button } from "../../ui/LoginSignupStyles";
+import { useSelector } from "react-redux";
+
 const Overlay = styled.div`
   position: fixed;
   top: 0;
@@ -42,15 +44,29 @@ const Input = styled.input`
   font-size: 16px;
 `;
 
+const ButtonGroup = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+`;
+
 export default function SavePatternModal({ isOpen, onClose, onSave, isLoading }) {
-  const [patternName, setPatternName] = useState("");
+  const name = useSelector(state => state.editor.name);
+  const id = useSelector(state => state.editor.id);
+  const [patternName, setPatternName] = useState(name);
 
   const handleSave = () => {
     if (patternName.trim()) {
-      onSave(patternName.trim());
+      onSave(patternName.trim(), id);
       onClose();
       setPatternName("");
     }
+  };
+
+  const handleCancel = () => {
+    onClose();
+    setPatternName(name); // Reset to original
   };
 
   return (
@@ -64,7 +80,10 @@ export default function SavePatternModal({ isOpen, onClose, onSave, isLoading })
           placeholder="My Pattern"
           disabled={isLoading}
         />
-          <Button onClick={handleSave}>Save</Button>
+        <ButtonGroup>
+          <Button $variant="cancel"  onClick={handleCancel} disabled={isLoading}>Cancel</Button>
+          <Button onClick={handleSave} disabled={isLoading}>Save</Button>
+        </ButtonGroup>
       </ModalContent>
     </Overlay>
   );

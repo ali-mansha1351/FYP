@@ -307,8 +307,8 @@ function NewsFeed() {
   } = useGetNewsFeed();
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
-    { label: "Community", path: "/user/newsfeed" },
-    { label: `${name}`, path: `/user/${_id}` },
+    { label: "Editor", path: `/editor` },
+    { label: "Profile", path: `/user/${_id}` },
   ];
   const navItems = [
     { label: "Home", path: "/" },

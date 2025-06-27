@@ -1,4 +1,3 @@
-import React from "react";
 import styled from "styled-components";
 import { Button } from "../../ui/LoginSignupStyles";
 
@@ -26,27 +25,34 @@ const ModalContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
 `;
 
 const Title = styled.div`
   font-size: 20px;
-  font-weight: 500;
+  padding-inline: 10px;
+  align-self: flex-start;
 `;
 
 const ButtonRow = styled.div`
   display: flex;
-  gap: 20px;
+  gap: 1rem;
+  width: 100%;
+  justify-content: center;
 `;
 
-export default function NewPatternModal({ isOpen, onConfirm, onCancel }) {
+export default function DeletePatternModal({ isOpen, onClose, onDelete, isDeleting }) {
   return (
     <Overlay $isOpen={isOpen}>
       <ModalContent>
-        <Title>Are you sure you want to start a new pattern?</Title>
+        <Title>Are you sure you want to delete this pattern?</Title>
         <ButtonRow>
-          <Button $variant="cancel" onClick={onConfirm}>Yes</Button>
-          <Button onClick={onCancel}>No</Button>
+          <Button onClick={onDelete} disabled={isDeleting}>
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+          <Button onClick={onClose} disabled={isDeleting} style={{ backgroundColor: "#ccc", color: "#000" }}>
+            Cancel
+          </Button>
         </ButtonRow>
       </ModalContent>
     </Overlay>

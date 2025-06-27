@@ -19,6 +19,8 @@ import {
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 import Spinner from "../../ui/Spinner";
+import { useNavigate } from "react-router-dom";
+import DiscardChangesModal from "./DiscardChangesModal";
 
 
 
@@ -125,11 +127,14 @@ export default function SubMenuBar() {
   const graphicalView = useSelector((state) => state.editor.graphicalView);
   const canUndo = useSelector((state) => state.editor.history.length > 0);
   const canRedo = useSelector((state) => state.editor.future.length > 0);
+  const canvas = useSelector((state) => state.editor.canvasRef);
   const [showNewModal, setShowNewModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false); 
+  const [showDiscardModal, setShowDiscardModal] = useState(false); 
   const pattern = useSelector((state) => state.editor.pattern);
+  const {_id} = useSelector(state => state.user.userDetail)
+  const isLoggedIn = useSelector(state=>state.user.isLoggedIn)
   const create = useCreatePattern();
-  console.log("hook content", create);
   const { mutate: savePattern, isPending: isSaving } = create;
 
 
@@ -145,7 +150,7 @@ export default function SubMenuBar() {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [tempColor, setTempColor] = useState(stitchColor);
   const pickerRef = useRef(null);
-
+  const navigate = useNavigate()
   
   const handleNewClick = () => setShowNewModal(true);
   const handleCancelNew = () => setShowNewModal(false);
@@ -162,18 +167,28 @@ export default function SubMenuBar() {
   setShowSaveModal(true);
 };
 
-  const handleConfirmSave = (name) => {
-    const data = { name, stitches: pattern.nodes, links: pattern.links };
-    savePattern(data, {
-      onSuccess: () => {
-        toast.success("Pattern saved!");
-        dispatch(resetEditor());
-      },
-      onError: () => {
-        toast.error("Failed to save pattern.");
-      },
-    });
-  };
+ const handleConfirmSave = (name) => {
+  if (!canvas) {
+    console.warn('Canvas not ready yet.');
+    return;
+  }
+
+  const imageData = canvas.toDataURL('image/png'); // use 'image/png' if transparency is needed
+
+  // Create a temporary anchor element to trigger download
+  const link = document.createElement('a');
+  link.href = imageData;
+  link.download = `${name || 'pattern'}.jpg`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+
+  const handleConfirmDiscard = () =>{
+    dispatch(resetEditor())
+    setShowDiscardModal(false)
+  }
 
 
 
@@ -216,7 +231,6 @@ export default function SubMenuBar() {
 
   return (
     <>
-    {console.log("saving?", isSaving)}
     {isSaving && <Spinner overlay />}
 
     <NewPatternModal
@@ -231,6 +245,11 @@ export default function SubMenuBar() {
       isLoading={isSaving}
     />
 
+    <DiscardChangesModal
+      isOpen={showDiscardModal}
+      onClose={() => setShowDiscardModal(false)}
+      onDiscard={handleConfirmDiscard}
+    />
 
     <Menubar>
       <MenuItemsContainer>
@@ -276,32 +295,41 @@ export default function SubMenuBar() {
 
           </>
         )}
-        {selectedMenu === 'File' && (
-        <>
-          <EditButton onClick={handleNewClick}>
-            <FaFileAlt />
-            New Pattern
-          </EditButton>
+        {selectedMenu === "File" && (
+  <>
+    <EditButton onClick={handleNewClick}>
+      <FaFileAlt />
+      New Pattern
+    </EditButton>
 
-          <EditButton onClick={() => console.log("Import Pattern")}>
-            <FaFileImport />
-            Import Pattern
-          </EditButton>
-          <EditButton onClick={handleSaveClick}>
-            <FaSave />
-            Save
-          </EditButton>
+    {isLoggedIn ? (
+      <>
+        <EditButton onClick={handleSaveClick}>
+          <FaSave />
+          Save
+        </EditButton>
 
-          <EditButton onClick={() => console.log("Discard Changes")}>
-            <FaTrashAlt />
-            Discard
-          </EditButton>
-          <EditButton onClick={() => console.log("Generate Instructions")}>
-            <FaFileExport />
-            Generate Instructions
-          </EditButton>
-        </>
-      )}
+        <EditButton onClick={() => console.log("Generate Instructions")}>
+          <FaFileExport />
+          Generate Instructions
+        </EditButton>
+      </>
+    ) : (
+      <>
+        <EditButton onClick={() => console.log("Import Pattern")}>
+          <FaFileImport />
+          Import Pattern
+        </EditButton>
+
+        <EditButton onClick={() => setShowDiscardModal(true)}>
+          <FaTrashAlt />
+          Discard
+        </EditButton>
+      </>
+    )}
+  </>
+)}
+        
 
 
 

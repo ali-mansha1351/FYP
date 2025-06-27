@@ -16,6 +16,9 @@ const initialState = {
   view3D: false,
   history: [],
   future: [],
+  canvasRef: null,
+  name: 'untitled',
+  id: null,
 };
 
 // Helper to deep copy relevant state
@@ -215,10 +218,30 @@ const editorSlice = createSlice({
       }
       state.view3D = !state.view3D;
     },
+    setCanvasRef: (state, action) => {
+      state.canvasRef = action.payload;
+    },
+    setStitches: (state, action) => {
+      state.pattern.nodes = action.payload;
+      state.selectedNode=state.pattern.nodes[state.pattern.nodes.length - 1]
+    },
+    setLinks: (state, action) => {
+      state.pattern.links = action.payload;
+    },
+    setPatternName: (state, action) => {
+      state.name = action.payload;
+    },
+    setId:(state, action)=>{
+      state.id = action.payload
+    }
   },
 });
 
 export const {
+  setId,
+  setStitches,
+  setLinks,
+  setPatternName,
   startPattern,
   addStitch,
   insertStitch,
@@ -231,7 +254,8 @@ export const {
   toggle3D,
   undo,
   redo,
-  resetEditor
+  resetEditor,
+  setCanvasRef
 } = editorSlice.actions;
 
 export default editorSlice.reducer;
