@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useUser } from "./useUser";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import { FaTrash } from "react-icons/fa";
+import { FaTrash , FaPencilAlt  } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { logoutUser, setUser } from "../login/loginSlice";
 import FullPageSpinner from '../../ui/FullPageSpinner'
@@ -27,6 +27,8 @@ import { savePost } from "../../services/postApi";
 import Spinner from "../../ui/Spinner";
 import { getPatterns } from "../../services/patternApi";
 import DeletePatternModal from "./DeletePatternModal";
+import DeletePostModal from "./DeletePostModal";
+import { resetEditor } from "../editor/editorSlice";
 
 const Container = styled.div`
   display: flex;
@@ -98,11 +100,13 @@ const PostUserName = styled.span`
   font-weight: 600;
   font-size: 1.1rem;
   color: #333;
+  text-transform: capitalize;
 `;
 
 const PostUserRole = styled.span`
   color: #666;
   font-size: 0.9rem;
+  text-transform: capitalize;
 `;
 
 const PostTime = styled.span`
@@ -134,6 +138,17 @@ const PatternImage = styled.div`
   line-height: 1.2;
   text-align: center;
   white-space: pre-line;
+`;
+const PostDesc = styled.div`
+  background-color: #f0f0f0;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  white-space: pre-line; 
+  word-wrap: break-word; 
+  overflow-wrap: break-word;
 `;
 
 const CrochetImage = styled.img`
@@ -211,10 +226,25 @@ const DeleteIcon = styled.div`
   font-size: 1rem;
   z-index: 2;
   &:hover{
-    color: red;
+    color: #6c7c6b
   }
 `;
+const IconButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 8px;
+  font-size: 16px;
+  color: black;
 
+  &:hover {
+  color: #6c7c6b;
+  }
+`;
+const Div= styled.div`
+  display: flex;
+  align-items: center;
+`
 const PatternName = styled.h3`
   font-size: 1.2rem;
   color: #333;
@@ -422,9 +452,11 @@ function UserProfile() {
   const [activeTab, setActiveTab] = useState("patterns"); // 'saved' or 'created' or 'patterns'
   const [savedPost, setSavedPosts] = useState([]);
   const [createdPosts, setCreatedPosts] = useState([]);
-  const { deletePost, isDeleting } = useDeletePost();
-  const [deleteId, setDeleteId] = useState(null);
   const { mutate: deletePattern, isPending } = useDeletePattern();
+  const { mutate: deletePost, isPending: isPendingPostDeletion } = useDeletePost();
+  
+  const [deleteId, setDeleteId] = useState(null);
+  const [deletePostId, setDeletePostId] = useState(null);
   const { isLoading, refetch } = useUser();
   const { savedPosts } = useGetSavedPost();
   const {
@@ -437,7 +469,6 @@ function UserProfile() {
   const isEffectRun = useRef(false);
   const userDetails = useSelector((store) => store.user);
   const {data: patterns, isPending: isLoadingPatterns} = useGetPatterns();
-  console.log('-------',patterns)
   const { _id,name, skillLevel, profileImage, coverImage, followers, following } =
     userDetails.userDetail;
   function formatDate(isoDate) {
@@ -490,14 +521,12 @@ function UserProfile() {
   };
 
   const handlePostDelete = (id) => {
-    console.log(id);
     deletePost(id, {
       onSuccess: (res) => {
         // userPostRefetch();
         toast.success("post successfully delete");
       },
       onError: (error) => {
-        console.log(error);
         toast.error("couldn't delete post");
       },
     });
@@ -539,12 +568,15 @@ function UserProfile() {
   function confirmDelete(id) {
     setDeleteId(id);
   }
-
+  function confirmDeletePost(id) {
+    setDeletePostId(id);
+  }
   function handleDeleteConfirm() {
     deletePattern(deleteId, {
       onSuccess: () => {
         toast.success("Pattern deleted successfully");
         setDeleteId(null);
+        dispatch(resetEditor());
       },
       onError: (err) => {
         toast.error(err.message);
@@ -552,10 +584,20 @@ function UserProfile() {
       },
     });
   }
+  function handleDeletePostConfirm() {
+  deletePost(deletePostId, {
+    onSuccess: () => {
+      toast.success("Post deleted successfully");
+      setDeletePostId(null);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+      setDeletePostId(null);
+    },
+  });
+}
 
-  function handleDeleteCancel() {
-    setDeleteId(null);
-  }
+ 
   if (isLoading || isLoggingOut) return <FullPageSpinner />
   
   const countFollowing = following?.length;
@@ -716,20 +758,33 @@ function UserProfile() {
                             <PostUserRole>{skillLevel}</PostUserRole>
                           </PostUserDetails>
                         </PostUserInfo>
-                        <div>
+                        <Div>
                           <PostTime>
-                            Created At {dateConverter(post.createdAt)}
+                          {dateConverter(post.createdAt)}
                           </PostTime>
-                          <AddButton onClick={() => handlePostDelete(post._id)}>
-                            Delete
-                          </AddButton>
-                          <AddButton>Edit</AddButton>
-                        </div>
+                          <IconButton onClick={(e) => {
+                              e.stopPropagation(); 
+                              confirmDeletePost(post._id);
+                            }} title="Delete">
+                            <FaTrash />
+                          </IconButton>
+                          <IconButton title="Edit">
+                            <FaPencilAlt  />
+                          </IconButton>
+                        </Div>
                       </PostHeader>
+                      {
+                        deletePostId && <DeletePostModal
+                          isOpen={!!deletePostId}
+                          onClose={() => setDeletePostId(null)}
+                          onDelete={() => handleDeletePostConfirm()}
+                          isDeleting={isPendingPostDeletion}
+                        />
+                      }
 
                       <PostContent>{post.title}</PostContent>
 
-                      <PatternImage>{post.description}</PatternImage>
+                      <PostDesc>{post.description}</PostDesc>
                       {/* {post.content
                       ? post.content.map((img) => (
                           <CrochetImage

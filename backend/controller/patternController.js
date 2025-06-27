@@ -3,7 +3,7 @@ import { Pattern } from "../modules/pattern.js";
 import { ErrorHandler } from "../utils/errorhandler.js";
 import { User } from "../modules/user.js";
 import { StatusCodes } from "http-status-codes";
-
+import mongoose from "mongoose";
 // export const createPattern = async (req, res, next) => {
 //   const { name, stitches } = req.body;
 //   const user = req.user.id;
@@ -50,30 +50,65 @@ import { StatusCodes } from "http-status-codes";
 //     );
 //   }
 // };
+
+
 export const createPattern = async (req, res, next) => {
   try {
-    const { name, stitches, links, image } = req.body;
-    if (!name || !stitches || stitches.length === 0 ) {
-      return res.status(400).json({ error: "Name, stitches and pattern picture are required." });
+    const { id, name, stitches, links, image } = req.body;
+
+    if (!name || !stitches || stitches.length === 0) {
+      return res.status(400).json({ error: "Name, stitches, and pattern picture are required." });
     }
 
-    const userId = req.user._id; // ✅ from isAuthenticatedUser middleware
+    const userId = req.user._id;
 
-    const pattern = await Pattern.create({
+    let pattern;
+
+    if (id) {
+      // Try to find pattern with same ID and user
+      pattern = await Pattern.findOne({ _id: id, user: userId });
+
+      if (pattern) {
+        // Overwrite existing pattern
+        pattern.name = name;
+        pattern.stitches = stitches;
+        pattern.links = links;
+        if (image) pattern.image = image;
+        pattern.lastModified = new Date();
+        await pattern.save();
+
+        return res.status(200).json({
+          success: true,
+          pattern,
+          message: "Pattern updated successfully",
+        });
+      }
+    }
+
+    // Create a new ObjectId if none is provided or not found
+    const newId = id ? new mongoose.Types.ObjectId(id) : new mongoose.Types.ObjectId();
+
+    pattern = await Pattern.create({
+      _id: newId,
       name,
-      user: userId, // ✅ use 'user' not 'userId' if schema defines it that way
+      user: userId,
       stitches,
       links,
+      image,
+      lastModified: new Date(),
     });
 
-    res.status(201).json({ success: true, pattern });
+    res.status(201).json({
+      success: true,
+      pattern,
+      message: "Pattern created successfully",
+    });
   } catch (error) {
-    console.error("❌ Error creating pattern:");
-    console.error("Message:", error.message);
-    console.error("Stack:", error.stack);
+    console.error("❌ Error creating/updating pattern:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 export const getPatterns = async (req, res, next) => {
   const user = req.user?.id;
 

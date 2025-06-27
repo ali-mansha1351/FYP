@@ -1,4 +1,6 @@
+import { useSelector } from "react-redux"
 import styled from "styled-components"
+import AskAIComponent from "./AskAIComponent"
 
 const Container = styled.div`
 font-family: var(--primary-font);
@@ -29,8 +31,11 @@ const Paragraph = styled.p`
 `
 
 export default function MainContent() {
+  const activeTab = useSelector(state => state.learn.activeTab)
   return (
     <Container>
+      {activeTab === "" ?
+      <>
       <Section>
         <SectionTitle>Welcome to the Skill Development Section</SectionTitle>
         <Paragraph>
@@ -50,6 +55,13 @@ export default function MainContent() {
           Use the "Ask AI" tab to get assistance with your crochet-related questions or editor usage in real time.
         </Paragraph>
       </Section>
+      </> :
+      activeTab === "ask-ai" ?
+      <AskAIComponent />
+      :
+      <>
+      </>
+    }
     </Container>
   )
 }

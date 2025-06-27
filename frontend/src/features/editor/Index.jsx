@@ -8,7 +8,7 @@ import styled from "styled-components";
 import SubMenuBar from "./SubMenuBar";
 import Spinner from "../../ui/Spinner";
 import { useGetPatternById } from "../../hooks/usePattern";
-import { setStitches, setLinks, setPatternName } from "./editorSlice";
+import { setStitches, setLinks, setPatternName, setId, resetEditor } from "./editorSlice";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -47,7 +47,11 @@ export default function Index() {
       dispatch(setStitches(pattern.stitches || []));
       dispatch(setLinks(pattern.links || []));
       dispatch(setPatternName(pattern.name));
+      dispatch(setId(pattern._id))
       setIsInitializing(false);
+    }
+    else{
+      dispatch(resetEditor())
     }
   }, [id, pattern, dispatch]);
 

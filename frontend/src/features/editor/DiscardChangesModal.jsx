@@ -39,13 +39,13 @@ const ButtonRow = styled.div`
   gap: 20px;
 `;
 
-export default function NewPatternModal({ isOpen, onConfirm, onCancel }) {
+export default function DiscardChangesModal({ isOpen, onDiscard, onCancel }) {
   return (
     <Overlay $isOpen={isOpen}>
       <ModalContent>
-        <Title>Are you sure you want to start a new pattern?</Title>
+        <Title>Are you sure you want to discard all the changes?</Title>
         <ButtonRow>
-          <Button $variant="cancel" onClick={onConfirm}>Yes</Button>
+          <Button $variant="cancel" onClick={onDiscard}>Yes</Button>
           <Button onClick={onCancel}>No</Button>
         </ButtonRow>
       </ModalContent>
