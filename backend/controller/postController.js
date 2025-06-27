@@ -360,57 +360,69 @@ export const likePost = async (req, res, next) => {
 
 export const savePost = async (req, res, next) => {
   const userId = req.user.id;
-  const post = req.params.id;
+  const postId = req.params.id;
+
   try {
-    if (!userId) {
-      throw new Error("unauthorized");
-    }
-    if (!post) {
-      throw new Error("no post id found to save it");
-    }
-    const userSavePostCheck = await User.findById(userId);
-    const alreadySaved = userSavePostCheck.savedPosts.includes(post);
+    if (!userId) throw new Error("unauthorized");
+    if (!postId) throw new Error("no post id found to save it");
+
+    const user = await User.findById(userId);
+    const post = await Post.findById(postId);
+
+    if (!user || !post) throw new Error("user or post not found");
+
+    const alreadySaved = user.savedPosts.includes(postId);
+
     if (alreadySaved) {
-      await User.findByIdAndUpdate(
-        userId,
-        { $pull: { savedPosts: post } },
-        { new: true }
-      );
+      // Remove post from user's saved list
+      await User.findByIdAndUpdate(userId, {
+        $pull: { savedPosts: postId },
+      });
+
+      // Remove user from post's saves list
+      await Post.findByIdAndUpdate(postId, {
+        $pull: { saves: userId },
+      });
+
       await Promise.all([
         invalidatePostCache(),
         invalidateUserInteractionsCache(userId),
       ]);
-      res.status(StatusCodes.OK).json({
+
+      return res.status(StatusCodes.OK).json({
         success: true,
         message: "post unsaved",
       });
     } else {
-      await User.findByIdAndUpdate(
-        userId,
-        { $addToSet: { savedPosts: post } },
-        { new: true }
-      );
+      // Add post to user's saved list
+      await User.findByIdAndUpdate(userId, {
+        $addToSet: { savedPosts: postId },
+      });
+
+      // Add user to post's saves list
+      await Post.findByIdAndUpdate(postId, {
+        $addToSet: { saves: userId },
+      });
+
       await Promise.all([
         invalidatePostCache(),
         invalidateUserInteractionsCache(userId),
       ]);
-      res.status(StatusCodes.OK).json({
+
+      return res.status(StatusCodes.OK).json({
         success: true,
         message: "post saved",
       });
     }
 
-    if (!userId || !userSavePostCheck) {
-      throw new Error("user not found to save post");
-    }
   } catch (error) {
     if (error.message === "unauthorized") {
       return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
     }
     if (error.message === "no post id found to save it") {
-      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
+      return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
     }
-    if (error.message === "user not found to save post") {
+    if (error.message === "user or post not found") {
       return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
     }
     return next(
@@ -422,30 +434,39 @@ export const savePost = async (req, res, next) => {
   }
 };
 
+
 export const getSavedPosts = async (req, res, next) => {
   const userId = req.user.id;
+
   try {
     if (!userId) {
       throw new Error("unauthorized");
     }
+
     const user = await User.findById(userId);
     if (!user) {
       throw new Error("user not found");
     }
+
     const savedPostsIds = user.savedPosts;
+
     if (savedPostsIds.length > 0) {
       const savedPosts = await Post.find({ _id: { $in: savedPostsIds } })
-        .populate()
+        .populate({
+          path: "createdBy",
+          select: "name profileImage skillLevel",
+        })
         .exec();
+
       res.status(StatusCodes.OK).json({
         success: true,
-        message: "all saved posts",
+        message: "All saved posts",
         savedPosts,
       });
     } else {
       res.status(StatusCodes.OK).json({
         success: true,
-        message: "no saved posts",
+        message: "No saved posts",
         savedPosts: [],
       });
     }
@@ -458,12 +479,13 @@ export const getSavedPosts = async (req, res, next) => {
     }
     return next(
       new ErrorHandler(
-        error.message || "internal server error",
+        error.message || "Internal server error",
         StatusCodes.INTERNAL_SERVER_ERROR
       )
     );
   }
 };
+
 
 export const deletePost = async (req, res, next) => {
   const user = req.user.id;

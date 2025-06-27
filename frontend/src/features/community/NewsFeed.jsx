@@ -326,7 +326,7 @@ function NewsFeed() {
 
   const feed = queryClient.getQueryData(["newsfeed"]);
   const suggestedUsers = queryClient.getQueryData(["userSuggestions"]);
-  console.log(suggestedUsers.suggestedUsers);
+  console.log(suggestedUsers?.suggestedUsers);
   const allPosts = feed?.pages?.flatMap((pages) => pages?.data?.posts);
   const handleOpen = () => {
     setIsModalOpen(true);
@@ -421,7 +421,7 @@ function NewsFeed() {
           <Sidebar>
             <SuggestionsCard>
               <SuggestionsTitle>Suggestions</SuggestionsTitle>
-              {suggestedUsers.suggestedUsers?.map((suggestion, index) => (
+              {suggestedUsers?.suggestedUsers?.map((suggestion, index) => (
                 <SuggestionItem key={index}>
                   <SuggestionUserInfo>
                     <SuggestionAvatar src={suggestion.profileImage?.url} />
