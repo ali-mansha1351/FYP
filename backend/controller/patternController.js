@@ -3,6 +3,8 @@ import { Pattern } from "../modules/pattern.js";
 import { ErrorHandler } from "../utils/errorhandler.js";
 import { User } from "../modules/user.js";
 import { StatusCodes } from "http-status-codes";
+// import { session } from "neo4j-driver";
+import { connectGraphDB } from "../config/database.js";
 
 // export const createPattern = async (req, res, next) => {
 //   const { name, stitches } = req.body;
@@ -50,7 +52,32 @@ import { StatusCodes } from "http-status-codes";
 //     );
 //   }
 // };
+
+//as primitive values are not supported in neo4j hence we clean the properties of each object of stitch and link
+const cleanObject = (obj) => {
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip MongoDB _id field and null/undefined values
+    if (key === "_id") continue;
+    if (value !== null && value !== undefined) {
+      // Convert ObjectId to string if it exists
+      if (
+        value &&
+        typeof value === "object" &&
+        value.constructor.name === "ObjectId"
+      ) {
+        cleaned[key] = value.toString();
+      } else {
+        cleaned[key] = value;
+      }
+    }
+  }
+  return cleaned;
+};
+
 export const createPattern = async (req, res, next) => {
+  const driver = await connectGraphDB();
+  const session = driver.session();
   try {
     const { name, stitches, links } = req.body;
 
@@ -67,14 +94,39 @@ export const createPattern = async (req, res, next) => {
       links,
     });
 
+    const cleanedStitches = stitches.map(cleanObject);
+    const cleanedLinks = links.map(cleanObject);
+    await session.run(
+      `
+        UNWIND $stitches AS stitch
+        CREATE (s:Stitch{id:stitch.id})
+        SET
+          s.type = COALESCE(stitch.type, null),
+          s.layer = COALESCE(stitch.layer, null),
+          s.index = COALESCE(stitch.index, null),
+          s.start = COALESCE(stitch.start, null),
+          s.x = COALESCE(stitch.x, null),
+          s.y = COALESCE(stitch.y, null)
+        WITH COUNT (*) AS stitchesCreated
+        UNWIND $links as link
+        MATCH(source:Stitch{id:link.source})
+        MATCH(target:Stitch{id:link.target})
+        CREATE (source)<-[r:linkedTo{inserts:link.inserts}]-(target)
+        SET r.inserts = COALESCE(link.inserts, null)
+        `,
+      { stitches: cleanedStitches, links: cleanedLinks }
+    );
     res.status(201).json({ success: true, pattern });
   } catch (error) {
-    console.error("❌ Error creating pattern:");
     console.error("Message:", error.message);
-    console.error("Stack:", error.stack);
-    res.status(500).json({ error: "Internal Server Error" });
+    return next(
+      new ErrorHandler(error.message, StatusCodes.INTERNAL_SERVER_ERROR)
+    );
+  } finally {
+    await session.close();
   }
 };
+
 export const getPatterns = async (req, res, next) => {
   const user = req.user?.id;
 
@@ -89,7 +141,6 @@ export const getPatterns = async (req, res, next) => {
       success: true,
       patterns,
     });
-
   } catch (error) {
     if (error.message === "login first to fetch patterns") {
       return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
@@ -126,7 +177,6 @@ export const getPatternById = async (req, res, next) => {
       success: true,
       pattern: patternToGet,
     });
-
   } catch (error) {
     if (error.message === "login first to get patterns") {
       return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
