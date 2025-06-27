@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import neo4j from "neo4j-driver";
 
 const connectDatabse = async () => {
   try {
@@ -14,4 +15,20 @@ const connectDatabse = async () => {
   }
 };
 
-export { connectDatabse };
+const connectGraphDB = async () => {
+  let driver;
+  try {
+    driver = neo4j.driver(
+      process.env.NEO4J_URI,
+      neo4j.auth.basic(process.env.NEO4J_USER, process.env.NEO4J_PASSWORD)
+    );
+    const serverInfo = await driver.getServerInfo();
+    console.log("connection established with neo4j database");
+    console.log(serverInfo);
+    return driver;
+  } catch (error) {
+    console.log(`connection error\n${err}\nCause: ${err.cause}`);
+  }
+};
+
+export { connectDatabse, connectGraphDB };

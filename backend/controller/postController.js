@@ -4,6 +4,11 @@ import { StatusCodes } from "http-status-codes";
 import {
   getUserInteractions,
   getPostFromCache,
+  invalidateUserInteractionsCache,
+  invalidatePostCache,
+  addPostToCache,
+  updatePostCache,
+  removePostFromCache,
 } from "../utils/userInteractedPosts.js";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -42,6 +47,7 @@ export const createPost = async (req, res, next) => {
     await uploadMultipleImages(allFiles);
     await newPost.save();
 
+    await addPostToCache(newPost);
     res.status(StatusCodes.OK).json({
       success: true,
       message: "post successfuly created",
@@ -119,7 +125,7 @@ export const updatePost = async (req, res, next) => {
       new: true,
       runValidators: true,
     });
-
+    await updatePostCache(post);
     if (!mongoose.Types.ObjectId.isValid(postId)) {
       throw new Error("invalid post id format");
     }
@@ -250,8 +256,8 @@ export const getNewsFeed = async (req, res, next) => {
     return !interactedPostIds.includes(post._id.toString());
   });
 
-  console.log("ainteractedPostIds", interactedPostIds);
-  console.log("allPosts", allPosts);
+  // console.log("ainteractedPostIds", interactedPostIds);
+  // console.log("allPosts", allPosts);
   // const interactedPosts = await getUserInteractedPosts(userId);
   // const newsFeed = await Post.find({
   //   _id: { $nin: interactedPosts },
@@ -310,6 +316,10 @@ export const likePost = async (req, res, next) => {
         { $pull: { likes: userId } },
         { new: true }
       );
+      await Promise.all([
+        invalidatePostCache(),
+        invalidateUserInteractionsCache(userId),
+      ]);
       res.status(StatusCodes.OK).json({
         success: true,
         message: "post unliked",
@@ -320,6 +330,10 @@ export const likePost = async (req, res, next) => {
         { $addToSet: { likes: userId } },
         { new: true }
       );
+      await Promise.all([
+        invalidatePostCache(),
+        invalidateUserInteractionsCache(userId),
+      ]);
       res.status(StatusCodes.OK).json({
         success: true,
         message: "post liked",
@@ -362,6 +376,10 @@ export const savePost = async (req, res, next) => {
         { $pull: { savedPosts: post } },
         { new: true }
       );
+      await Promise.all([
+        invalidatePostCache(),
+        invalidateUserInteractionsCache(userId),
+      ]);
       res.status(StatusCodes.OK).json({
         success: true,
         message: "post unsaved",
@@ -372,6 +390,10 @@ export const savePost = async (req, res, next) => {
         { $addToSet: { savedPosts: post } },
         { new: true }
       );
+      await Promise.all([
+        invalidatePostCache(),
+        invalidateUserInteractionsCache(userId),
+      ]);
       res.status(StatusCodes.OK).json({
         success: true,
         message: "post saved",
@@ -463,7 +485,7 @@ export const deletePost = async (req, res, next) => {
     if (!result) {
       throw new Error("post not found");
     }
-
+    await removePostFromCache(req.params.id);
     res.status(StatusCodes.OK).json({
       success: true,
       message: "post deleted successfully",

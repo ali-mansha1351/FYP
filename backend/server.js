@@ -1,5 +1,5 @@
 import { app, httpServer } from "./app.js";
-import { connectDatabse } from "./config/database.js";
+import { connectDatabse, connectGraphDB } from "./config/database.js";
 import dotenv from "dotenv";
 import { initializePostCache } from "./utils/userInteractedPosts.js";
 
@@ -13,6 +13,7 @@ process.on("uncaughtException", (errors) => {
 dotenv.config({ path: "backend/config/config.env" });
 //connecting to db
 connectDatabse();
+// connectGraphDB();
 
 const cacheInitialized = await initializePostCache();
 
