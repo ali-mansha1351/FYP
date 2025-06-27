@@ -1,15 +1,17 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deletePost as deletePostApi } from "../../services/postApi";
-import { useQueryClient } from "@tanstack/react-query";
+
+// useDeletePost.js
 export const useDeletePost = () => {
   const queryClient = useQueryClient();
-  const { mutate: deletePost, isPending: isDeleting } = useMutation({
+
+  const { mutate, isPending } = useMutation({
     mutationFn: (id) => deletePostApi(id),
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userPosts"] });
       queryClient.invalidateQueries({ queryKey: ["savedPosts"] });
-      console.log(response);
     },
   });
-  return { deletePost, isDeleting };
+
+  return { mutate, isPending }; 
 };

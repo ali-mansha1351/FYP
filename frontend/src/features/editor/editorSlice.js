@@ -17,7 +17,8 @@ const initialState = {
   history: [],
   future: [],
   canvasRef: null,
-  name: 'untitled'
+  name: 'untitled',
+  id: null,
 };
 
 // Helper to deep copy relevant state
@@ -222,18 +223,22 @@ const editorSlice = createSlice({
     },
     setStitches: (state, action) => {
       state.pattern.nodes = action.payload;
+      state.selectedNode=state.pattern.nodes[state.pattern.nodes.length - 1]
     },
     setLinks: (state, action) => {
       state.pattern.links = action.payload;
     },
     setPatternName: (state, action) => {
       state.name = action.payload;
-      console.log(JSON.parse(JSON.stringify(state)))
     },
+    setId:(state, action)=>{
+      state.id = action.payload
+    }
   },
 });
 
 export const {
+  setId,
   setStitches,
   setLinks,
   setPatternName,
