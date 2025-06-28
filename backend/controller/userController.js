@@ -387,133 +387,70 @@ export const updateUser = async (req, res, next) => {
   }
 };
 
-export const followUser = async (req, res, next) => {
-  const user = req.user.id;
-  const user_to_follow = req.params.id;
+export const toggleFollowUser = async (req, res, next) => {
+  const userId = req.user.id;
+  const targetUserId = req.params.id;
+
   try {
-    if (!user) {
+    if (!userId) {
       throw new Error("unauthorized access");
     }
-    if (!mongoose.Types.ObjectId.isValid(user_to_follow)) {
-      throw new Error("invalid user to follow id format");
-    }
-    const updatedUser = await User.findById(user);
-    const userToFollow = await User.findById(user_to_follow);
-    if (!updatedUser) {
-      throw new Error("can not find user");
-    }
-    if (!userToFollow) {
-      throw new Error("user to follow not found");
-    }
-    //const followId = mongoose.Types.ObjectId(user_to_follow);
 
-    if (updatedUser.following.includes(user_to_follow)) {
-      // console.log(updatedUser.following.length);
-      throw new Error("already following this user");
+    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
+      throw new Error("invalid target user id format");
     }
 
-    // if(userToFollow.followers.includes(user)){
-    //   throw new Error("user is already following you")
-    // }
+    const currentUser = await User.findById(userId);
+    const targetUser = await User.findById(targetUserId);
 
-    updatedUser.following.push(userToFollow._id);
-    userToFollow.followers.push(user);
-    await userToFollow.save();
-    await updatedUser.save();
+    if (!currentUser) {
+      throw new Error("can not find current user");
+    }
+    if (!targetUser) {
+      throw new Error("target user not found");
+    }
 
-    console.log(updateUser.following.length);
-    res.status(StatusCodes.OK).json({
-      success: true,
-      message: "user successfully followed",
-    });
-  } catch (error) {
-    if (error.message === "unauthorized access") {
-      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
-    }
-    if (error.message === "can not find user") {
-      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
-    }
-    if (error.message === "user to follow not found") {
-      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
-    }
-    if (error.message === "already following this user") {
-      return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
-    }
-    if (error.message === "invalid user to follow id format") {
-      return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
+    const isFollowing = currentUser.following.includes(targetUserId);
+
+    if (isFollowing) {
+      // Unfollow
+      currentUser.following.pull(targetUser._id);
+      targetUser.followers.pull(userId);
+      await currentUser.save();
+      await targetUser.save();
+
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: "User unfollowed successfully",
+        followed: false,
+      });
     } else {
-      return next(
-        new ErrorHandler(
-          error.message || "internal server error",
-          StatusCodes.INTERNAL_SERVER_ERROR
-        )
-      );
+      // Follow
+      currentUser.following.push(targetUser._id);
+      targetUser.followers.push(userId);
+      await currentUser.save();
+      await targetUser.save();
+
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: "User followed successfully",
+        followed: true,
+      });
     }
+  } catch (error) {
+    const code =
+      error.message === "unauthorized access"
+        ? StatusCodes.UNAUTHORIZED
+        : error.message.includes("not found") || error.message.includes("can not")
+        ? StatusCodes.NOT_FOUND
+        : error.message.includes("format")
+        ? StatusCodes.BAD_REQUEST
+        : StatusCodes.INTERNAL_SERVER_ERROR;
+
+    return next(new ErrorHandler(error.message, code));
   }
 };
 
-export const unFollowUser = async (req, res, next) => {
-  const user = req.user.id;
-  const user_to_unfollow = req.params.id;
-  try {
-    if (!user) {
-      throw new Error("unauthorized access");
-    }
-    if (!mongoose.Types.ObjectId.isValid(user_to_unfollow)) {
-      throw new Error("invalid user to unfollow id format");
-    }
-    const updatedUser = await User.findById(user);
-    const userTounFollow = await User.findById(user_to_unfollow);
-    if (!updatedUser) {
-      throw new Error("can not find user");
-    }
-    if (!userTounFollow) {
-      throw new Error("user to unfollow not found");
-    }
-    //const followId = mongoose.Types.ObjectId(user_to_follow);
-
-    if (!updatedUser.following.includes(user_to_unfollow)) {
-      throw new Error("already unfollowed this user");
-    }
-
-    // if(userToFollow.followers.includes(user)){
-    //   throw new Error("user is already following you")
-    // }
-
-    updatedUser.following.pull(userTounFollow._id);
-    userTounFollow.followers.pull(user);
-    userTounFollow.save();
-    updatedUser.save();
-
-    res.status(StatusCodes.OK).json({
-      success: true,
-      message: "user successfully unfollowed",
-    });
-  } catch (error) {
-    if (error.message === "unauthorized access") {
-      return next(new ErrorHandler(error.message, StatusCodes.UNAUTHORIZED));
-    }
-    if (error.message === "can not find user") {
-      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
-    }
-    if (error.message === "user to unfollow not found") {
-      return next(new ErrorHandler(error.message, StatusCodes.NOT_FOUND));
-    }
-    if (error.message === "already unfollowed this user") {
-      return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
-    }
-    if (error.message === "invalid user to unfollow id format") {
-      return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
-    } else {
-      return next(
-        new ErrorHandler(
-          error.message || "internal server error",
-          StatusCodes.INTERNAL_SERVER_ERROR
-        )
-      );
-    }
-  }
-};
 
 export const getSuggestedUsers = async (req, res, next) => {
   const userId = req.user.id;

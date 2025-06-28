@@ -116,3 +116,34 @@ export async function getSuggestedUsers() {
   console.log("these are suggested users with order", result);
   return result;
 }
+export async function likePost(postId) {
+  const res = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
+    method: "PATCH",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    console.error("Error liking/unliking post:", err.error);
+    throw new Error(err.error || "Failed to like/unlike post.");
+  }
+
+  const data = await res.json();
+  return data; // { success: true, message: "post liked" | "post unliked" }
+}
+export async function savePostApi(postId) {
+  const res = await fetch(`${API_BASE_URL}/post/save/${postId}`, {
+    method: "PATCH",
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error("Save post error:", data.error);
+    throw new Error(data.error || "Failed to save post");
+  }
+
+  return data;
+}
+

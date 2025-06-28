@@ -1,6 +1,9 @@
 import { useSelector } from "react-redux"
 import styled from "styled-components"
 import AskAIComponent from "./AskAIComponent"
+import CrochetBasicsComponent from "./CrochetBasicsComponent"
+import UsingEditorComponent from "./UsingEditorComponent"
+import OtherResourcesComponent from "./OtherResourcesComponent"
 
 const Container = styled.div`
 font-family: var(--primary-font);
@@ -34,33 +37,42 @@ export default function MainContent() {
   const activeTab = useSelector(state => state.learn.activeTab)
   return (
     <Container>
-      {activeTab === "" ?
-      <>
-      <Section>
-        <SectionTitle>Welcome to the Skill Development Section</SectionTitle>
-        <Paragraph>
-          Here you’ll find helpful guides and tips to improve your crochet
-          skills, use the pattern editor effectively, and explore more resources.
-        </Paragraph>
-      </Section>
-      <Section>
-        <SectionTitle>Getting Started</SectionTitle>
-        <Paragraph>
-          If you're new to crochet, start with the "Crochet Basics" tab in the sidebar. We cover stitches, tools, and techniques step-by-step.
-        </Paragraph>
-      </Section>
-      <Section>
-        <SectionTitle>Need Help?</SectionTitle>
-        <Paragraph>
-          Use the "Ask AI" tab to get assistance with your crochet-related questions or editor usage in real time.
-        </Paragraph>
-      </Section>
-      </> :
+      {
+      // activeTab === "" ?
+      // <>
+      // <Section>
+      //   <SectionTitle>Welcome to the Skill Development Section</SectionTitle>
+      //   <Paragraph>
+      //     Here you’ll find helpful guides and tips to improve your crochet
+      //     skills, use the pattern editor effectively, and explore more resources.
+      //   </Paragraph>
+      // </Section>
+      // <Section>
+      //   <SectionTitle>Getting Started</SectionTitle>
+      //   <Paragraph>
+      //     If you're new to crochet, start with the "Crochet Basics" tab in the sidebar. We cover stitches, tools, and techniques step-by-step.
+      //   </Paragraph>
+      // </Section>
+      // <Section>
+      //   <SectionTitle>Need Help?</SectionTitle>
+      //   <Paragraph>
+      //     Use the "Ask AI" tab to get assistance with your crochet-related questions or editor usage in real time.
+      //   </Paragraph>
+      // </Section>
+      // </> :
       activeTab === "ask-ai" ?
       <AskAIComponent />
       :
-      <>
-      </>
+      activeTab === "crochet-basics" ?
+      <CrochetBasicsComponent />
+      :
+      activeTab === "using-editor" ?
+      <UsingEditorComponent />
+      :
+      activeTab === "other-resources" ?
+      <OtherResourcesComponent />
+      :
+      <></>
     }
     </Container>
   )

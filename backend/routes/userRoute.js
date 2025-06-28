@@ -11,9 +11,8 @@ import {
   forgotPassword,
   currentUser,
   updateUser,
-  followUser,
-  unFollowUser,
   getSuggestedUsers,
+  toggleFollowUser,
 } from "../controller/userController.js";
 
 import {
@@ -35,8 +34,7 @@ router
   .route("/user/me/suggestedUsers")
   .get(isAuthenticatedUser, getSuggestedUsers);
 
-router.route("/user/follow/:id").patch(isAuthenticatedUser, followUser);
-router.route("/user/unfollow/:id").patch(isAuthenticatedUser, unFollowUser);
+router.route("/user/toggle-follow/:id").patch(isAuthenticatedUser, toggleFollowUser);
 
 router.route("/user/password/forgot").post(forgotPassword);
 

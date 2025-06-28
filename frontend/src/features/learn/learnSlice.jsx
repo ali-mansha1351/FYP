@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  activeTab:"",
+  activeTab:"crochet-basics",
   openMenu:true,
 };
 
@@ -11,7 +11,7 @@ const learnSlice = createSlice({
   reducers: {
     SetActiveTab : (state, action) => {
         if(state.activeTab === action.payload){
-            state.activeTab = ""
+            
         }
         else{
             state.activeTab = action.payload

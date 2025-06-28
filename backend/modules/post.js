@@ -22,6 +22,13 @@ const postSchema = mongoose.Schema(
         default: null,
       },
     ],
+    saves: [ // <-- New field to track saves
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+    ],
     comments: [
       {
         user: {
