@@ -48,7 +48,7 @@ function Header({ navItems }) {
   const navigate = useNavigate();
   return (
     <HeaderBar>
-      <Title onClick={() => navigate("/")}>Crochet Pattern Pro</Title>
+      <Title onClick={() => navigate("/")}>UCP Pattern Pro</Title>
       <Cont>
         <DropdownMenu items={navItems} />
         {navItems.map((item, index) => (
