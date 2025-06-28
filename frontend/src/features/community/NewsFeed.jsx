@@ -14,6 +14,7 @@ import { useLikePost } from "../../hooks/useLikePost";
 import { useSavePost } from "../../hooks/useSavePost";
 import Spinner from "../../ui/Spinner";
 import { useToggleFollow } from "../../hooks/useToggleFollow";
+import { useUser } from "../userDashboard/useUser";
 const FollowButton = styled.button`
   background-color: var(--secondary-color);
   font-size: 16px;
@@ -351,7 +352,9 @@ const LoadMoreTrigger = styled.div`
 `;
 function NewsFeed() {
   const user = useSelector((store) => store.user);
-  const { name, _id , following} = user.userDetail;
+  const { name, _id } = user.userDetail;
+  const { isLoading : isLoadingUser, user: userData, error, refetch } = useUser();
+  console.log(userData)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [likingPostId, setLikingPostId] = useState(null);
   const [activeSaveId, setActiveSaveId] = useState(null);
@@ -424,7 +427,7 @@ function NewsFeed() {
   const renderPost = (post, index) => {
     const hasLiked = post.likes.includes(_id);
     const isSaved = post.saves.includes(_id);
-    const isFollowing = following.includes(post.createdBy._id);
+    const isFollowing = userData?.following.includes(post.createdBy._id);
     return (
       <Post key={post._id}>
         <PostHeader>
@@ -465,8 +468,8 @@ function NewsFeed() {
                 {isPendingFollow && activeFollowId === post.createdBy._id ? (
                   <Spinner width="16px" border="2px" />
                 ) : isFollowing ? 
-                    ("unfollow"):
-                  ("Follow")
+                    ("followed"):
+                  ("follow")
                 }
               </FollowButton>
             )}
@@ -554,7 +557,7 @@ function NewsFeed() {
             <SuggestionsCard>
           <SuggestionsTitle>Suggestions</SuggestionsTitle>
           {suggestedUsers?.suggestedUsers?.map((suggestion, index) => { 
-            const isFollowing = following.includes(suggestion._id);
+            const isFollowing = userData?.following.includes(suggestion._id);
             return <SuggestionItem key={index}>
               <SuggestionUserInfo>
                 {suggestion.profileImage?.url ? (
@@ -574,8 +577,8 @@ function NewsFeed() {
               >
                 {isPendingFollow && activeFollowId === suggestion._id ? (
                   <Spinner width="16px" border="2px" />
-                ) : isFollowing ? "unfollow" :(
-                  "Follow"
+                ) : isFollowing ? "followed" :(
+                  "follow"
                 )}
               </FollowButton>
             </SuggestionItem>
