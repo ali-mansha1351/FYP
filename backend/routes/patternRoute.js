@@ -5,12 +5,28 @@ import {
   deletePatternById,
   getPatternById,
   getPatterns,
+  savePatternImage,
   // updatePattern,
   // deletePattern,
   // getPattern,
 } from "../controller/patternController.js";
+import {
+  multerErrorMiddleware,
+  multerFileFilter,
+} from "../middlewares/errors.js";
+import { uploadPostMedia } from "../middlewares/multer.js";
 
 const router = express.Router();
+
+router
+  .route("/patterns/save")
+  .post(
+    isAuthenticatedUser,
+    multerErrorMiddleware,
+    multerFileFilter,
+    uploadPostMedia,
+    savePatternImage
+  );
 
 // POST /api/v1/patterns → Create new pattern
 router.post("/patterns", isAuthenticatedUser, createPattern);

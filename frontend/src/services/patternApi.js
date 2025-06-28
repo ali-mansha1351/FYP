@@ -1,7 +1,7 @@
 const BASE_URL = "http://localhost:4000/api/v1";
 
 export async function createPattern(patternData) {
-  console.log(patternData)
+  console.log(patternData);
   const res = await fetch(`${BASE_URL}/patterns`, {
     method: "POST",
     credentials: "include",
@@ -57,5 +57,22 @@ export async function deletePatternById(id) {
     throw new Error(error.message || "Failed to delete pattern");
   }
 
-  return true; 
+  return true;
+}
+
+export async function savePatternImage(data) {
+  const res = await fetch(`${BASE_URL}/patterns/save`, {
+    method: "POST",
+    credentials: "include",
+    body: data,
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    console.log(err);
+    console.log(err.error);
+    throw new Error(err.error);
+  }
+
+  const result = await res.json();
+  return result;
 }

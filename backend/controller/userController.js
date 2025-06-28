@@ -441,7 +441,8 @@ export const toggleFollowUser = async (req, res, next) => {
     const code =
       error.message === "unauthorized access"
         ? StatusCodes.UNAUTHORIZED
-        : error.message.includes("not found") || error.message.includes("can not")
+        : error.message.includes("not found") ||
+          error.message.includes("can not")
         ? StatusCodes.NOT_FOUND
         : error.message.includes("format")
         ? StatusCodes.BAD_REQUEST
@@ -450,7 +451,6 @@ export const toggleFollowUser = async (req, res, next) => {
     return next(new ErrorHandler(error.message, code));
   }
 };
-
 
 export const getSuggestedUsers = async (req, res, next) => {
   const userId = req.user.id;

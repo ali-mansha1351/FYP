@@ -2,13 +2,19 @@ import { useSelector, useDispatch } from "react-redux";
 import Header from "../../ui/Header";
 import styled from "styled-components";
 import React, { useState } from "react";
-import HeaderButton from '../../ui/HeaderButton'
+import HeaderButton from "../../ui/HeaderButton";
 import PostModal from "./PostModal";
 import { useGetNewsFeed } from "./useGetNewsFeed";
 import { useQueryClient } from "@tanstack/react-query";
 import { dateConverter } from "../../utils/dateConverter";
 import ImageCarousel from "../../ui/ImageCrousel";
-import { FaUserCircle, FaHeart, FaRegHeart, FaBookmark, FaRegBookmark  } from "react-icons/fa";
+import {
+  FaUserCircle,
+  FaHeart,
+  FaRegHeart,
+  FaBookmark,
+  FaRegBookmark,
+} from "react-icons/fa";
 
 import { useLikePost } from "../../hooks/useLikePost";
 import { useSavePost } from "../../hooks/useSavePost";
@@ -25,8 +31,7 @@ const FollowButton = styled.button`
   border-radius: 25px;
   cursor: pointer;
   padding: 5px 15px;
-  &:hover{
-    
+  &:hover {
     background-color: #bbceba;
   }
 `;
@@ -143,7 +148,7 @@ const FeedContent = styled.div`
 
 const NewPostButton = styled.button`
   width: 100%;
-  background-color: #EBFFE9;
+  background-color: #ebffe9;
   border: none;
   padding: 1rem 2rem;
   border-radius: 25px;
@@ -352,9 +357,11 @@ const LoadMoreTrigger = styled.div`
 `;
 function NewsFeed() {
   const user = useSelector((store) => store.user);
+
   const { name, _id } = user.userDetail;
   const { isLoading : isLoadingUser, user: userData, error, refetch } = useUser();
   console.log(userData)
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [likingPostId, setLikingPostId] = useState(null);
   const [activeSaveId, setActiveSaveId] = useState(null);
@@ -381,7 +388,7 @@ function NewsFeed() {
     isFetchingNextPage,
     ref,
   } = useGetNewsFeed();
-  
+
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
     { label: "Editor", path: `/editor` },
@@ -394,11 +401,11 @@ function NewsFeed() {
   ];
 
   const feed = queryClient.getQueryData(["newsfeed"]);
-  console.log(feed)
+  console.log(feed);
   const suggestedUsers = queryClient.getQueryData(["userSuggestions"]);
   console.log(suggestedUsers?.suggestedUsers);
   const allPosts = feed?.pages?.flatMap((pages) => pages?.data?.posts);
-  
+
   const handleOpen = () => {
     setIsModalOpen(true);
   };
@@ -425,30 +432,32 @@ function NewsFeed() {
   };
 
   const renderPost = (post, index) => {
+
     const hasLiked = post.likes.includes(_id);
     const isSaved = post.saves.includes(_id);
     const isFollowing = userData?.following.includes(post.createdBy._id);
+
     return (
       <Post key={post._id}>
         <PostHeader>
           <PostUserInfo>
-            {post.createdBy?.profileImage?.url ?
-            <PostAvatar>
-              <img
-                src={post.createdBy.profileImage?.url }
-                alt="User avatar"
-                style={{
-                  borderRadius: "50%",
-                  width: "50px",
-                  height: "50px",
-                  objectFit: "cover",
-                  objectPosition: "center",
-                }}
-              />
-            </PostAvatar>
-            :
-            <FaUserCircle size={50} color="#333" />
-            }
+            {post.createdBy?.profileImage?.url ? (
+              <PostAvatar>
+                <img
+                  src={post.createdBy.profileImage?.url}
+                  alt="User avatar"
+                  style={{
+                    borderRadius: "50%",
+                    width: "50px",
+                    height: "50px",
+                    objectFit: "cover",
+                    objectPosition: "center",
+                  }}
+                />
+              </PostAvatar>
+            ) : (
+              <FaUserCircle size={50} color="#333" />
+            )}
             <PostUserDetails>
               <PostUserName>
                 {post.createdBy.name || "Sarah Wells"}
@@ -463,18 +472,22 @@ function NewsFeed() {
             {_id !== post.createdBy._id && (
               <FollowButton
                 onClick={() => handleFollow(post.createdBy._id)}
-                disabled={isPendingFollow && activeFollowId === post.createdBy._id}
+                disabled={
+                  isPendingFollow && activeFollowId === post.createdBy._id
+                }
               >
                 {isPendingFollow && activeFollowId === post.createdBy._id ? (
                   <Spinner width="16px" border="2px" />
+
+
                 ) : isFollowing ? 
                     ("followed"):
                   ("follow")
                 }
+
               </FollowButton>
             )}
           </div>
-
         </PostHeader>
 
         <PostContent>{post.title}</PostContent>
@@ -494,7 +507,7 @@ function NewsFeed() {
             )}
           </HeartIcon>
           <SaveIcon saved={isSaved} onClick={(e) => handleSave(e, post._id)}>
-            <span>{post.saves.length}</span>
+            <span>{post?.saves?.length}</span>
             {isPendingSaving && activeSaveId === post._id ? (
               <Spinner width="20px" border="2px" />
             ) : isSaved ? (
@@ -555,6 +568,7 @@ function NewsFeed() {
 
           <Sidebar>
             <SuggestionsCard>
+
           <SuggestionsTitle>Suggestions</SuggestionsTitle>
           {suggestedUsers?.suggestedUsers?.map((suggestion, index) => { 
             const isFollowing = userData?.following.includes(suggestion._id);
@@ -598,5 +612,6 @@ function NewsFeed() {
             </>
           );
         }
+
 
 export default NewsFeed;

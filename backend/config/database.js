@@ -27,7 +27,7 @@ const connectGraphDB = async () => {
     console.log(serverInfo);
     return driver;
   } catch (error) {
-    console.log(`connection error\n${err}\nCause: ${err.cause}`);
+    console.log(`connection error\n${error}\nCause: ${error.cause}`);
   }
 };
 

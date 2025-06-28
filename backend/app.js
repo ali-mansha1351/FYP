@@ -8,7 +8,7 @@ import cookieParser from "cookie-parser";
 import chatRoute from "./routes/chatRoute.js";
 import messageRoute from "./routes/messageRoute.js";
 import { configureSocket } from "./config/socket.js";
-import askAIRoute from './routes/askAIRoute.js'
+import askAIRoute from "./routes/askAIRoute.js";
 import { initializePostCache } from "./utils/userInteractedPosts.js";
 import http from "http";
 const app = express();
@@ -37,7 +37,7 @@ app.use((req, res, next) => {
   next();
 });
 
-//initlaizing cache 
+//initlaizing cache
 
 //importing all the routes
 
@@ -46,7 +46,7 @@ app.use("/api/v1", messageRoute);
 app.use("/api/v1", userRoute);
 app.use("/api/v1", patternRoute);
 app.use("/api/v1", postRoute);
-app.use("/api/v1",askAIRoute )
+app.use("/api/v1", askAIRoute);
 
 app.use(errorMiddleware);
 export { app, httpServer };
