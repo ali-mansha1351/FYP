@@ -481,11 +481,10 @@ function NewsFeed() {
                 {isPendingFollow && activeFollowId === post.createdBy._id ? (
                   <Spinner width="16px" border="2px" />
                 ) : isFollowing ? (
-                  "unfollow"
+                  "followed"
                 ) : (
-                  "Follow"
+                  "follow"
                 )}
-                ) : isFollowing ? ("followed"): ("follow") }
               </FollowButton>
             )}
           </div>
@@ -530,6 +529,7 @@ function NewsFeed() {
         ) : (
           <Header navItems={navItems} />
         )}
+
         <MainContent>
           <FeedSection>
             <FeedTab>Feed</FeedTab>
@@ -611,18 +611,6 @@ function NewsFeed() {
             </SuggestionsCard>
           </Sidebar>
         </MainContent>
-        <FollowButton
-          onClick={() => handleFollow(suggestion._id)}
-          disabled={isPendingFollow && activeFollowId === suggestion._id}
-        >
-          {isPendingFollow && activeFollowId === suggestion._id ? (
-            <Spinner width="16px" border="2px" />
-          ) : isFollowing ? (
-            "followed"
-          ) : (
-            "follow"
-          )}
-        </FollowButton>
 
         {isModalOpen && (
           <PostModal
