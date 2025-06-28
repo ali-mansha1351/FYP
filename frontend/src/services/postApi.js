@@ -146,4 +146,36 @@ export async function savePostApi(postId) {
 
   return data;
 }
+export const updatePostById = async ({ id, formData }) => {
+  const response = await fetch(`${API_BASE_URL}/post/${id}`, {
+    method: "POST",
+    credentials: "include", // required for cookie-based auth
+    body: formData,
+  });
 
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to update post");
+  }
+
+  const data = await response.json();
+  return data.post;
+};
+
+export const getPostById = async (postId) => {
+  const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
+    method: "GET",
+    credentials: "include", // needed if your auth uses cookies
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to fetch post");
+  }
+
+  const data = await response.json();
+  return data.post;
+};
