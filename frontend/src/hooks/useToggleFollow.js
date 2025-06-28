@@ -12,9 +12,9 @@ export function useToggleFollow() {
     mutationFn: toggleFollowApi,
     onSuccess: (data) => {
       toast.success(data.message || "Follow status updated");
-
-      // Optional: Invalidate or refetch user profile/suggestions/etc.
-      queryClient.invalidateQueries({ queryKey: ["userSuggestions"] });
+      queryClient.invalidateQueries(["newsfeed"]); 
+      queryClient.invalidateQueries(["userSuggestions"]);
+      queryClient.invalidateQueries(["user"]) 
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Failed to update follow status");
