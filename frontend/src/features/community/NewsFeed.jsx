@@ -20,6 +20,7 @@ import { useLikePost } from "../../hooks/useLikePost";
 import { useSavePost } from "../../hooks/useSavePost";
 import Spinner from "../../ui/Spinner";
 import { useToggleFollow } from "../../hooks/useToggleFollow";
+import { useUser } from "../userDashboard/useUser";
 const FollowButton = styled.button`
   background-color: var(--secondary-color);
   font-size: 16px;
@@ -356,7 +357,15 @@ const LoadMoreTrigger = styled.div`
 `;
 function NewsFeed() {
   const user = useSelector((store) => store.user);
-  const { name, _id, following } = user.userDetail;
+  //const { name, _id, following } = user.userDetail;
+  const { name, _id } = user.userDetail;
+  const {
+    isLoading: isLoadingUser,
+    user: userData,
+    error,
+    refetch,
+  } = useUser();
+  console.log(userData);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [likingPostId, setLikingPostId] = useState(null);
   const [activeSaveId, setActiveSaveId] = useState(null);
@@ -427,9 +436,9 @@ function NewsFeed() {
   };
 
   const renderPost = (post, index) => {
-    const hasLiked = post?.likes?.includes(_id);
-    const isSaved = post?.saves?.includes(_id);
-    const isFollowing = following.includes(post.createdBy._id);
+    const hasLiked = post.likes.includes(_id);
+    const isSaved = post.saves.includes(_id);
+    const isFollowing = userData?.following.includes(post.createdBy._id);
     return (
       <Post key={post._id}>
         <PostHeader>
@@ -476,6 +485,10 @@ function NewsFeed() {
                 ) : (
                   "Follow"
                 )}
+                ) : isFollowing ? 
+                    ("followed"):
+                  ("follow")
+                }
               </FollowButton>
             )}
           </div>
@@ -579,6 +592,21 @@ function NewsFeed() {
                         </SuggestionUserRole>
                       </SuggestionUserDetails>
                     </SuggestionUserInfo>
+          <SuggestionsTitle>Suggestions</SuggestionsTitle>
+          {suggestedUsers?.suggestedUsers?.map((suggestion, index) => { 
+            const isFollowing = userData?.following.includes(suggestion._id);
+            return <SuggestionItem key={index}>
+              <SuggestionUserInfo>
+                {suggestion.profileImage?.url ? (
+                  <SuggestionAvatar src={suggestion.profileImage.url} />
+                ) : (
+                  <FaUserCircle size={45} color="#333" />
+                )}
+                <SuggestionUserDetails>
+                  <SuggestionUserName>{suggestion.name}</SuggestionUserName>
+                  <SuggestionUserRole>{suggestion.skillLevel}</SuggestionUserRole>
+                </SuggestionUserDetails>
+              </SuggestionUserInfo>
 
                     <FollowButton
                       onClick={() => handleFollow(suggestion._id)}
@@ -600,6 +628,22 @@ function NewsFeed() {
             </SuggestionsCard>
           </Sidebar>
         </MainContent>
+              <FollowButton
+                onClick={() => handleFollow(suggestion._id)}
+                disabled={isPendingFollow && activeFollowId === suggestion._id}
+              >
+                {isPendingFollow && activeFollowId === suggestion._id ? (
+                  <Spinner width="16px" border="2px" />
+                ) : isFollowing ? "followed" :(
+                  "follow"
+                )}
+              </FollowButton>
+            </SuggestionItem>
+          })}
+        </SuggestionsCard>
+
+                  </Sidebar>
+                </MainContent>
 
         {isModalOpen && (
           <PostModal

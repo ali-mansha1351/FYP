@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { useUser } from "./useUser";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
+import EditPostModal from "./EditPostModal";
 import { FaTrash, FaPencilAlt, FaEllipsisV, FaHeart, FaRegHeart, FaBookmark, FaRegBookmark  } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { logoutUser, setUser } from "../login/loginSlice";
@@ -484,6 +485,7 @@ function UserProfile() {
   //testing useUser hook works fetching logged in user and geting the data?
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const[showEditModal, setShowEditModal] = useState(false)
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isDropDownOpen, setIsDropDownOpen] = useState();
   const [likingPostId, setLikingPostId] = useState(null);
@@ -505,6 +507,7 @@ function UserProfile() {
   } = useGetSuggestions();
   const [deleteId, setDeleteId] = useState(null);
   const [deletePostId, setDeletePostId] = useState(null);
+  const [editPost, setEditPost] = useState(null)
   const { isLoading, refetch } = useUser();
   const { savedPosts } = useGetSavedPost();
   const {
@@ -581,6 +584,9 @@ const handleSave = (e, postId) => {
   const handlePostModalCancel = () => {
     setIsPostModalOpen(false);
   };
+  const handleEditPostModalCancel = () => {
+    setShowEditModal(false)
+  }
   const handleModalOpen = () => {
     setIsModalOpen(true);
   };
@@ -815,6 +821,7 @@ const handleSave = (e, postId) => {
       getCachedPosts.posts.map((post) => {
         const hasLiked = post.likes.includes(_id);
         const isSaved = post.saves.includes(_id)
+        {console.log('hi',post._id)}
         return (
           <Post key={post._id}>
             <PostHeader>
@@ -853,7 +860,7 @@ const handleSave = (e, postId) => {
                 >
                   <FaTrash />
                 </IconButton>
-                <IconButton title="Edit">
+                <IconButton onClick={()=>{setEditPost(post); setShowEditModal(true); }} title="Edit">
                   <FaPencilAlt />
                 </IconButton>
               </Div>
@@ -1037,6 +1044,14 @@ const handleSave = (e, postId) => {
         onHide={handleModalClose}
         userDetail={userDetails.userDetail}
       />
+      {showEditModal && 
+      <EditPostModal 
+        handlePostModalCancel={handleEditPostModalCancel}
+        show={showEditModal}
+        post={editPost}
+      />
+      }
+
 
       <PostModal
         handlePostModalCancel={handlePostModalCancel}
