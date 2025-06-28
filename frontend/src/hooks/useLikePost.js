@@ -10,7 +10,6 @@ export function useLikePost() {
     onSuccess: (data) => {
       toast.success(data.message); // "post liked" or "post unliked"
       queryClient.invalidateQueries(["userPosts"]);
-      queryClient.invalidateQueries(["newsfeed"]); 
       queryClient.invalidateQueries(["savedPosts"]); 
     },
     onError: (err) => {

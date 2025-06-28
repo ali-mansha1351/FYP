@@ -10,7 +10,6 @@ export function useSavePost() {
     onSuccess: (data) => {
       toast.success(data.message || "Post saved!");
       queryClient.invalidateQueries(["userPosts"]);
-      queryClient.invalidateQueries(["newsfeed"]); 
       queryClient.invalidateQueries(["savedPosts"]); 
     },
     onError: (error) => {
