@@ -81,7 +81,7 @@ export const createPattern = async (req, res, next) => {
   const driver = await connectGraphDB();
   const session = driver.session();
   try {
-    const { id, name, stitches, links, image } = req.body;
+    const { id, name, stitches, links } = req.body;
 
     if (!name || !stitches || stitches.length === 0) {
       return res
@@ -102,7 +102,6 @@ export const createPattern = async (req, res, next) => {
         pattern.name = name;
         pattern.stitches = stitches;
         pattern.links = links;
-        if (image) pattern.image = image;
         pattern.lastModified = new Date();
         await pattern.save();
 
@@ -125,7 +124,6 @@ export const createPattern = async (req, res, next) => {
       user: userId,
       stitches,
       links,
-      image,
       lastModified: new Date(),
     });
 

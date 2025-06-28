@@ -560,7 +560,6 @@ function UserProfile() {
     setIsModalOpen(false);
   };
   const handlePostModalOpen = () => {
-    console.log(1);
     setIsPostModalOpen(true);
   };
   const handleLike = (e, postId) => {
@@ -820,6 +819,7 @@ const handleSave = (e, postId) => {
           <Post key={post._id}>
             <PostHeader>
               <PostUserInfo>
+                {getCachedUser?.profileImage?.url ?
                 <PostAvatar>
                   <img
                     src={getCachedUser.profileImage.url}
@@ -832,7 +832,9 @@ const handleSave = (e, postId) => {
                       objectPosition: "center",
                     }}
                   />
-                </PostAvatar>
+                </PostAvatar> :
+                <FaUserCircle size={50} color='#333'/>
+                  }
 
                 <PostUserDetails>
                   <PostUserName>{name}</PostUserName>
@@ -905,7 +907,6 @@ const handleSave = (e, postId) => {
   </PostsContent>
             ) : activeTab === "saved" ? (
               <PostsContent>
-                {console.log('hi', getCachedSavedPosts.savedPosts)}
   {getCachedSavedPosts.savedPosts && getCachedSavedPosts.savedPosts.length > 0 ? (
     getCachedSavedPosts.savedPosts.map((post) => {
       const hasLiked = post.likes.includes(_id);
@@ -915,6 +916,7 @@ const handleSave = (e, postId) => {
         <Post key={post._id}>
           <PostHeader>
             <PostUserInfo>
+              {post?.createdBy?.profileImage?.url ?
               <PostAvatar>
                 <img
                   src={post.createdBy.profileImage?.url}
@@ -928,6 +930,9 @@ const handleSave = (e, postId) => {
                   }}
                 />
               </PostAvatar>
+              :
+              <FaUserCircle size={50} color="#333"/>
+              }
 
               <PostUserDetails>
                 <PostUserName>{post.createdBy.name}</PostUserName>

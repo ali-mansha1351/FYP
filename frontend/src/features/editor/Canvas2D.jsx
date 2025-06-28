@@ -114,13 +114,6 @@ export default function Canvas2D() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (containerRef.current) {
-      const canvas = containerRef.current.querySelector("canvas");
-      if (canvas) dispatch(setCanvasRef(canvas));
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
     if (graphRef.current) {
       // Re-apply the same data to trigger a redraw
       graphRef.current.graphData(JSON.parse(JSON.stringify(patternData)));

@@ -208,7 +208,6 @@ function UpdateUserModal({ show, onHide, userDetail }) {
 
   const handleProfileImageChange = (e) => {
     const file = e.target.files[0];
-    console.log(file);
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -256,7 +255,6 @@ function UpdateUserModal({ show, onHide, userDetail }) {
         onHide();
         refetch()
           .then((response) => {
-            console.log(response.data);
             if (response.data) {
               dispatch(setUser(response.data));
               navigate("/user/_id", { replace: true });
