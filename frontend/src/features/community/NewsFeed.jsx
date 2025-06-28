@@ -2,11 +2,33 @@ import { useSelector, useDispatch } from "react-redux";
 import Header from "../../ui/Header";
 import styled from "styled-components";
 import React, { useState } from "react";
+import HeaderButton from '../../ui/HeaderButton'
 import PostModal from "./PostModal";
 import { useGetNewsFeed } from "./useGetNewsFeed";
 import { useQueryClient } from "@tanstack/react-query";
 import { dateConverter } from "../../utils/dateConverter";
 import ImageCarousel from "../../ui/ImageCrousel";
+import { FaUserCircle, FaHeart, FaRegHeart, FaBookmark, FaRegBookmark  } from "react-icons/fa";
+
+import { useLikePost } from "../../hooks/useLikePost";
+import { useSavePost } from "../../hooks/useSavePost";
+import Spinner from "../../ui/Spinner";
+import { useToggleFollow } from "../../hooks/useToggleFollow";
+const FollowButton = styled.button`
+  background-color: var(--secondary-color);
+  font-size: 16px;
+  display: flex;
+  border: none;
+  justify-content: center;
+  align-items: center;
+  border-radius: 25px;
+  cursor: pointer;
+  padding: 5px 15px;
+  &:hover{
+    
+    background-color: #bbceba;
+  }
+`;
 const Container = styled.div`
   min-height: 100vh;
   background-color: #f5f5f5;
@@ -64,6 +86,41 @@ const MainContent = styled.div`
   gap: 2rem;
   padding: 0 2rem;
 `;
+const PostDesc = styled.div`
+  background-color: #f0f0f0;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  white-space: pre-line;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+`;
+const HeartIcon = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  color: ${({ liked }) => (liked ? "crimson" : "#555")};
+  cursor: pointer;
+
+  svg {
+    transition: color 0.3s ease;
+  }
+`;
+const SaveIcon = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: ${({ saved }) => (saved ? "#6366f1" : "#4b5563")}; // Indigo for saved
+
+  svg {
+    transition: 0.2s ease;
+    font-size: 18px;
+  }
+`;
 
 const FeedSection = styled.div`
   flex: 2;
@@ -85,7 +142,7 @@ const FeedContent = styled.div`
 
 const NewPostButton = styled.button`
   width: 100%;
-  background-color: #c8e6c9;
+  background-color: #EBFFE9;
   border: none;
   padding: 1rem 2rem;
   border-radius: 25px;
@@ -97,7 +154,7 @@ const NewPostButton = styled.button`
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: #a5d6a7;
+    background-color: #bbceba;
   }
 `;
 
@@ -119,9 +176,10 @@ const PostUserInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+  text-transform: capitalize;
 `;
 
-const PostAvatar = styled.img`
+const PostAvatar = styled.div`
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -236,11 +294,13 @@ const SuggestionUserName = styled.span`
   font-weight: 600;
   color: #333;
   font-size: 1rem;
+  text-transform: capitalize;
 `;
 
 const SuggestionUserRole = styled.span`
   color: #666;
   font-size: 0.85rem;
+  text-transform: capitalize;
 `;
 
 const SuggestionAddButton = styled.button`
@@ -291,10 +351,24 @@ const LoadMoreTrigger = styled.div`
 `;
 function NewsFeed() {
   const user = useSelector((store) => store.user);
-  const { name, _id } = user.userDetail;
+  const { name, _id , following} = user.userDetail;
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [likingPostId, setLikingPostId] = useState(null);
+  const [activeSaveId, setActiveSaveId] = useState(null);
+  const { toggleFollow, isPendingFollow } = useToggleFollow();
+  const [activeFollowId, setActiveFollowId] = useState(null);
   const queryClient = useQueryClient();
 
+  const { mutate: toggleLike, isPending: isPendingLike } = useLikePost();
+  const { savePost, isPendingSaving } = useSavePost();
+  const handleFollow = (userId) => {
+    setActiveFollowId(userId);
+    toggleFollow(userId, {
+      onSettled: () => {
+        setActiveFollowId(null);
+      },
+    });
+  };
   const {
     data,
     hasNextPage,
@@ -304,6 +378,7 @@ function NewsFeed() {
     isFetchingNextPage,
     ref,
   } = useGetNewsFeed();
+  
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
     { label: "Editor", path: `/editor` },
@@ -315,19 +390,12 @@ function NewsFeed() {
     { label: "Login", path: "/login" },
   ];
 
-  const suggestions = [
-    { name: "Elizabeth Olsen", role: "Beginner with 2 month experience" },
-    { name: "John Doe", role: "Intermediate with 1 year experience" },
-    { name: "Jack Den", role: "Intermediate with 1.5 year experience" },
-    { name: "Fatima Anjum", role: "Expert with 3 year experience" },
-    { name: "Mike Baggs", role: "Beginner with 4 month experience" },
-    { name: "Ilsa Nadeem", role: "Beginner with 2 week experience" },
-  ];
-
   const feed = queryClient.getQueryData(["newsfeed"]);
+  console.log(feed)
   const suggestedUsers = queryClient.getQueryData(["userSuggestions"]);
   console.log(suggestedUsers?.suggestedUsers);
   const allPosts = feed?.pages?.flatMap((pages) => pages?.data?.posts);
+  
   const handleOpen = () => {
     setIsModalOpen(true);
   };
@@ -336,36 +404,102 @@ function NewsFeed() {
     setIsModalOpen(false);
   };
 
-  //const allPosts = data.pages?.flatMap((page) => page.data.posts);
-  //console.log(allPosts);
+  const handleLike = (e, postId) => {
+    e.stopPropagation();
+    setLikingPostId(postId);
+
+    toggleLike(postId, {
+      onSettled: () => setLikingPostId(null),
+    });
+  };
+
+  const handleSave = (e, postId) => {
+    e.stopPropagation();
+    setActiveSaveId(postId);
+    savePost(postId, {
+      onSettled: () => setActiveSaveId(null),
+    });
+  };
+
   const renderPost = (post, index) => {
+    const hasLiked = post.likes.includes(_id);
+    const isSaved = post.saves.includes(_id);
+    const isFollowing = following.includes(post.createdBy._id);
     return (
-      <Post>
+      <Post key={post._id}>
         <PostHeader>
           <PostUserInfo>
-            <PostAvatar src={post.createdBy.profileImage.url} />
+            {post.createdBy?.profileImage?.url ?
+            <PostAvatar>
+              <img
+                src={post.createdBy.profileImage?.url }
+                alt="User avatar"
+                style={{
+                  borderRadius: "50%",
+                  width: "50px",
+                  height: "50px",
+                  objectFit: "cover",
+                  objectPosition: "center",
+                }}
+              />
+            </PostAvatar>
+            :
+            <FaUserCircle size={50} color="#333" />
+            }
             <PostUserDetails>
               <PostUserName>
                 {post.createdBy.name || "Sarah Wells"}
               </PostUserName>
               <PostUserRole>
-                {post.createdBy.skillLevel || "Intermediate Designer"}
+                {post.createdBy.skillLevel || "Intermediate"}
               </PostUserRole>
             </PostUserDetails>
           </PostUserInfo>
-          <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <PostTime>{dateConverter(post.createdAt)}</PostTime>
-            <AddButton>+ Add</AddButton>
+            {_id !== post.createdBy._id && (
+              <FollowButton
+                onClick={() => handleFollow(post.createdBy._id)}
+                disabled={isPendingFollow && activeFollowId === post.createdBy._id}
+              >
+                {isPendingFollow && activeFollowId === post.createdBy._id ? (
+                  <Spinner width="16px" border="2px" />
+                ) : isFollowing ? 
+                    ("unfollow"):
+                  ("Follow")
+                }
+              </FollowButton>
+            )}
           </div>
+
         </PostHeader>
 
-        <PostContent>{post.description}</PostContent>
+        <PostContent>{post.title}</PostContent>
+        <PostDesc>{post.description}</PostDesc>
 
         <ImageCarousel images={post.content} />
 
         <PostStats>
-          <span>{post.likes}</span>
-          <span>{post.comments}</span>
+          <HeartIcon liked={hasLiked} onClick={(e) => handleLike(e, post._id)}>
+            <span>{post.likes.length}</span>
+            {isPendingLike && likingPostId === post._id ? (
+              <Spinner width="20px" border="2px" />
+            ) : hasLiked ? (
+              <FaHeart />
+            ) : (
+              <FaRegHeart />
+            )}
+          </HeartIcon>
+          <SaveIcon saved={isSaved} onClick={(e) => handleSave(e, post._id)}>
+            <span>{post.saves.length}</span>
+            {isPendingSaving && activeSaveId === post._id ? (
+              <Spinner width="20px" border="2px" />
+            ) : isSaved ? (
+              <FaBookmark />
+            ) : (
+              <FaRegBookmark />
+            )}
+          </SaveIcon>
         </PostStats>
       </Post>
     );
@@ -401,9 +535,7 @@ function NewsFeed() {
               )}
 
               {/* Render posts from API */}
-
               {allPosts?.map((post, postIndex) => {
-                // console.log(post);
                 return renderPost(post, `${postIndex}`);
               })}
 
@@ -420,35 +552,48 @@ function NewsFeed() {
 
           <Sidebar>
             <SuggestionsCard>
-              <SuggestionsTitle>Suggestions</SuggestionsTitle>
-              {suggestedUsers?.suggestedUsers?.map((suggestion, index) => (
-                <SuggestionItem key={index}>
-                  <SuggestionUserInfo>
-                    <SuggestionAvatar src={suggestion.profileImage?.url} />
-                    <SuggestionUserDetails>
-                      <SuggestionUserName>{suggestion.name}</SuggestionUserName>
-                      <SuggestionUserRole>
-                        {suggestion.skillLevel}
-                      </SuggestionUserRole>
-                    </SuggestionUserDetails>
-                  </SuggestionUserInfo>
-                  <SuggestionAddButton>+ Add</SuggestionAddButton>
-                </SuggestionItem>
-              ))}
-              {/* <ViewAllButton>View all suggestion →</ViewAllButton> */}
-            </SuggestionsCard>
-          </Sidebar>
-        </MainContent>
+          <SuggestionsTitle>Suggestions</SuggestionsTitle>
+          {suggestedUsers?.suggestedUsers?.map((suggestion, index) => { 
+            const isFollowing = following.includes(suggestion._id);
+            return <SuggestionItem key={index}>
+              <SuggestionUserInfo>
+                {suggestion.profileImage?.url ? (
+                  <SuggestionAvatar src={suggestion.profileImage.url} />
+                ) : (
+                  <FaUserCircle size={45} color="#333" />
+                )}
+                <SuggestionUserDetails>
+                  <SuggestionUserName>{suggestion.name}</SuggestionUserName>
+                  <SuggestionUserRole>{suggestion.skillLevel}</SuggestionUserRole>
+                </SuggestionUserDetails>
+              </SuggestionUserInfo>
 
-        {isModalOpen && (
-          <PostModal
-            show={isModalOpen}
-            handlePostModalCancel={handlePostModalCancel}
-          />
-        )}
-      </Container>
-    </>
-  );
-}
+              <FollowButton
+                onClick={() => handleFollow(suggestion._id)}
+                disabled={isPendingFollow && activeFollowId === suggestion._id}
+              >
+                {isPendingFollow && activeFollowId === suggestion._id ? (
+                  <Spinner width="16px" border="2px" />
+                ) : isFollowing ? "unfollow" :(
+                  "Follow"
+                )}
+              </FollowButton>
+            </SuggestionItem>
+          })}
+        </SuggestionsCard>
+
+                  </Sidebar>
+                </MainContent>
+
+                {isModalOpen && (
+                  <PostModal
+                    show={isModalOpen}
+                    handlePostModalCancel={handlePostModalCancel}
+                  />
+                )}
+              </Container>
+            </>
+          );
+        }
 
 export default NewsFeed;
