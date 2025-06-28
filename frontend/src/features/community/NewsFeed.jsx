@@ -326,7 +326,7 @@ function NewsFeed() {
 
   const feed = queryClient.getQueryData(["newsfeed"]);
   const suggestedUsers = queryClient.getQueryData(["userSuggestions"]);
-  console.log(suggestedUsers.suggestedUsers);
+  console.log(suggestedUsers?.suggestedUsers);
   const allPosts = feed?.pages?.flatMap((pages) => pages?.data?.posts);
   const handleOpen = () => {
     setIsModalOpen(true);

@@ -151,13 +151,11 @@ export const createPattern = async (req, res, next) => {
         `,
       { stitches: cleanedStitches, links: cleanedLinks }
     );
-    res
-      .status(StatusCodes.CREATED)
-      .json({
-        success: true,
-        pattern,
-        message: "Pattern created successfully",
-      });
+    res.status(StatusCodes.CREATED).json({
+      success: true,
+      pattern,
+      message: "Pattern created successfully",
+    });
   } catch (error) {
     console.error("Message:", error.message);
     return next(
@@ -285,6 +283,16 @@ export const deletePatternById = async (req, res, next) => {
   }
 };
 
+export const savePatternImage = async (req, res, next) => {
+  const files = req.files;
+  try {
+    console.log(files);
+  } catch (error) {
+    return next(
+      new ErrorHandler(error.message, StatusCodes.INTERNAL_SERVER_ERROR)
+    );
+  }
+};
 // export const getPattern = async (req, res, next) => {
 //   const user = req.user.id;
 //   try {
