@@ -485,10 +485,7 @@ function NewsFeed() {
                 ) : (
                   "Follow"
                 )}
-                ) : isFollowing ? 
-                    ("followed"):
-                  ("follow")
-                }
+                ) : isFollowing ? ("followed"): ("follow") }
               </FollowButton>
             )}
           </div>
@@ -533,7 +530,6 @@ function NewsFeed() {
         ) : (
           <Header navItems={navItems} />
         )}
-
         <MainContent>
           <FeedSection>
             <FeedTab>Feed</FeedTab>
@@ -574,7 +570,9 @@ function NewsFeed() {
             <SuggestionsCard>
               <SuggestionsTitle>Suggestions</SuggestionsTitle>
               {suggestedUsers?.suggestedUsers?.map((suggestion, index) => {
-                const isFollowing = following.includes(suggestion._id);
+                const isFollowing = userData?.following.includes(
+                  suggestion._id
+                );
                 return (
                   <SuggestionItem key={index}>
                     <SuggestionUserInfo>
@@ -592,21 +590,6 @@ function NewsFeed() {
                         </SuggestionUserRole>
                       </SuggestionUserDetails>
                     </SuggestionUserInfo>
-          <SuggestionsTitle>Suggestions</SuggestionsTitle>
-          {suggestedUsers?.suggestedUsers?.map((suggestion, index) => { 
-            const isFollowing = userData?.following.includes(suggestion._id);
-            return <SuggestionItem key={index}>
-              <SuggestionUserInfo>
-                {suggestion.profileImage?.url ? (
-                  <SuggestionAvatar src={suggestion.profileImage.url} />
-                ) : (
-                  <FaUserCircle size={45} color="#333" />
-                )}
-                <SuggestionUserDetails>
-                  <SuggestionUserName>{suggestion.name}</SuggestionUserName>
-                  <SuggestionUserRole>{suggestion.skillLevel}</SuggestionUserRole>
-                </SuggestionUserDetails>
-              </SuggestionUserInfo>
 
                     <FollowButton
                       onClick={() => handleFollow(suggestion._id)}
@@ -617,9 +600,9 @@ function NewsFeed() {
                       {isPendingFollow && activeFollowId === suggestion._id ? (
                         <Spinner width="16px" border="2px" />
                       ) : isFollowing ? (
-                        "unfollow"
+                        "followed"
                       ) : (
-                        "Follow"
+                        "follow"
                       )}
                     </FollowButton>
                   </SuggestionItem>
@@ -628,22 +611,18 @@ function NewsFeed() {
             </SuggestionsCard>
           </Sidebar>
         </MainContent>
-              <FollowButton
-                onClick={() => handleFollow(suggestion._id)}
-                disabled={isPendingFollow && activeFollowId === suggestion._id}
-              >
-                {isPendingFollow && activeFollowId === suggestion._id ? (
-                  <Spinner width="16px" border="2px" />
-                ) : isFollowing ? "followed" :(
-                  "follow"
-                )}
-              </FollowButton>
-            </SuggestionItem>
-          })}
-        </SuggestionsCard>
-
-                  </Sidebar>
-                </MainContent>
+        <FollowButton
+          onClick={() => handleFollow(suggestion._id)}
+          disabled={isPendingFollow && activeFollowId === suggestion._id}
+        >
+          {isPendingFollow && activeFollowId === suggestion._id ? (
+            <Spinner width="16px" border="2px" />
+          ) : isFollowing ? (
+            "followed"
+          ) : (
+            "follow"
+          )}
+        </FollowButton>
 
         {isModalOpen && (
           <PostModal
