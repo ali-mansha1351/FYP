@@ -167,24 +167,25 @@ export default function SubMenuBar() {
   setShowSaveModal(true);
 };
 
- const handleConfirmSave = (name) => {
-  if (!canvas) {
-    console.warn('Canvas not ready yet.');
-    return;
-  }
-
-  const imageData = canvas.toDataURL('image/png'); // use 'image/png' if transparency is needed
-
-  // Create a temporary anchor element to trigger download
-  const link = document.createElement('a');
-  link.href = imageData;
-  link.download = `${name || 'pattern'}.jpg`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
-
-
+  const handleConfirmSave = (name, id) => {
+    if (!canvas) {
+      console.warn('Canvas not ready yet.');
+      return;
+    }
+    const imageData = canvas.toDataURL('image/jpg');
+    const data = { name, stitches: pattern.nodes, links: pattern.links, image: imageData, id };
+    console.log('data to save', data)
+    savePattern(data, {
+      onSuccess: () => {
+        toast.success("Pattern saved!");
+        dispatch(resetEditor());
+        navigate(`/user/${_id}`)
+      },
+      onError: () => {
+        toast.error("Failed to save pattern.");
+      },
+    });
+  };
   const handleConfirmDiscard = () =>{
     dispatch(resetEditor())
     setShowDiscardModal(false)

@@ -105,12 +105,6 @@ export default function Canvas2D() {
   const graphRef = useRef();
   const dispatch = useDispatch();
   
-  useEffect(() => {
-    if (containerRef.current) {
-      const canvas = containerRef.current.querySelector("canvas");
-      if (canvas) dispatch(setCanvasRef(canvas));
-    }
-  }, [dispatch]);
   
   useEffect(() => {
     if (graphRef.current) {
