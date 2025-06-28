@@ -26,7 +26,7 @@ const ModalContent = styled.div`
   padding: 2rem;
   width: 90%;
   max-width: 500px;
-  max-height: 80vh;
+  // max-height: 80vh;
   overflow-y: auto;
 `;
 
